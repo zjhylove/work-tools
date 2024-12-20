@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import org.kordamp.bootstrapfx.scene.layout.Panel?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.zjhy.love.worktools.HelloController"
+            styleClass="root"
+            stylesheets="@bootstrapfx.css">
+    
+    <!-- 顶部工具栏 -->
+    <top>
+        <ToolBar styleClass="bg-light">
+            <items>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button text="新建" styleClass="btn,btn-primary" onAction="#handleNew"/>
+                <Button text="保存" styleClass="btn,btn-success" onAction="#handleSave"/>
+                <Separator orientation="VERTICAL"/>
+                <Button text="设置" styleClass="btn,btn-info" onAction="#handleSettings"/>
+            </items>
+        </ToolBar>
+    </top>
+    
+    <!-- 左侧菜单栏 -->
+    <left>
+        <Panel styleClass="panel-primary" minWidth="200">
+            <heading>
+                <Label styleClass="h4" text="功能菜单"/>
+            </heading>
+            <body>
+                <ListView fx:id="menuListView" VBox.vgrow="ALWAYS"/>
+            </body>
+        </Panel>
+    </left>
+    
+    <!-- 中间内容区域 -->
+    <center>
+        <StackPane fx:id="contentArea">
+            <padding>
+                <Insets top="10" right="10" bottom="10" left="10"/>
+            </padding>
+        </StackPane>
+    </center>
+    
+</BorderPane>

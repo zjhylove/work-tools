@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import org.kordamp.bootstrapfx.scene.layout.Panel?>
+
+<VBox xmlns:fx="http://javafx.com/fxml" 
+      fx:controller="com.zjhy.love.worktools.controller.ApiDocFormController"
+      styleClass="form" spacing="20">
+    
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+    
+    <GridPane vgap="15" hgap="10">
+        <columnConstraints>
+            <ColumnConstraints minWidth="100" prefWidth="150"/>
+            <ColumnConstraints hgrow="ALWAYS"/>
+        </columnConstraints>
+        
+        <!-- 解析包路径 -->
+        <Label text="解析包路径:" styleClass="field-label" 
+               GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+        <VBox spacing="5" GridPane.columnIndex="1" GridPane.rowIndex="0">
+            <HBox spacing="0">
+                <TextField fx:id="packagePathField" promptText="com.example.api" HBox.hgrow="ALWAYS"/>
+                <Button text="选择文件" styleClass="btn,btn-default" onAction="#handleSelectPackage" 
+                        minHeight="-Infinity" maxHeight="-Infinity"/>
+            </HBox>
+            <Label fx:id="packagePathError" styleClass="field-error" managed="false" visible="false"/>
+        </VBox>
+        
+        <!-- 领域服务名称 -->
+        <Label text="领域服务名称:" styleClass="field-label" 
+               GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+        <VBox spacing="5" GridPane.columnIndex="1" GridPane.rowIndex="1">
+            <TextField fx:id="serviceNameField" promptText="用户服务"/>
+            <Label fx:id="serviceNameError" styleClass="field-error" managed="false" visible="false"/>
+        </VBox>
+        
+        <!-- 解析依赖jar包 -->
+        <Label text="解析依赖jar包:" styleClass="field-label" 
+               GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+        <VBox spacing="5" GridPane.columnIndex="1" GridPane.rowIndex="2">
+            <TextField fx:id="jarPathField" promptText="user-service-api,order-service-api"/>
+            <Label fx:id="jarPathError" styleClass="field-error" managed="false" visible="false"/>
+            <Label styleClass="field-help" text="多个jar包名称用逗号分隔，无需包含.jar扩展名" 
+                   wrapText="true"/>
+        </VBox>
+        
+        <!-- 接口所在类 -->
+        <Label text="接口所在类:" styleClass="field-label" 
+               GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+        <VBox spacing="5" GridPane.columnIndex="1" GridPane.rowIndex="3">
+            <TextField fx:id="classNameField" 
+                       promptText="com.xxx.a#pathA,pathB,pathC@com.xxx.b@com.xxx.c#pathA,pathB,pathC"/>
+            <Label fx:id="classNameError" styleClass="field-error" managed="false" visible="false"/>
+            <Label styleClass="field-help" text="格式：包名#路径1,路径2@包名#路径1,路径2" 
+                   wrapText="true"/>
+        </VBox>
+    </GridPane>
+    
+    <!-- 按钮区域 -->
+    <HBox alignment="CENTER_RIGHT" spacing="10">
+        <Button text="重置" styleClass="btn,btn-default" onAction="#handleReset"/>
+        <Button text="生成文档" styleClass="btn,btn-primary" onAction="#handleSubmit"/>
+    </HBox>
+    
+</VBox> 

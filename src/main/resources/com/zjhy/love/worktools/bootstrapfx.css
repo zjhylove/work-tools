@@ -1,0 +1,92 @@
+.list-cell {
+    -fx-padding: 5;
+    -fx-background-radius: 5;
+}
+
+.list-cell:hover {
+    -fx-background-color: #f8f9fa;
+}
+
+.list-cell:selected {
+    -fx-background-color: #e9ecef;
+}
+
+.list-cell:selected .h5 {
+    -fx-text-fill: #0d6efd;
+}
+
+.list-view {
+    -fx-background-insets: 0;
+    -fx-padding: 5;
+    -fx-border-width: 0;
+}
+
+.tool-bar {
+    -fx-spacing: 10;
+    -fx-padding: 8 15;
+}
+
+.panel {
+    -fx-background-radius: 5;
+}
+
+.h5 {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+}
+
+.small {
+    -fx-font-size: 12px;
+}
+
+.form {
+    -fx-padding: 20;
+    -fx-spacing: 15;
+}
+
+.form .field {
+    -fx-padding: 10 0;
+}
+
+.form .field-label {
+    -fx-font-weight: bold;
+}
+
+.form .field-error {
+    -fx-text-fill: #dc3545;
+    -fx-font-size: 12px;
+}
+
+.form .field-help {
+    -fx-text-fill: #6c757d;
+    -fx-font-size: 12px;
+    -fx-padding: 2 0 0 0;
+}
+
+.form .text-field {
+    -fx-pref-width: 300;
+    -fx-pref-height: 32px;
+}
+
+.form .button-bar {
+    -fx-padding: 20 0 0 0;
+}
+
+.form .button {
+    -fx-min-width: 100;
+}
+
+.form .btn {
+    -fx-pref-height: 32px;
+    -fx-min-width: 80px;
+}
+
+.form .btn-default {
+    -fx-border-radius: 0 4px 4px 0;
+    -fx-background-radius: 0 4px 4px 0;
+}
+
+.form .jar-field {
+    -fx-border-radius: 4px 0 0 4px;
+    -fx-background-radius: 4px 0 0 4px;
+} 

@@ -1,0 +1,29 @@
+.sidebar {
+    -fx-background-color: #f4f4f4;
+    -fx-min-width: 200;
+    -fx-padding: 10;
+}
+
+.content-area {
+    -fx-background-color: white;
+}
+
+.list-view {
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+    -fx-background-color: transparent;
+}
+
+.list-cell {
+    -fx-padding: 8 15;
+    -fx-background-color: transparent;
+}
+
+.list-cell:hover {
+    -fx-background-color: #e8e8e8;
+}
+
+.list-cell:selected {
+    -fx-background-color: #0096C9;
+    -fx-text-fill: white;
+} 
