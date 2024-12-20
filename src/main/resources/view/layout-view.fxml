@@ -6,9 +6,9 @@
 <?import org.kordamp.bootstrapfx.scene.layout.Panel?>
 
 <BorderPane xmlns:fx="http://javafx.com/fxml"
-            fx:controller="com.zjhy.love.worktools.HelloController"
+            fx:controller="com.zjhy.love.worktools.controller.LayoutUiController"
             styleClass="root"
-            stylesheets="@bootstrapfx.css">
+            stylesheets="@../css/bootstrapfx.css">
     
     <!-- 顶部工具栏 -->
     <top>

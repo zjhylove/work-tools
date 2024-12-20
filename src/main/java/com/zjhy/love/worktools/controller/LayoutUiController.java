@@ -1,4 +1,4 @@
-package com.zjhy.love.worktools;
+package com.zjhy.love.worktools.controller;
 
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
@@ -22,7 +22,10 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import java.io.IOException;
 
-public class HelloController {
+/**
+ * @author zhengjun
+ */
+public class LayoutUiController {
     
     @FXML
     private ListView<MenuItem> menuListView;
@@ -62,7 +65,7 @@ public class HelloController {
         switch (selectedItem.getTitle()) {
             case "API文档":
                 try {
-                    FXMLLoader loader = new FXMLLoader(getClass().getResource("view/api-doc-form.fxml"));
+                    FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/api-doc-form.fxml"));
                     VBox apiDocForm = loader.load();
                     panel.setBody(apiDocForm);
                 } catch (IOException e) {
@@ -95,8 +98,10 @@ public class HelloController {
         
         contentArea.getChildren().setAll(panel);
     }
-    
-    // 菜单项数据类
+
+    /**
+     * 菜单项数据类
+     */
     public static class MenuItem {
         private final String title;
         private final String icon;
@@ -112,8 +117,10 @@ public class HelloController {
         public String getIcon() { return icon; }
         public String getDescription() { return description; }
     }
-    
-    // 自定义菜单项单元格
+
+    /**
+     * 自定义菜单项单元格
+     */
     private static class MenuItemCell extends ListCell<MenuItem> {
         private final HBox content;
         private final Label title;

@@ -1,26 +1,38 @@
 package com.zjhy.love.worktools.service;
 
+import cn.hutool.core.annotation.AnnotationUtil;
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.convert.Convert;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.lang.JarClassLoader;
-import cn.hutool.core.util.ClassLoaderUtil;
-import cn.hutool.core.util.ReflectUtil;
-import cn.hutool.core.util.ZipUtil;
+import cn.hutool.core.lang.reflect.ActualTypeMapperPool;
+import cn.hutool.core.map.MapUtil;
+import cn.hutool.core.text.CharSequenceUtil;
+import cn.hutool.core.text.StrPool;
+import cn.hutool.core.util.*;
+import cn.hutool.http.HtmlUtil;
+import cn.hutool.json.JSONUtil;
+import com.zjhy.love.worktools.common.util.MockUtil;
 import com.zjhy.love.worktools.model.ApiDocConfig;
+import com.zjhy.love.worktools.model.ApiField;
 import com.zjhy.love.worktools.model.ApiInfo;
+import com.zjhy.love.worktools.model.NodeInfo;
+import org.apache.commons.collections4.SetUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.File;
-import java.io.FileWriter;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+@SuppressWarnings({"unchecked", "rawtypes"})
 public class ApiDocService {
 
-    public List<ApiInfo> parseApiInfo(ApiDocConfig config) throws Exception {
+    private static final Logger LOGGER = LogManager.getLogger(ApiDocService.class);
+
+    public List<ApiInfo> generateApiDoc(ApiDocConfig config) throws Exception {
         //解压jar包
         File unzip = ZipUtil.unzip(config.getSourceJarPath());
         String rootDir = unzip.getAbsolutePath();
@@ -42,14 +54,10 @@ public class ApiDocService {
 
         //循环解析
         Map<String, List<String>> classPathMapping = config.getClassPathMapping();
-
-
-
-        List<ApiConfig> configList = Arrays.stream(apiList.split("@")).map(ApiConfig::new).collect(Collectors.toList());
-        return configList.stream().flatMap(c -> {
+        return classPathMapping.entrySet().stream().flatMap(c -> {
             Class<?> clazz;
             try {
-                clazz = jarClassLoader.loadClass(c.className);
+                clazz = jarClassLoader.loadClass(c.getKey());
             } catch (ClassNotFoundException e) {
                 return Stream.empty();
             }
@@ -62,12 +70,12 @@ public class ApiDocService {
                 if (Objects.isNull(annotationValue)) {
                     return false;
                 }
-                if (Objects.isNull(c.pathList)) {
+                if (Objects.isNull(c.getValue())) {
                     return true;
                 }
                 String[] value = (String[]) annotationValue;
                 HashSet<String> pSet = SetUtils.hashSet(value);
-                return Arrays.stream(c.pathList).map(p -> {
+                return c.getValue().stream().map(p -> {
                     String prefix = StrPool.SLASH;
                     if (!p.startsWith(prefix)) {
                         return prefix + p.trim();
@@ -83,7 +91,7 @@ public class ApiDocService {
                 } else {
                     apiInfo.setApiName("");
                 }
-                apiInfo.setD(domainService);
+                apiInfo.setD(config.getServiceName());
 
                 //解析org.springframework.web.bind.annotation.RequestMapping 注解value 属性
                 annotationValue = AnnotationUtil.getAnnotationValue(m.getDeclaringClass(), requestMappingClazz);
@@ -153,7 +161,7 @@ public class ApiDocService {
         List<ApiField> apiFieldList = topNode.getRespFieldList();
         for (ApiField f : apiFieldList) {
             Optional<NodeInfo> op = nodeList.stream().filter(t -> t.getNodeType().equals(f.getClazzType())).findFirst();
-            if (!op.isPresent()) {
+            if (op.isEmpty()) {
                 topMap.put(f.getFieldName(), f.getExampleValue() == null ? MockUtil.mockObject(f.getOriginClazzType()) : Convert.convert(f.getOriginClazzType(), f.getExampleValue()));
             } else {
                 Class<?> originClazzType = f.getOriginClazzType();
@@ -225,17 +233,17 @@ public class ApiDocService {
             apiField.setExampleValue(example);
             if (isCollection(propertyType)) {
                 Type returnType = field.getGenericType();
-                if(returnType instanceof ParameterizedType){
+                if (returnType instanceof ParameterizedType) {
                     returnType = ((ParameterizedType) returnType).getActualTypeArguments()[0];
                 }
-                if(returnType instanceof Class){
+                if (returnType instanceof Class) {
                     apiField.setClazzType((Class<?>) returnType);
-                }else if (genericType instanceof ParameterizedType){
+                } else if (genericType instanceof ParameterizedType) {
                     returnType = ((ParameterizedType) genericType).getActualTypeArguments()[0];
                 }
-                if(returnType instanceof Class){
+                if (returnType instanceof Class) {
                     apiField.setClazzType((Class<?>) returnType);
-                }else {
+                } else {
                     Type type = genericMap.get(returnType);
                     apiField.setClazzType((Class<?>) type);
                 }

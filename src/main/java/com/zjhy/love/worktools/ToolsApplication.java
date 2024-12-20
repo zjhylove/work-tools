@@ -8,10 +8,14 @@ import org.kordamp.bootstrapfx.BootstrapFX;
 
 import java.io.IOException;
 
-public class HelloApplication extends Application {
+/**
+ * @author zhengjun
+ */
+public class ToolsApplication extends Application {
+
     @Override
     public void start(Stage stage) throws IOException {
-        FXMLLoader fxmlLoader = new FXMLLoader(HelloApplication.class.getResource("hello-view.fxml"));
+        FXMLLoader fxmlLoader = new FXMLLoader(ToolsApplication.class.getResource("/view/layout-view.fxml"));
         Scene scene = new Scene(fxmlLoader.load(), 800, 600);
         // 添加BootstrapFX样式表
         scene.getStylesheets().add(BootstrapFX.bootstrapFXStylesheet());
