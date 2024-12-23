@@ -14,6 +14,10 @@
     <top>
         <ToolBar styleClass="bg-light">
             <items>
+                <Button fx:id="logButton" text="日志" 
+                        styleClass="btn,btn-info" 
+                        onAction="#handleShowLogs"/>
+                <Separator orientation="VERTICAL"/>
                 <Region HBox.hgrow="ALWAYS"/>
                 <Button text="新建" styleClass="btn,btn-primary" onAction="#handleNew"/>
                 <Button text="保存" styleClass="btn,btn-success" onAction="#handleSave"/>

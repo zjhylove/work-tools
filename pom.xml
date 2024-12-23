@@ -4,25 +4,58 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
+    <!-- e-iceblue 仓库 -->
+    <repositories>
+        <repository>
+            <id>com.e-iceblue</id>
+            <url>http://repo.e-iceblue.cn/repository/maven-public/</url>
+        </repository>
+    </repositories>
+
     <groupId>com.zjhy.love</groupId>
     <artifactId>work-tools</artifactId>
     <version>1.0-SNAPSHOT</version>
     <name>work-tools</name>
 
     <properties>
+        <!-- 基础配置 -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
+        
+        <!-- JavaFX -->
         <javafx.version>22</javafx.version>
-        <junit.version>5.10.2</junit.version>
-        <jackson.version>2.12.6</jackson.version>
-        <log4j.version>2.14.1</log4j.version>
+        <controlsfx.version>11.1.0</controlsfx.version>
+        <bootstrapfx.version>0.4.0</bootstrapfx.version>
+        <formsfx.version>11.6.0</formsfx.version>
+        <validatorfx.version>0.5.0</validatorfx.version>
+        
+        <!-- 日志 -->
+        <log4j.version>2.20.0</log4j.version>
+        <slf4j.version>1.7.32</slf4j.version>
+        
+        <!-- 工具库 -->
         <hutool.version>5.8.25</hutool.version>
         <commons-codec.version>1.15</commons-codec.version>
-        <httpclient.version>4.5.13</httpclient.version>
-        <slf4j.version>1.7.32</slf4j.version>
-        <httpcore.version>4.4.13</httpcore.version>
         <commons-compress.version>1.21</commons-compress.version>
+        <freemarker.version>2.3.9</freemarker.version>
+        
+        <!-- HTTP -->
+        <httpclient.version>4.5.13</httpclient.version>
+        <httpcore.version>4.4.13</httpcore.version>
+        
+        <!-- Office -->
+        <poi.version>5.2.5</poi.version>
+        <spire.version>12.8.0</spire.version>
+        
+        <!-- SSH -->
+        <sshd.version>2.9.2</sshd.version>
+        
+        <!-- JSON -->
+        <jackson.version>2.12.6</jackson.version>
+        
+        <!-- 测试 -->
+        <junit.version>5.10.2</junit.version>
     </properties>
 
     <dependencyManagement>
@@ -32,65 +65,22 @@
                 <groupId>com.fasterxml.jackson</groupId>
                 <artifactId>jackson-bom</artifactId>
                 <version>${jackson.version}</version>
-                <scope>import</scope>
                 <type>pom</type>
+                <scope>import</scope>
             </dependency>
             
-            <!-- Commons Codec -->
+            <!-- Log4j BOM -->
             <dependency>
-                <groupId>commons-codec</groupId>
-                <artifactId>commons-codec</artifactId>
-                <version>${commons-codec.version}</version>
-            </dependency>
-            
-            <!-- HttpClient -->
-            <dependency>
-                <groupId>org.apache.httpcomponents</groupId>
-                <artifactId>httpclient</artifactId>
-                <version>${httpclient.version}</version>
-            </dependency>
-            
-            <!-- HttpCore -->
-            <dependency>
-                <groupId>org.apache.httpcomponents</groupId>
-                <artifactId>httpcore</artifactId>
-                <version>${httpcore.version}</version>
-            </dependency>
-            
-            <!-- Commons Compress -->
-            <dependency>
-                <groupId>org.apache.commons</groupId>
-                <artifactId>commons-compress</artifactId>
-                <version>${commons-compress.version}</version>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-bom</artifactId>
+                <version>${log4j.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
 
     <dependencies>
-        <!-- Core Dependencies -->
-        <dependency>
-            <groupId>commons-codec</groupId>
-            <artifactId>commons-codec</artifactId>
-            <version>${commons-codec.version}</version>
-        </dependency>
-
-        <!-- 添加 httpclient -->
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient</artifactId>
-            <version>${httpclient.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>commons-codec</groupId>
-                    <artifactId>commons-codec</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.httpcomponents</groupId>
-                    <artifactId>httpcore</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
         <!-- JavaFX -->
         <dependency>
             <groupId>org.openjfx</groupId>
@@ -102,24 +92,24 @@
             <artifactId>javafx-fxml</artifactId>
             <version>${javafx.version}</version>
         </dependency>
-
+        
         <!-- UI Controls -->
         <dependency>
             <groupId>org.controlsfx</groupId>
             <artifactId>controlsfx</artifactId>
-            <version>11.1.0</version>
+            <version>${controlsfx.version}</version>
         </dependency>
         <dependency>
             <groupId>org.kordamp.bootstrapfx</groupId>
             <artifactId>bootstrapfx-core</artifactId>
-            <version>0.4.0</version>
+            <version>${bootstrapfx.version}</version>
         </dependency>
-
+        
         <!-- Forms -->
         <dependency>
             <groupId>com.dlsc.formsfx</groupId>
             <artifactId>formsfx-core</artifactId>
-            <version>11.6.0</version>
+            <version>${formsfx.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.openjfx</groupId>
@@ -130,7 +120,7 @@
         <dependency>
             <groupId>net.synedra</groupId>
             <artifactId>validatorfx</artifactId>
-            <version>0.5.0</version>
+            <version>${validatorfx.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.openjfx</groupId>
@@ -139,7 +129,7 @@
             </exclusions>
         </dependency>
 
-        <!-- Logging -->
+        <!-- 日志 -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
@@ -147,31 +137,57 @@
         </dependency>
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-slf4j-impl</artifactId>
-            <version>${log4j.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-api</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
 
-        <!-- Utils -->
+        <!-- 工具库 -->
         <dependency>
             <groupId>cn.hutool</groupId>
             <artifactId>hutool-all</artifactId>
             <version>${hutool.version}</version>
         </dependency>
         <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>${commons-codec.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-compress</artifactId>
+            <version>${commons-compress.version}</version>
+        </dependency>
+        <dependency>
             <groupId>freemarker</groupId>
             <artifactId>freemarker</artifactId>
-            <version>2.3.9</version>
+            <version>${freemarker.version}</version>
         </dependency>
+
+        <!-- HTTP -->
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>${httpclient.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>commons-codec</groupId>
+                    <artifactId>commons-codec</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        
+        <!-- Office -->
         <dependency>
             <groupId>org.apache.poi</groupId>
             <artifactId>poi-ooxml</artifactId>
-            <version>5.2.5</version>
+            <version>${poi.version}</version>
             <exclusions>
                 <exclusion>
                     <artifactId>log4j-api</artifactId>
@@ -187,178 +203,26 @@
                 </exclusion>
             </exclusions>
         </dependency>
-
-        <!-- SSH -->
-        <dependency>
-            <groupId>org.apache.sshd</groupId>
-            <artifactId>sshd-core</artifactId>
-            <version>2.9.2</version>
-            <exclusions>
-                <exclusion>
-                    <artifactId>slf4j-api</artifactId>
-                    <groupId>org.slf4j</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <!-- Nacos -->
-        <dependency>
-            <groupId>com.alibaba.nacos</groupId>
-            <artifactId>nacos-client</artifactId>
-            <version>2.2.0</version>
-            <exclusions>
-                <exclusion>
-                    <artifactId>commons-codec</artifactId>
-                    <groupId>commons-codec</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>jackson-core</artifactId>
-                    <groupId>com.fasterxml.jackson.core</groupId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-api</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.httpcomponents</groupId>
-                    <artifactId>httpclient</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.fasterxml.jackson.core</groupId>
-                    <artifactId>jackson-core</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.httpcomponents</groupId>
-                    <artifactId>httpcore</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.commons</groupId>
-                    <artifactId>commons-compress</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <!-- Database -->
-        <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
-            <version>8.0.28</version>
-            <scope>runtime</scope>
-        </dependency>
-
-        <!-- Security -->
-        <dependency>
-            <groupId>com.eatthepath</groupId>
-            <artifactId>java-otp</artifactId>
-            <version>0.4.0</version>
-        </dependency>
-
-        <!-- QR Code -->
-        <dependency>
-            <groupId>com.google.zxing</groupId>
-            <artifactId>core</artifactId>
-            <version>3.4.0</version>
-        </dependency>
-        <dependency>
-            <groupId>com.google.zxing</groupId>
-            <artifactId>javase</artifactId>
-            <version>3.4.0</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>commons-codec</groupId>
-                    <artifactId>commons-codec</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <!-- Cloud Storage -->
-        <dependency>
-            <groupId>com.qcloud</groupId>
-            <artifactId>cos_api</artifactId>
-            <version>5.6.24</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-api</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>commons-codec</groupId>
-                    <artifactId>commons-codec</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.httpcomponents</groupId>
-                    <artifactId>httpclient</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.bouncycastle</groupId>
-                    <artifactId>bcprov-jdk15on</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.httpcomponents</groupId>
-                    <artifactId>httpcore</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>com.tencent.cloud</groupId>
-            <artifactId>cos-sts-java</artifactId>
-            <version>3.0.6</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>commons-codec</groupId>
-                    <artifactId>commons-codec</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>com.aliyun.oss</groupId>
-            <artifactId>aliyun-sdk-oss</artifactId>
-            <version>3.10.2</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-api</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>commons-codec</groupId>
-                    <artifactId>commons-codec</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.httpcomponents</groupId>
-                    <artifactId>httpclient</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.jdom</groupId>
-                    <artifactId>jdom</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.codehaus.jettison</groupId>
-                    <artifactId>jettison</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.httpcomponents</groupId>
-                    <artifactId>httpcore</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.commons</groupId>
-                    <artifactId>commons-compress</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.codehaus.jettison</groupId>
-            <artifactId>jettison</artifactId>
-            <version>1.5.2</version>
-        </dependency>
-
-        <!-- Document Processing -->
         <dependency>
             <groupId>e-iceblue</groupId>
             <artifactId>spire.doc</artifactId>
             <version>12.8.4</version>
         </dependency>
 
-        <!-- Test -->
+        <!-- SSH -->
+        <dependency>
+            <groupId>org.apache.sshd</groupId>
+            <artifactId>sshd-core</artifactId>
+            <version>${sshd.version}</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>slf4j-api</artifactId>
+                    <groupId>org.slf4j</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <!-- 测试 -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
@@ -371,21 +235,9 @@
             <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
-
-        <!-- 在 dependencies 节点中添加 -->
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-compress</artifactId>
-            <version>1.21</version>
-        </dependency>
     </dependencies>
 
-    <repositories>
-        <repository>
-            <id>com.e-iceblue</id>
-            <url>http://repo.e-iceblue.cn/repository/maven-public/</url>
-        </repository>
-    </repositories>
+
 
     <build>
         <resources>
@@ -394,10 +246,11 @@
                 <includes>
                     <include>**/*</include>
                 </includes>
+                <filtering>false</filtering>
             </resource>
         </resources>
+        
         <plugins>
-            <!-- Maven 编译器插件配置 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -406,10 +259,16 @@
                     <source>${maven.compiler.source}</source>
                     <target>${maven.compiler.target}</target>
                     <encoding>${project.build.sourceEncoding}</encoding>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.apache.logging.log4j</groupId>
+                            <artifactId>log4j-core</artifactId>
+                            <version>${log4j.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
                 </configuration>
             </plugin>
-
-            <!-- JavaFX Maven 插件 -->
+            
             <plugin>
                 <groupId>org.openjfx</groupId>
                 <artifactId>javafx-maven-plugin</artifactId>
@@ -429,7 +288,6 @@
                         <option>javafx.graphics/com.sun.javafx.stage=org.controlsfx.controls</option>
                         <option>--add-exports</option>
                         <option>javafx.base/com.sun.javafx.event=org.controlsfx.controls</option>
-                        
                         <option>--add-opens</option>
                         <option>java.base/java.lang=ALL-UNNAMED</option>
                         <option>--add-opens</option>

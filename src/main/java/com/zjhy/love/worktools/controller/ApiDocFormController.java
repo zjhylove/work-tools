@@ -5,6 +5,8 @@ import com.dlsc.formsfx.model.structure.Form;
 import com.dlsc.formsfx.model.structure.Group;
 import com.dlsc.formsfx.model.validators.CustomValidator;
 import com.dlsc.formsfx.view.renderer.FormRenderer;
+import com.zjhy.love.worktools.common.util.HistoryUtil;
+import com.zjhy.love.worktools.common.util.MockUtil;
 import com.zjhy.love.worktools.common.util.NotificationUtil;
 import com.zjhy.love.worktools.model.ApiDocConfig;
 import com.zjhy.love.worktools.service.ApiDocService;
@@ -14,6 +16,8 @@ import javafx.fxml.FXML;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Window;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.*;
@@ -24,6 +28,8 @@ import java.util.*;
  * @author zhengjun
  */
 public class ApiDocFormController {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ApiDocFormController.class);
 
     @FXML
     private VBox formContainer;
@@ -102,6 +108,33 @@ public class ApiDocFormController {
                 )
         );
 
+        // 获取历史记录
+        ApiDocConfig history = HistoryUtil.getHistory("apiDoc", ApiDocConfig.class);
+        if (history != null) {
+            // 回显历史数据到表单
+            packagePathProperty.set(history.getSourceJarPath());
+            serviceNameProperty.set(history.getServiceName());
+            jarPathProperty.set(String.join(",",history.getDependencyJars()));
+            // 将Map<String, List<String>>转换为字符串格式
+            StringBuilder classPathStr = new StringBuilder();
+            Map<String, List<String>> classPathMapping = history.getClassPathMapping();
+            if (classPathMapping != null) {
+                boolean isFirst = true;
+                for (Map.Entry<String, List<String>> entry : classPathMapping.entrySet()) {
+                    if (!isFirst) {
+                        classPathStr.append("@");
+                    }
+                    classPathStr.append(entry.getKey());
+                    if (!entry.getValue().isEmpty()) {
+                        classPathStr.append("#")
+                            .append(String.join(",", entry.getValue()));
+                    }
+                    isFirst = false;
+                }
+                classNameProperty.set(classPathStr.toString());
+            }
+        }
+
         // 渲染表单
         FormRenderer formRenderer = new FormRenderer(form);
         formContainer.getChildren().add(formRenderer);
@@ -130,12 +163,15 @@ public class ApiDocFormController {
                 // 显示处理中提示
                 NotificationUtil.showPersist("正在生成文档，请稍候...");
 
-                // 构建配置
+                // 获取表单数据
                 ApiDocConfig config = new ApiDocConfig();
                 config.setSourceJarPath(packagePathProperty.get());
                 config.setServiceName(serviceNameProperty.get());
                 config.setDependencyJars(Arrays.asList(jarPathProperty.get().split(",")));
                 config.setClassPathMapping(parseClassPathMapping(classNameProperty.get()));
+
+                // 保存历史记录
+                HistoryUtil.saveHistory("apiDoc", config);
 
                 // 调用服务生成文档
                 ApiDocService service = new ApiDocService();
@@ -147,7 +183,7 @@ public class ApiDocFormController {
                 NotificationUtil.showSuccess("文档生成成功！");
 
             } catch (Exception e) {
-                e.printStackTrace();
+                LOGGER.error("生成文档失败", e);
                 // 隐藏处理中提示
                 NotificationUtil.hidePersist();
                 // 显示错误提示

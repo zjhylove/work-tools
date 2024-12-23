@@ -143,8 +143,8 @@ public class MockUtil {
             }
             return instance;
         } catch (Exception e) {
-            LOGGER.warn("无法正常生成类型[" + returnType.getTypeName() + "]的模拟对象", e);
-            return new Object();
+            LOGGER.error("生成模拟数据失败", e);
+            return null;
         }
     }
 }

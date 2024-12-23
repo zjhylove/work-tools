@@ -14,15 +14,15 @@ import cn.hutool.core.text.StrPool;
 import cn.hutool.core.util.*;
 import cn.hutool.http.HtmlUtil;
 import cn.hutool.json.JSONUtil;
-import com.zjhy.love.worktools.common.util.OfficeDocUtil;
 import com.zjhy.love.worktools.common.util.MockUtil;
+import com.zjhy.love.worktools.common.util.OfficeDocUtil;
 import com.zjhy.love.worktools.model.ApiDocConfig;
 import com.zjhy.love.worktools.model.ApiField;
 import com.zjhy.love.worktools.model.ApiInfo;
 import com.zjhy.love.worktools.model.NodeInfo;
 import org.apache.commons.collections4.SetUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.lang.reflect.*;
@@ -33,15 +33,15 @@ import java.util.stream.Stream;
 @SuppressWarnings({"unchecked", "rawtypes"})
 public class ApiDocService {
 
-    private static final Logger LOGGER = LogManager.getLogger(ApiDocService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ApiDocService.class);
 
     public void generateDoc(ApiDocConfig config){
         List<ApiInfo> apiInfoList = new ArrayList<>();
         try {
             apiInfoList = getApiInfoList(config);
         } catch (Exception e) {
-            LOGGER.error(()-> "解析接口文档列表失败",e);
-            ExceptionUtil.wrapAndThrow(e);
+            LOGGER.error("解析接口文档列表失败",e);
+            ExceptionUtil.wrapAndThrow(ExceptionUtil.getRootCause(e));
         }
         //导出接口文档
         String exportDir = FileUtil.getParent(config.getSourceJarPath(), 1);
@@ -54,8 +54,8 @@ public class ApiDocService {
                 OfficeDocUtil.openOfficeXml2Docx(renderXmlFile, docxFile);
                 OfficeDocUtil.formatDocxJson(docxFile, filePrefix + "-" + LocalDateTimeUtil.formatNormal(LocalDate.now()) + ".docx");
             } catch (Exception e) {
-                LOGGER.error(() -> "接口【" + t.getApiName() + "】导出文档失败", e);
-                ExceptionUtil.wrapAndThrow(e);
+                LOGGER.error("接口【" + t.getApiName() + "】导出文档失败", e);
+                ExceptionUtil.wrapAndThrow(ExceptionUtil.getRootCause(e));
             } finally {
                 FileUtil.del(renderXmlFile);
                 FileUtil.del(docxFile);
@@ -231,7 +231,7 @@ public class ApiDocService {
         try {
             fields = ReflectUtil.getFields(clazz);
         } catch (Exception e) {
-            LOGGER.error(() -> "反射获取类【" + clazz.getName() + "】属性字段出错", e);
+            LOGGER.error("反射获取类【" + clazz.getName() + "】属性字段出错", e);
             return;
         }
         Arrays.stream(fields).forEach(field -> {

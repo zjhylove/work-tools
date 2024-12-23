@@ -1,32 +1,40 @@
 package com.zjhy.love.worktools.common.util;
 
-import cn.hutool.core.bean.BeanUtil;
-import cn.hutool.core.io.FileUtil;
-import cn.hutool.json.JSONUtil;
-import com.spire.doc.Document;
-import com.spire.doc.FileFormat;
-import freemarker.cache.ClassTemplateLoader;
-import freemarker.cache.TemplateLoader;
-import freemarker.cache.URLTemplateLoader;
-import freemarker.template.Configuration;
-import freemarker.template.Template;
-import freemarker.template.TemplateException;
-import freemarker.template.TemplateExceptionHandler;
-import org.apache.poi.xwpf.usermodel.XWPFDocument;
-import org.apache.poi.xwpf.usermodel.XWPFParagraph;
-import org.apache.poi.xwpf.usermodel.XWPFRun;
-
-import java.io.*;
+import java.io.BufferedWriter;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import org.apache.poi.xwpf.usermodel.XWPFDocument;
+import org.apache.poi.xwpf.usermodel.XWPFParagraph;
+import org.apache.poi.xwpf.usermodel.XWPFRun;
+
+import com.spire.doc.Document;
+import com.spire.doc.FileFormat;
+
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.io.FileUtil;
+import cn.hutool.json.JSONUtil;
+import freemarker.cache.TemplateLoader;
+import freemarker.cache.URLTemplateLoader;
+import freemarker.template.Configuration;
+import freemarker.template.Template;
+import freemarker.template.TemplateException;
+import freemarker.template.TemplateExceptionHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * @author zhengjun
  */
 public abstract class OfficeDocUtil {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(OfficeDocUtil.class);
 
     private OfficeDocUtil() {
     }
@@ -36,7 +44,7 @@ public abstract class OfficeDocUtil {
      *
      * @param ftlTemplateName 模板名称
      * @param renderData      渲染数据
-     * @param renderXmlFile   ���染输出xml 文件
+     * @param renderXmlFile   渲染输出xml 文件
      * @throws IOException 异常
      * @throws TemplateException 异常
      */

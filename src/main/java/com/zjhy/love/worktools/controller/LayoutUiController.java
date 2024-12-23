@@ -1,33 +1,37 @@
 package com.zjhy.love.worktools.controller;
 
-import javafx.fxml.FXML;
-import javafx.geometry.Insets;
-import javafx.scene.control.ListCell;
-import javafx.scene.control.ListView;
-import javafx.scene.layout.StackPane;
+import com.zjhy.love.worktools.common.util.NotificationUtil;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.geometry.Insets;
+import javafx.scene.Node;
+import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import org.kordamp.bootstrapfx.BootstrapFX;
 import org.kordamp.bootstrapfx.scene.layout.Panel;
-import com.zjhy.love.worktools.controller.ApiDocFormController;
-import com.zjhy.love.worktools.controller.DbDocFormController;
-import com.zjhy.love.worktools.controller.IpForwardController;
-import com.zjhy.love.worktools.controller.AuthController;
-import com.zjhy.love.worktools.controller.ObjectStorageController;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
-import javafx.application.Platform;
-import javafx.scene.Node;
 
 /**
  * @author zhengjun
  */
 public class LayoutUiController {
+    
+    private static final Logger LOGGER = LoggerFactory.getLogger(LayoutUiController.class);
     
     @FXML
     private ListView<MenuItem> menuListView;
@@ -35,8 +39,11 @@ public class LayoutUiController {
     @FXML
     private StackPane contentArea;
     
+    private Stage logStage;
+    
     @FXML
     public void initialize() {
+        LOGGER.info("初始化菜单信息");
         // 初始化菜单列表
         ObservableList<MenuItem> menuItems = FXCollections.observableArrayList(
             new MenuItem("API文档", "fas-book", "API接口文档管理与查看工具"),
@@ -70,33 +77,25 @@ public class LayoutUiController {
         panel.setHeading(title);
         
         try {
-            Node content = null;
-            switch (selectedItem.getTitle()) {
-                case "API文档":
+            Node content = switch (selectedItem.getTitle()) {
+                case "API文档" -> {
                     FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/api-doc-form.fxml"));
-                    content = loader.load();
-                    break;
-                case "DB文档":
-                    content = new DbDocFormController();
-                    break;
-                case "IP转发":
-                    content = new IpForwardController();
-                    break;
-                case "身份验证":
-                    content = new AuthController();
-                    break;
-                case "对象存储":
-                    content = new ObjectStorageController();
-                    break;
-            }
-            
+                    yield loader.load();
+                }
+                case "DB文档" -> new DbDocFormController();
+                case "IP转发" -> new IpForwardController();
+                case "身份验证" -> new AuthController();
+                case "对象存储" -> new ObjectStorageController();
+                default -> null;
+            };
+
             if (content != null) {
                 panel.setBody(content);
                 contentArea.getChildren().setAll(panel);
             }
             
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.error("加载菜单出错",e);
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("错误");
             alert.setHeaderText(null);
@@ -175,5 +174,32 @@ public class LayoutUiController {
     @FXML
     private void handleSettings() {
         // 处理设置操作
+    }
+    
+    @FXML
+    private void handleShowLogs() {
+        if (logStage == null) {
+            try {
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/log-view.fxml"));
+                Scene scene = new Scene(loader.load(), 800, 600);
+                scene.getStylesheets().add(BootstrapFX.bootstrapFXStylesheet());
+                
+                logStage = new Stage();
+                logStage.setTitle("日志查看");
+                logStage.setScene(scene);
+                logStage.initModality(Modality.NONE);
+                logStage.initOwner(contentArea.getScene().getWindow());
+                
+                // 当日志窗口关闭时，重置logStage
+                logStage.setOnHidden(event -> logStage = null);
+            } catch (IOException e) {
+                LOGGER.error("打开日志窗口失败", e);
+                NotificationUtil.showError("错误", "打开日志窗口失败: " + e.getMessage());
+                return;
+            }
+        }
+        
+        logStage.show();
+        logStage.toFront();
     }
 }

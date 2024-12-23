@@ -17,7 +17,7 @@
     
     <!-- 按钮区域 -->
     <HBox spacing="10" alignment="CENTER_RIGHT">
-        <Button text="选择JAR" onAction="#handleSelectPackage" 
+        <Button text="选择JAR包" onAction="#handleSelectPackage"
                 styleClass="btn,btn-primary"/>
         <Button text="重置" onAction="#handleReset" 
                 styleClass="btn,btn-warning"/>

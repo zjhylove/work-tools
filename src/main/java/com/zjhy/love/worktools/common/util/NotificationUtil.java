@@ -8,6 +8,8 @@ import javafx.stage.Popup;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import org.controlsfx.control.Notifications;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 全局通知工具类
@@ -17,6 +19,8 @@ public class NotificationUtil {
     
     private static Stage primaryStage;
     private static Popup persistentPopup;
+    
+    private static final Logger LOGGER = LoggerFactory.getLogger(NotificationUtil.class);
     
     // 定义通知框样式常量
     private static final String NOTIFICATION_STYLE = """
