@@ -3,6 +3,8 @@ package com.zjhy.love.worktools.service;
 import cn.hutool.core.annotation.AnnotationUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.convert.Convert;
+import cn.hutool.core.date.LocalDateTimeUtil;
+import cn.hutool.core.exceptions.ExceptionUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.lang.JarClassLoader;
 import cn.hutool.core.lang.reflect.ActualTypeMapperPool;
@@ -12,6 +14,7 @@ import cn.hutool.core.text.StrPool;
 import cn.hutool.core.util.*;
 import cn.hutool.http.HtmlUtil;
 import cn.hutool.json.JSONUtil;
+import com.zjhy.love.worktools.common.doc.OfficeDocUtil;
 import com.zjhy.love.worktools.common.util.MockUtil;
 import com.zjhy.love.worktools.model.ApiDocConfig;
 import com.zjhy.love.worktools.model.ApiField;
@@ -23,6 +26,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.lang.reflect.*;
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -31,7 +35,35 @@ public class ApiDocService {
 
     private static final Logger LOGGER = LogManager.getLogger(ApiDocService.class);
 
-    public List<ApiInfo> generateApiDoc(ApiDocConfig config) throws Exception {
+    public void generateDoc(ApiDocConfig config){
+        List<ApiInfo> apiInfoList = new ArrayList<>();
+        try {
+            apiInfoList = getApiInfoList(config);
+        } catch (Exception e) {
+            LOGGER.error(()-> "解析接口文档列表失败",e);
+            ExceptionUtil.wrapAndThrow(e);
+        }
+        //导出接口文档
+        String exportDir = FileUtil.getParent(config.getSourceJarPath(), 1);
+        apiInfoList.forEach(t -> {
+            String filePrefix = exportDir + File.separator + t.getApiName();
+            String renderXmlFile = filePrefix + ".xml";
+            String docxFile = filePrefix + ".docx";
+            try {
+                OfficeDocUtil.openOfficeXmlRender("api-doc-template.ftl", t, renderXmlFile);
+                OfficeDocUtil.openOfficeXml2Docx(renderXmlFile, docxFile);
+                OfficeDocUtil.formatDocxJson(docxFile, filePrefix + "-" + LocalDateTimeUtil.formatNormal(LocalDate.now()) + ".docx");
+            } catch (Exception e) {
+                LOGGER.error(() -> "接口【" + t.getApiName() + "】导出文档失败", e);
+                ExceptionUtil.wrapAndThrow(e);
+            } finally {
+                FileUtil.del(renderXmlFile);
+                FileUtil.del(docxFile);
+            }
+        });
+    }
+
+    private List<ApiInfo> getApiInfoList(ApiDocConfig config) throws Exception {
         //解压jar包
         File unzip = ZipUtil.unzip(config.getSourceJarPath());
         String rootDir = unzip.getAbsolutePath();

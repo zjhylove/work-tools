@@ -20,8 +20,10 @@ public class ToolsApplication extends Application {
     public void start(Stage stage) throws IOException {
         FXMLLoader fxmlLoader = new FXMLLoader(ToolsApplication.class.getResource("/view/layout-view.fxml"));
         Scene scene = new Scene(fxmlLoader.load(), 960, 600);
-        scene.getStylesheets().addAll(BootstrapFX.bootstrapFXStylesheet(),
-                Objects.requireNonNull(getClass().getResource("/css/application.css")).toExternalForm());
+        scene.getStylesheets().addAll(
+                BootstrapFX.bootstrapFXStylesheet(),
+                Objects.requireNonNull(getClass().getResource("/css/application.css")).toExternalForm()
+        );
 
         // 设置标题样式
         stage.setTitle("✨ Work Tools ⚡");

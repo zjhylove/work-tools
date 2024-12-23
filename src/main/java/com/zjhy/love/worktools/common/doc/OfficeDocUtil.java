@@ -36,7 +36,7 @@ public abstract class OfficeDocUtil {
      *
      * @param ftlTemplateName 模板名称
      * @param renderData      渲染数据
-     * @param renderXmlFile   渲染输出xml 文件
+     * @param renderXmlFile   ���染输出xml 文件
      * @throws IOException 异常
      * @throws TemplateException 异常
      */
@@ -46,12 +46,8 @@ public abstract class OfficeDocUtil {
         configuration.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
         configuration.setLocale(Locale.CHINESE);
 
-        String templateDir = ftlTemplateName.substring(0, ftlTemplateName.lastIndexOf("-"));
-        ClassTemplateLoader classTemplateLoader = new ClassTemplateLoader(OfficeDocUtil.class, "/" + templateDir);
-        configuration.setTemplateLoader(classTemplateLoader);
-
+        configuration.setClassForTemplateLoading(OfficeDocUtil.class, "/templates");
         Template template = configuration.getTemplate(ftlTemplateName);
-
         BufferedWriter writer = FileUtil.getWriter(renderXmlFile, StandardCharsets.UTF_8, false);
         Map<String, Object> map = BeanUtil.beanToMap(renderData);
         template.process(map, writer);

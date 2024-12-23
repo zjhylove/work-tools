@@ -7,7 +7,10 @@ module com.zjhy.love.worktools {
     requires com.dlsc.formsfx;
     requires net.synedra.validatorfx;
     requires org.kordamp.bootstrapfx.core;
+    
+    // hutool 依赖
     requires cn.hutool;
+    
     requires org.apache.commons.collections4;
     requires org.apache.logging.log4j;
     requires freemarker;
@@ -22,8 +25,11 @@ module com.zjhy.love.worktools {
     opens com.zjhy.love.worktools to javafx.fxml;
     opens com.zjhy.love.worktools.controller to javafx.fxml;
     opens com.zjhy.love.worktools.common.util to javafx.fxml;
+    opens com.zjhy.love.worktools.model to com.dlsc.formsfx;
 
     exports com.zjhy.love.worktools;
     exports com.zjhy.love.worktools.controller;
     exports com.zjhy.love.worktools.common.util;
+    exports com.zjhy.love.worktools.model;
+    exports com.zjhy.love.worktools.service;
 }
