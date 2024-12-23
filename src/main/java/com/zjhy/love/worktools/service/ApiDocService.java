@@ -14,7 +14,7 @@ import cn.hutool.core.text.StrPool;
 import cn.hutool.core.util.*;
 import cn.hutool.http.HtmlUtil;
 import cn.hutool.json.JSONUtil;
-import com.zjhy.love.worktools.common.doc.OfficeDocUtil;
+import com.zjhy.love.worktools.common.util.OfficeDocUtil;
 import com.zjhy.love.worktools.common.util.MockUtil;
 import com.zjhy.love.worktools.model.ApiDocConfig;
 import com.zjhy.love.worktools.model.ApiField;

@@ -1,4 +1,4 @@
-package com.zjhy.love.worktools.common.doc;
+package com.zjhy.love.worktools.common.util;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.io.FileUtil;
@@ -6,6 +6,8 @@ import cn.hutool.json.JSONUtil;
 import com.spire.doc.Document;
 import com.spire.doc.FileFormat;
 import freemarker.cache.ClassTemplateLoader;
+import freemarker.cache.TemplateLoader;
+import freemarker.cache.URLTemplateLoader;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
@@ -14,10 +16,8 @@ import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFRun;
 
-import java.io.BufferedWriter;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Locale;
@@ -45,8 +45,13 @@ public abstract class OfficeDocUtil {
         configuration.setDefaultEncoding(StandardCharsets.UTF_8.displayName());
         configuration.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
         configuration.setLocale(Locale.CHINESE);
-
-        configuration.setClassForTemplateLoading(OfficeDocUtil.class, "/templates");
+        TemplateLoader templateLoader = new URLTemplateLoader() {
+            @Override
+            protected URL getURL(String ftlName) {
+                return OfficeDocUtil.class.getResource("/templates/"+ftlName);
+            }
+        };
+        configuration.setTemplateLoader(templateLoader);
         Template template = configuration.getTemplate(ftlTemplateName);
         BufferedWriter writer = FileUtil.getWriter(renderXmlFile, StandardCharsets.UTF_8, false);
         Map<String, Object> map = BeanUtil.beanToMap(renderData);
