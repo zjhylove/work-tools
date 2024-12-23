@@ -7,8 +7,7 @@
         </Console>
         
         <!-- 自定义日志视图Appender -->
-        <LogView name="LogView"
-                 class="com.zjhy.love.worktools.common.log.LogViewAppender">
+        <LogView name="LogView">
             <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
         </LogView>
     </Appenders>
