@@ -8,7 +8,7 @@
 <BorderPane xmlns:fx="http://javafx.com/fxml"
             fx:controller="com.zjhy.love.worktools.controller.LayoutUiController"
             styleClass="root"
-            stylesheets="@../css/bootstrapfx.css">
+            stylesheets="@../css/layout.css">
     
     <!-- 顶部工具栏 -->
     <top>

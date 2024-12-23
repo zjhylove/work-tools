@@ -3,9 +3,7 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import org.kordamp.bootstrapfx.scene.layout.Panel?>
-
-<VBox xmlns:fx="http://javafx.com/fxml" 
+<VBox xmlns:fx="http://javafx.com/fxml"
       fx:controller="com.zjhy.love.worktools.controller.ApiDocFormController"
       styleClass="form" spacing="20">
     
