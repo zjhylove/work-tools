@@ -1,7 +1,9 @@
 package com.zjhy.love.worktools.controller;
 
 import com.zjhy.love.worktools.model.ApiDocConfig;
+import com.zjhy.love.worktools.model.ApiInfo;
 import com.zjhy.love.worktools.service.ApiDocService;
+import com.zjhy.love.worktools.common.util.NotificationUtil;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
@@ -12,6 +14,9 @@ import javafx.stage.Window;
 import java.io.File;
 import java.util.*;
 
+/**
+ * @author zhengjun
+ */
 public class ApiDocFormController {
 
     @FXML
@@ -58,41 +63,46 @@ public class ApiDocFormController {
 
     @FXML
     private void handleSubmit() {
-        if (validateAll()) {
-            try {
-                // 构建配置
-                ApiDocConfig config = new ApiDocConfig();
-                config.setSourceJarPath(packagePathField.getText().trim());
-                config.setServiceName(serviceNameField.getText().trim());
-                config.setDependencyJars(Arrays.asList(
-                        jarPathField.getText().trim().split(",")
-                ));
+        try {
+            if (validateAll()) {
+                try {
+                    // 构建配置
+                    ApiDocConfig config = new ApiDocConfig();
+                    config.setSourceJarPath(packagePathField.getText().trim());
+                    config.setServiceName(serviceNameField.getText().trim());
+                    config.setDependencyJars(Arrays.asList(
+                            jarPathField.getText().trim().split(",")
+                    ));
 
-                // 解析类名和路径映射
-                Map<String, List<String>> classPathMapping = parseClassPathMapping(
-                        classNameField.getText().trim()
-                );
-                config.setClassPathMapping(classPathMapping);
+                    // 解析类名和路径映射
+                    Map<String, List<String>> classPathMapping = parseClassPathMapping(
+                            classNameField.getText().trim()
+                    );
+                    config.setClassPathMapping(classPathMapping);
 
-                // 生成文档
-                ApiDocService docService = new ApiDocService();
-                docService.generateApiDoc(config);
+                    // 显示处理中提示
+                    NotificationUtil.showPersist("正在生成文档，请稍候...");
+                    
+                    // 生成文档
+                    ApiDocService docService = new ApiDocService();
+                    docService.generateApiDoc(config);
 
-                // 显示成功提示
-                Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                alert.setTitle("成功");
-                alert.setHeaderText(null);
-                alert.setContentText("文档生成成功！");
-                alert.showAndWait();
+                    // 隐藏处理中提示
+                    NotificationUtil.hidePersist();
+                    // 显示成功提示
+                    NotificationUtil.showSuccess("文档生成成功！");
 
-            } catch (Exception e) {
-                // 显示错误提示
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("错误");
-                alert.setHeaderText(null);
-                alert.setContentText("生成文档失败：" + e.getMessage());
-                alert.showAndWait();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    // 隐藏处理中提示
+                    NotificationUtil.hidePersist();
+                    // 显示错误提示
+                    NotificationUtil.showError("生成文档失败", e.getMessage());
+                }
             }
+        } catch (Exception e) {
+            e.printStackTrace();
+            NotificationUtil.showError("验证失败", e.getMessage());
         }
     }
 

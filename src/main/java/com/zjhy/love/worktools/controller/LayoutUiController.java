@@ -21,6 +21,8 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import java.io.IOException;
+import javafx.application.Platform;
+import javafx.scene.Node;
 
 /**
  * @author zhengjun
@@ -53,6 +55,11 @@ public class LayoutUiController {
                 handleMenuSelection(newValue);
             }
         });
+
+        // 默认选择第一个菜单项
+        Platform.runLater(() -> {
+            menuListView.getSelectionModel().select(0);
+        });
     }
     
     private void handleMenuSelection(MenuItem selectedItem) {
@@ -62,41 +69,40 @@ public class LayoutUiController {
         title.getStyleClass().add("h3");
         panel.setHeading(title);
         
-        switch (selectedItem.getTitle()) {
-            case "API文档":
-                try {
+        try {
+            Node content = null;
+            switch (selectedItem.getTitle()) {
+                case "API文档":
                     FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/api-doc-form.fxml"));
-                    VBox apiDocForm = loader.load();
-                    panel.setBody(apiDocForm);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    // 显示错误提示
-                    Alert alert = new Alert(Alert.AlertType.ERROR);
-                    alert.setTitle("错误");
-                    alert.setHeaderText(null);
-                    alert.setContentText("加载API文档表单失败：" + e.getMessage());
-                    alert.showAndWait();
-                }
-                break;
-            case "DB文档":
-                DbDocFormController dbDocForm = new DbDocFormController();
-                panel.setBody(dbDocForm);
-                break;
-            case "IP转发":
-                IpForwardController ipForwardForm = new IpForwardController();
-                panel.setBody(ipForwardForm);
-                break;
-            case "身份验证":
-                AuthController authForm = new AuthController();
-                panel.setBody(authForm);
-                break;
-            case "对象存储":
-                ObjectStorageController storageForm = new ObjectStorageController();
-                panel.setBody(storageForm);
-                break;
+                    content = loader.load();
+                    break;
+                case "DB文档":
+                    content = new DbDocFormController();
+                    break;
+                case "IP转发":
+                    content = new IpForwardController();
+                    break;
+                case "身份验证":
+                    content = new AuthController();
+                    break;
+                case "对象存储":
+                    content = new ObjectStorageController();
+                    break;
+            }
+            
+            if (content != null) {
+                panel.setBody(content);
+                contentArea.getChildren().setAll(panel);
+            }
+            
+        } catch (IOException e) {
+            e.printStackTrace();
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("错误");
+            alert.setHeaderText(null);
+            alert.setContentText("加载表单失败：" + e.getMessage());
+            alert.showAndWait();
         }
-        
-        contentArea.getChildren().setAll(panel);
     }
 
     /**

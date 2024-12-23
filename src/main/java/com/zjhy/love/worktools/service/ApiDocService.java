@@ -24,7 +24,6 @@ import org.apache.logging.log4j.Logger;
 import java.io.File;
 import java.lang.reflect.*;
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @SuppressWarnings({"unchecked", "rawtypes"})
@@ -147,7 +146,7 @@ public class ApiDocService {
                 apiInfo.setRespExample(toExample(reqNodeList, returnType));
                 return apiInfo;
             });
-        }).collect(Collectors.toList());
+        }).toList();
     }
 
     private String toExample(Set<NodeInfo> nodeList, Type topClass) {

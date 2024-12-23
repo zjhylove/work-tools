@@ -2,6 +2,7 @@ module com.zjhy.love.worktools {
     requires javafx.controls;
     requires javafx.fxml;
     requires javafx.graphics;
+    requires javafx.base;
 
     requires com.dlsc.formsfx;
     requires net.synedra.validatorfx;
@@ -12,10 +13,17 @@ module com.zjhy.love.worktools {
     requires freemarker;
     requires spire.doc;
     requires org.apache.poi.ooxml;
-    requires slf4j.api;
+    requires org.slf4j;
+    requires org.apache.commons.compress;
+    requires java.sql;
+    requires org.controlsfx.controls;
 
+    // 导出和打开我们自己的包
     opens com.zjhy.love.worktools to javafx.fxml;
     opens com.zjhy.love.worktools.controller to javafx.fxml;
+    opens com.zjhy.love.worktools.common.util to javafx.fxml;
+
     exports com.zjhy.love.worktools;
     exports com.zjhy.love.worktools.controller;
+    exports com.zjhy.love.worktools.common.util;
 }
