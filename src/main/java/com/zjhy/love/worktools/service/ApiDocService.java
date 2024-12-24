@@ -16,10 +16,7 @@ import cn.hutool.http.HtmlUtil;
 import cn.hutool.json.JSONUtil;
 import com.zjhy.love.worktools.common.util.MockUtil;
 import com.zjhy.love.worktools.common.util.OfficeDocUtil;
-import com.zjhy.love.worktools.model.ApiDocConfig;
-import com.zjhy.love.worktools.model.ApiField;
-import com.zjhy.love.worktools.model.ApiInfo;
-import com.zjhy.love.worktools.model.NodeInfo;
+import com.zjhy.love.worktools.model.*;
 import org.apache.commons.collections4.SetUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +30,9 @@ import java.util.stream.Stream;
 @SuppressWarnings({"unchecked", "rawtypes"})
 public class ApiDocService {
 
+    /**
+     * 日志记录器
+     */
     private static final Logger LOGGER = LoggerFactory.getLogger(ApiDocService.class);
 
     public void generateDoc(ApiDocConfig config){
@@ -40,23 +40,28 @@ public class ApiDocService {
         try {
             apiInfoList = getApiInfoList(config);
         } catch (Exception e) {
-            LOGGER.error("解析接口文档列表失败",e);
+            LOGGER.error("解析接口文档列表失败", e);
             ExceptionUtil.wrapAndThrow(ExceptionUtil.getRootCause(e));
         }
-        //导出接口文档
+
+        // 导出接口文档
         String exportDir = FileUtil.getParent(config.getSourceJarPath(), 1);
         apiInfoList.forEach(t -> {
             String filePrefix = exportDir + File.separator + t.getApiName();
             String renderXmlFile = filePrefix + ".xml";
             String docxFile = filePrefix + ".docx";
             try {
+                // 生成XML文件
                 OfficeDocUtil.openOfficeXmlRender("api-doc-template.ftl", t, renderXmlFile);
+                // 转换为DOCX
                 OfficeDocUtil.openOfficeXml2Docx(renderXmlFile, docxFile);
+                // 格式化DOCX
                 OfficeDocUtil.formatDocxJson(docxFile, filePrefix + "-" + LocalDateTimeUtil.formatNormal(LocalDate.now()) + ".docx");
             } catch (Exception e) {
-                LOGGER.error("接口【" + t.getApiName() + "】导出文档失败", e);
+                LOGGER.error("接口【{}】导出文档失败", t.getApiName(), e);
                 ExceptionUtil.wrapAndThrow(ExceptionUtil.getRootCause(e));
             } finally {
+                // 清理临时文件
                 FileUtil.del(renderXmlFile);
                 FileUtil.del(docxFile);
             }
@@ -64,32 +69,32 @@ public class ApiDocService {
     }
 
     private List<ApiInfo> getApiInfoList(ApiDocConfig config) throws Exception {
-        //解压jar包
+        // 解压jar包
         File unzip = ZipUtil.unzip(config.getSourceJarPath());
         String rootDir = unzip.getAbsolutePath();
 
-        //加载jar包中classes 文件
+        // 加载jar包中classes文件
         JarClassLoader jarClassLoader = ClassLoaderUtil.getJarClassLoader(new File(rootDir + "/BOOT-INF/classes"));
 
-        //加载解析当前jar包接口所需的依赖
+        // 加载解析当前jar包接口所需的依赖
         List<File> requiredJarList = FileUtil.loopFiles(rootDir + "/BOOT-INF/lib",
                 pathname -> config.getDependencyJars().stream().anyMatch(t -> pathname.getName().startsWith(t)));
         requiredJarList.forEach(jarClassLoader::addJar);
 
-        //加载需要解析的注解
+        // 加载需要解析的注解类
         Class requestMappingClazz = jarClassLoader.loadClass("org.springframework.web.bind.annotation.RequestMapping");
         Class postMappingClazz = jarClassLoader.loadClass("org.springframework.web.bind.annotation.PostMapping");
-
         Class apiModelPropertyClazz = jarClassLoader.loadClass("io.swagger.annotations.ApiModelProperty");
         Class apiOperationClazz = jarClassLoader.loadClass("io.swagger.annotations.ApiOperation");
 
-        //循环解析
+        // 循环解析类和方法
         Map<String, List<String>> classPathMapping = config.getClassPathMapping();
         return classPathMapping.entrySet().stream().flatMap(c -> {
             Class<?> clazz;
             try {
                 clazz = jarClassLoader.loadClass(c.getKey());
             } catch (ClassNotFoundException e) {
+                LOGGER.error("加载类失败: {}", c.getKey(), e);
                 return Stream.empty();
             }
             Method[] publicMethods = ReflectUtil.getPublicMethods(clazz);
