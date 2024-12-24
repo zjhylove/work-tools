@@ -68,6 +68,26 @@ public class NotificationUtil {
     }
 
     /**
+     * 显示成功通知
+     */
+    public static void showSuccess(String title,String message) {
+        Platform.runLater(() -> {
+            Notifications notifications = Notifications.create()
+                    .title(title)
+                    .text(message)
+                    .position(Pos.TOP_CENTER)
+                    .hideAfter(Duration.seconds(3))
+                    .darkStyle();  // 使用深色样式
+
+            if (primaryStage != null) {
+                notifications.owner(primaryStage);
+            }
+
+            notifications.showInformation();
+        });
+    }
+
+    /**
      * 显示错误通知
      */
     public static void showError(String title, String message) {

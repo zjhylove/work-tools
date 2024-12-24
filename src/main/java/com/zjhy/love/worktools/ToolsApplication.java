@@ -1,6 +1,8 @@
 package com.zjhy.love.worktools;
 
 import com.zjhy.love.worktools.common.util.NotificationUtil;
+import com.zjhy.love.worktools.controller.IpForwardController;
+import com.zjhy.love.worktools.controller.LayoutUiController;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -20,6 +22,8 @@ public class ToolsApplication extends Application {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ToolsApplication.class);
 
+    private LayoutUiController layoutController;
+
     @Override
     public void start(Stage stage) throws IOException {
         try {
@@ -32,6 +36,9 @@ public class ToolsApplication extends Application {
                     BootstrapFX.bootstrapFXStylesheet(),
                     Objects.requireNonNull(getClass().getResource("/css/application.css")).toExternalForm()
             );
+
+            // 获取布局控制器
+            layoutController = fxmlLoader.getController();
 
             // 设置标题样式
             stage.setTitle("✨ Work Tools ⚡");
@@ -47,6 +54,22 @@ public class ToolsApplication extends Application {
             LOGGER.error("应用启动失败", e);
             throw e;
         }
+    }
+
+    @Override
+    public void stop() {
+        try {
+            // 从布局控制器获取IP转发控制器
+            IpForwardController controller = layoutController.getIpForwardController();
+            if (controller != null) {
+                controller.stop();
+                LOGGER.info("IP转发服务已停止");
+            }
+        } catch (Exception e) {
+            LOGGER.error("停止IP转发服务失败", e);
+        }
+        
+        // ... 其他清理工作 ...
     }
 
     public static void main(String[] args) {

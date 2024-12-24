@@ -41,6 +41,8 @@ public class LayoutUiController {
     
     private Stage logStage;
     
+    private IpForwardController ipForwardController;
+    
     @FXML
     public void initialize() {
         LOGGER.info("初始化菜单信息");
@@ -86,7 +88,10 @@ public class LayoutUiController {
                     FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/db-doc-form.fxml"));
                     yield loader.load();
                 }
-                case "IP转发" -> new IpForwardController();
+                case "IP转发" -> {
+                    FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/ip-forward.fxml"));
+                    yield loader.load();
+                }
                 case "身份验证" -> new AuthController();
                 case "对象存储" -> new ObjectStorageController();
                 default -> null;
@@ -204,5 +209,35 @@ public class LayoutUiController {
         
         logStage.show();
         logStage.toFront();
+    }
+
+    /**
+     * 获取视图加载器
+     */
+    private FXMLLoader getViewLoader(String viewName) {
+        try {
+            String fxmlPath = "/view/" + viewName + ".fxml";
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
+            // 预加载FXML以获取控制器
+            loader.load();
+            return loader;
+        } catch (IOException e) {
+            LOGGER.error("加载视图失败: " + viewName, e);
+            NotificationUtil.showError("错误", "加载视图失败: " + e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * 获取IP转发控制器
+     */
+    public IpForwardController getIpForwardController() {
+        if (ipForwardController == null) {
+            FXMLLoader loader = getViewLoader("ip-forward");
+            if (loader != null) {
+                ipForwardController = loader.getController();
+            }
+        }
+        return ipForwardController;
     }
 }

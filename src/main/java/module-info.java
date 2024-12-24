@@ -21,6 +21,15 @@ module com.zjhy.love.worktools {
     requires org.apache.logging.log4j;
     requires java.sql;
     requires java.desktop;
+    requires jsch;
+    requires io.netty.transport;
+    requires io.netty.codec.http;
+    requires io.netty.codec;
+    requires io.netty.handler;
+    requires io.netty.buffer;
+    requires io.netty.common;
+    requires nacos.client;
+    requires com.fasterxml.jackson.databind;
 
     // 导出和打开我们自己的包
     opens com.zjhy.love.worktools to javafx.fxml;
