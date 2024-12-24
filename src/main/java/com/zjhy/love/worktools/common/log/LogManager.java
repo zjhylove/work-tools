@@ -14,7 +14,10 @@ import java.util.stream.Collectors;
 public class LogManager {
     
     private static final ConcurrentLinkedDeque<LogEntry> logQueue = new ConcurrentLinkedDeque<>();
-    private static final int MAX_LOG_SIZE = 1000; // 最大保存1000条日志
+    /**
+     * 最大保存1000条日志
+     */
+    private static final int MAX_LOG_SIZE = 1000;
     
     private LogManager() {}
     

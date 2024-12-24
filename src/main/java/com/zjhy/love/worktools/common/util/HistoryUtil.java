@@ -13,54 +13,60 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 用户操作历史记录工具类
+ *
  * @author zhengjun
  */
 public class HistoryUtil {
-    
+
     private static final Logger LOGGER = LoggerFactory.getLogger(HistoryUtil.class);
-    
+
     private static final String HISTORY_DIR = System.getProperty("user.home") + "/.work-tools";
     private static final String HISTORY_FILE = "history.json";
-    private static final Map<String, Object> historyCache = new ConcurrentHashMap<>();
-    
+    private static final Map<String, Object> HISTORY_CACHE = new ConcurrentHashMap<>();
+
+    private HistoryUtil() {
+    }
+
     static {
         // 确保目录存在
         FileUtil.mkdir(HISTORY_DIR);
         // 加载历史记录
         loadHistory();
     }
-    
+
     /**
      * 保存工具的操作历史
+     *
      * @param toolName 工具名称
-     * @param params 参数内容
+     * @param params   参数内容
      */
     public static void saveHistory(String toolName, Object params) {
         try {
-            historyCache.put(toolName, params);
-            
+            HISTORY_CACHE.put(toolName, params);
+
             // 写入文件
-            String historyJson = JSONUtil.toJsonStr(historyCache);
+            String historyJson = JSONUtil.toJsonStr(HISTORY_CACHE);
             Path historyPath = Paths.get(HISTORY_DIR, HISTORY_FILE);
             FileUtil.writeUtf8String(historyJson, historyPath.toFile());
         } catch (Exception e) {
             LOGGER.error("保存历史记录失败", e);
-            NotificationUtil.showError("保存历史记录失败",e.getMessage());
+            NotificationUtil.showError("保存历史记录失败", e.getMessage());
         }
     }
-    
+
     /**
      * 获取工具的历史记录
+     *
      * @param toolName 工具名称
      * @return 历史参数
      */
     @SuppressWarnings("unchecked")
     public static <T> T getHistory(String toolName, Class<T> type) {
-        Object history = historyCache.get(toolName);
+        Object history = HISTORY_CACHE.get(toolName);
         if (history == null) {
             return null;
         }
-        
+
         try {
             // 将Map转换为指定类型
             if (history instanceof Map) {
@@ -68,20 +74,21 @@ public class HistoryUtil {
             }
             return (T) history;
         } catch (Exception e) {
-            NotificationUtil.showError("读取历史记录失败 " , e.getMessage());
+            NotificationUtil.showError("读取历史记录失败 ", e.getMessage());
             return null;
         }
     }
-    
+
     /**
      * 清除指定工具的历史记录
+     *
      * @param toolName 工具名称
      */
     public static void clearHistory(String toolName) {
-        historyCache.remove(toolName);
+        HISTORY_CACHE.remove(toolName);
         saveHistory(toolName, null);
     }
-    
+
     /**
      * 加载历史记录
      */
@@ -91,12 +98,12 @@ public class HistoryUtil {
             if (!FileUtil.exist(historyPath.toFile())) {
                 return;
             }
-            
+
             String historyJson = FileUtil.readUtf8String(historyPath.toFile());
             Map<String, Object> history = JSONUtil.toBean(historyJson, HashMap.class);
-            historyCache.putAll(history);
+            HISTORY_CACHE.putAll(history);
         } catch (Exception e) {
-            NotificationUtil.showError("加载历史记录失败: " , e.getMessage());
+            NotificationUtil.showError("加载历史记录失败: ", e.getMessage());
         }
     }
 } 

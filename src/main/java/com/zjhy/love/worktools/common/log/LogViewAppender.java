@@ -11,6 +11,9 @@ import org.apache.logging.log4j.core.config.plugins.PluginElement;
 import org.apache.logging.log4j.core.config.plugins.PluginFactory;
 import org.apache.logging.log4j.core.layout.PatternLayout;
 
+/**
+ * @author zhengjun
+ */
 @Plugin(
     name = "LogView",
     category = Core.CATEGORY_NAME,
