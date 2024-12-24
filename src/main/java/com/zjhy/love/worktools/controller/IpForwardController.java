@@ -1,18 +1,21 @@
 package com.zjhy.love.worktools.controller;
 
+import com.alibaba.nacos.api.naming.pojo.Instance;
 import com.dlsc.formsfx.model.structure.Field;
 import com.dlsc.formsfx.model.structure.Form;
 import com.dlsc.formsfx.model.structure.Group;
 import com.dlsc.formsfx.model.validators.CustomValidator;
 import com.dlsc.formsfx.view.renderer.FormRenderer;
+import com.zjhy.love.worktools.common.util.FileUtil;
 import com.zjhy.love.worktools.common.util.HistoryUtil;
 import com.zjhy.love.worktools.common.util.NotificationUtil;
+import com.zjhy.love.worktools.common.util.RetryUtil;
 import com.zjhy.love.worktools.model.ForwardEntry;
 import com.zjhy.love.worktools.model.IpForwardConfig;
 import com.zjhy.love.worktools.model.NacosConfig;
-import com.zjhy.love.worktools.service.SshService;
-import com.zjhy.love.worktools.service.NacosService;
 import com.zjhy.love.worktools.service.HttpProxyService;
+import com.zjhy.love.worktools.service.NacosService;
+import com.zjhy.love.worktools.service.SshService;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
@@ -26,111 +29,292 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.alibaba.nacos.api.naming.pojo.Instance;
-import com.zjhy.love.worktools.common.util.RetryUtil;
-import com.zjhy.love.worktools.common.util.FileUtil;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.Callable;
-import java.util.function.Predicate;
 
 /**
  * IP转发控制器
+ * 负责处理SSH端口转发和Nacos服务转发的UI交互逻辑
  */
 public class IpForwardController {
     private static final Logger LOGGER = LoggerFactory.getLogger(IpForwardController.class);
 
+    /**
+     * SSH配置表单容器
+     * 用于放置SSH连接配置的表单
+     */
     @FXML
     private VBox sshFormContainer;
     
+    /**
+     * 转发规则表格
+     * 显示和编辑端口转发规则
+     */
     @FXML
     private TableView<ForwardEntry> forwardTable;
 
+    /**
+     * SSH配置表单
+     * 包含SSH连接的所有配置字段
+     */
     private Form sshForm;
+
+    /**
+     * SSH服务器地址属性
+     * 用于绑定表单输入
+     */
     private final StringProperty hostProperty = new SimpleStringProperty("");
+
+    /**
+     * SSH服务器端口属性
+     * 默认值为22
+     */
     private final StringProperty portProperty = new SimpleStringProperty("22");
+
+    /**
+     * SSH用户名属性
+     * 用于绑定表单输入
+     */
     private final StringProperty usernameProperty = new SimpleStringProperty("");
+
+    /**
+     * SSH密码属性
+     * 用于绑定表单输入
+     */
     private final StringProperty passwordProperty = new SimpleStringProperty("");
     
+    /**
+     * SSH服务实例
+     * 处理SSH连接和端口转发
+     */
     private final SshService sshService = new SshService();
+
+    /**
+     * 转发规则列表
+     * 存储所有的端口转发配置
+     */
     private final ObservableList<ForwardEntry> forwardEntries = FXCollections.observableArrayList();
 
+    /**
+     * SSH连接状态
+     * true表示已连接，false表示未连接
+     */
     private boolean isConnected = false;
 
+    /**
+     * 连接状态标签
+     * 显示当前SSH连接状态
+     */
     @FXML
     private Label statusLabel;
 
+    /**
+     * 连接按钮
+     * 用于建立SSH连接
+     */
     @FXML
     private Button connectButton;
     
+    /**
+     * 断开连接按钮
+     * 用于断开SSH连接
+     */
     @FXML
     private Button disconnectButton;
     
+    /**
+     * 开始转发按钮
+     * 用于启动端口转发
+     */
     @FXML
     private Button startForwardButton;
 
+    /**
+     * 标签页面板
+     * 包含SSH转发和Nacos转发两个标签页
+     */
     @FXML
     private TabPane tabPane;
     
+    /**
+     * Nacos配置表单容器
+     * 用于放置Nacos连接配置的表单
+     */
     @FXML
     private VBox nacosFormContainer;
     
+    /**
+     * 服务列表表格
+     * 显示Nacos中的服务列表
+     */
     @FXML
     private TableView<String> serviceTable;
 
+    /**
+     * Nacos服务实例
+     * 处理与Nacos服务器的交互
+     */
     private final NacosService nacosService = new NacosService();
+
+    /**
+     * HTTP代理服务实例
+     * 处理HTTP请求的转发
+     */
     private final HttpProxyService httpProxyService = new HttpProxyService();
     
+    /**
+     * Nacos配置表单
+     * 包含Nacos连接的所有配置字段
+     */
     private Form nacosForm;
+
+    /**
+     * Nacos服务器地址属性
+     * 用于绑定表单输入
+     */
     private final StringProperty serverAddrProperty = new SimpleStringProperty("");
+
+    /**
+     * Nacos命名空间属性
+     * 用于绑定表单输入
+     */
     private final StringProperty namespaceProperty = new SimpleStringProperty("");
+
+    /**
+     * Nacos用户名属性
+     * 用于绑定表单输入
+     */
     private final StringProperty nacosUsernameProperty = new SimpleStringProperty("");
+
+    /**
+     * Nacos密码属性
+     * 用于绑定表单输入
+     */
     private final StringProperty nacosPasswordProperty = new SimpleStringProperty("");
+
+    /**
+     * 服务名称列表
+     * 存储要转发的Nacos服务
+     */
     private final ObservableList<String> serviceNames = FXCollections.observableArrayList();
 
+    /**
+     * Nacos连接状态标签
+     * 显示当前Nacos连接状态
+     */
     @FXML
     private Label nacosStatusLabel;
     
+    /**
+     * Nacos连接按钮
+     * 用于连接Nacos服务器
+     */
     @FXML
     private Button nacosConnectButton;
     
+    /**
+     * Nacos断开连接按钮
+     * 用于断开Nacos连接
+     */
     @FXML
     private Button nacosDisconnectButton;
     
+    /**
+     * 开始Nacos转发按钮
+     * 用于启动Nacos服务转发
+     */
     @FXML
     private Button startNacosForwardButton;
     
+    /**
+     * Nacos连接状态
+     * true表示已连接，false表示未连接
+     */
     private boolean isNacosConnected = false;
+
+    /**
+     * Nacos转发状态
+     * true表示正在转发，false表示未转发
+     */
     private boolean isNacosForwarding = false;
 
+    /**
+     * 最大重试次数
+     * 自动重连时的最大尝试次数
+     */
     private static final int MAX_RETRY_ATTEMPTS = 3;
+
+    /**
+     * 重试延迟时间
+     * 两次重试之间的等待时间（毫秒）
+     */
     private static final long RETRY_DELAY_MS = 1000;
     
+    /**
+     * 服务搜索输入框
+     * 用于过滤服务列表
+     */
     @FXML
     private TextField serviceSearchField;
+
+    /**
+     * 所有服务列表
+     * 存储Nacos中的所有可用服务
+     */
     private final ObservableList<String> allServices = FXCollections.observableArrayList();
     
+    /**
+     * 重连定时器
+     * 用于自动重连功能
+     */
     private java.util.Timer reconnectTimer;
+
+    /**
+     * 自动重连标志
+     * true表示启用自动重连，false表示禁用
+     */
     private boolean autoReconnect = true;
 
+    /**
+     * Nacos分组名称属性
+     * 用于指定服务所属的分组
+     */
     private final StringProperty groupNameProperty = new SimpleStringProperty("DEFAULT_GROUP");
 
+    /**
+     * 初始化控制器
+     * 设置表单、表格和事件监听器
+     */
     @FXML
     public void initialize() {
+        // 初始化SSH配置表单
         initializeSshForm();
+        
+        // 初始化转发规则表格
         initializeForwardTable();
+        
+        // 加载历史配置
         loadHistory();
-        updateButtonStatus();
-        updateStatusLabel();
+        
+        // 初始化Nacos配置表单
         initializeNacosForm();
-        initializeServiceTable();
-        loadNacosHistory();
+        
+        // 初始化服务搜索功能
         initializeServiceSearch();
+        
+        // 加载Nacos历史配置
+        loadNacosHistory();
+        
+        // 启动自动重连定时器
         startReconnectTimer();
     }
 
+    /**
+     * 初始化SSH配置表单
+     * 创建并配置SSH连接所需的输入字段
+     */
     private void initializeSshForm() {
         sshForm = Form.of(
             Group.of(
@@ -168,6 +352,10 @@ public class IpForwardController {
         sshFormContainer.getChildren().add(formRenderer);
     }
 
+    /**
+     * 初始化转发规则表格
+     * 设置表格列和编辑功能
+     */
     private void initializeForwardTable() {
         // 设置表格可编辑
         forwardTable.setEditable(true);
@@ -235,7 +423,7 @@ public class IpForwardController {
             }
         });
 
-        // 添加删除���
+        // 添加删除列
         TableColumn<ForwardEntry, Void> deleteCol = new TableColumn<>("操作");
         deleteCol.setCellFactory(param -> new TableCell<>() {
             private final Button deleteButton = new Button("删除");
@@ -292,28 +480,42 @@ public class IpForwardController {
         HistoryUtil.saveHistory("ipForward", config);
     }
 
+    /**
+     * 处理SSH连接
+     * 使用表单中的配置信息建立SSH连接
+     */
     @FXML
     private void handleConnect() {
-        if (sshForm.isValid()) {
-            try {
-                sshService.connect(
-                    hostProperty.get(),
-                    Integer.parseInt(portProperty.get()),
-                    usernameProperty.get(),
-                    passwordProperty.get()
-                );
-                isConnected = true;
-                updateButtonStatus();
-                updateStatusLabel();
-                NotificationUtil.showSuccess("连接成功", "SSH连接已建立");
-                saveHistory();
-            } catch (Exception e) {
-                LOGGER.error("SSH连接失败", e);
-                NotificationUtil.showError("连接失败", e.getMessage());
-            }
+        try {
+            // 获取表单配置
+            String host = hostProperty.get();
+            int port = Integer.parseInt(portProperty.get());
+            String username = usernameProperty.get();
+            String password = passwordProperty.get();
+            
+            // 建立SSH连接
+            sshService.connect(host, port, username, password);
+            
+            // 更新连接状态
+            isConnected = true;
+            updateButtonStatus();
+            updateStatusLabel();
+            
+            // 保存配置到历史记录
+            saveHistory();
+            
+            // 显示成功提示
+            NotificationUtil.showSuccess("连接成功", "SSH连接已建立");
+        } catch (Exception e) {
+            LOGGER.error("SSH连接失败", e);
+            NotificationUtil.showError("连接失败", e.getMessage());
         }
     }
 
+    /**
+     * 处理SSH断开连接
+     * 关闭SSH连接并更新UI状态
+     */
     @FXML
     private void handleDisconnect() {
         sshService.disconnect();
@@ -323,6 +525,10 @@ public class IpForwardController {
         NotificationUtil.showSuccess("断开连接", "SSH连接已断开");
     }
 
+    /**
+     * 添加端口转发规则
+     * 打开对话框让用户输入转发规则
+     */
     @FXML
     private void handleAddForward() {
         ForwardEntry entry = new ForwardEntry();
@@ -332,6 +538,10 @@ public class IpForwardController {
         saveHistory();
     }
 
+    /**
+     * 开始端口转发
+     * 根据表格中的规则配置SSH端口转发
+     */
     @FXML
     private void handleStartForward() {
         if (!sshService.isConnected()) {
@@ -407,6 +617,10 @@ public class IpForwardController {
         }
     }
 
+    /**
+     * 初始化Nacos配置表单
+     * 创���并配置Nacos连接所需的输入字段
+     */
     private void initializeNacosForm() {
         nacosForm = Form.of(
             Group.of(
@@ -435,7 +649,7 @@ public class IpForwardController {
                     .label("用户名")
                     .validate(CustomValidator.forPredicate(
                         value -> !value.trim().isEmpty(),
-                        "用户名不能为空"
+                        "用户名不能���空"
                     )),
                     
                 Field.ofStringType(nacosPasswordProperty)
@@ -516,29 +730,45 @@ public class IpForwardController {
         HistoryUtil.saveHistory("nacos", config);
     }
 
+    /**
+     * 处理Nacos连接
+     * 使用表单中的配置信息连接Nacos服务器
+     */
     @FXML
     private void handleNacosConnect() {
-        if (nacosForm.isValid()) {
+        if (!isNacosConnected) {
             try {
+                // 创建Nacos配置对象
                 NacosConfig config = new NacosConfig();
                 config.setServerAddr(serverAddrProperty.get());
                 config.setNamespace(namespaceProperty.get());
                 config.setUsername(nacosUsernameProperty.get());
                 config.setPassword(nacosPasswordProperty.get());
                 
+                // 连接Nacos服务器
                 nacosService.connect(config);
+                
+                // 更新连接状态
                 isNacosConnected = true;
                 updateNacosButtonStatus();
                 updateNacosStatusLabel();
+                
+                // 保存配置到历史记录
                 saveNacosHistory();
+                
+                // 显示成功提示
                 NotificationUtil.showSuccess("连接成功", "Nacos连接已建立");
             } catch (Exception e) {
-                LOGGER.error("Nacos连接失���", e);
+                LOGGER.error("Nacos连接失败", e);
                 NotificationUtil.showError("连接失败", e.getMessage());
             }
         }
     }
 
+    /**
+     * 处理Nacos断开连接
+     * 关闭Nacos连接并更新UI状态
+     */
     @FXML
     private void handleNacosDisconnect() {
         nacosService.shutdown();
@@ -550,6 +780,10 @@ public class IpForwardController {
         NotificationUtil.showSuccess("断开连接", "Nacos连接已断开");
     }
 
+    /**
+     * 开始Nacos服务转发
+     * 为选中的服务配置端口转发和HTTP代理
+     */
     @FXML
     private void handleStartNacosForward() {
         if (!isNacosConnected) {
@@ -563,7 +797,7 @@ public class IpForwardController {
         }
 
         if (!sshService.isConnected()) {
-            NotificationUtil.showError("错误", "请先建立SSH连接");
+            NotificationUtil.showError("错误", "请先建立SSH连���");
             return;
         }
 
@@ -621,6 +855,10 @@ public class IpForwardController {
         }
     }
 
+    /**
+     * 添加Nacos服务
+     * 从Nacos服务器获取可用服务列表并让用户选择
+     */
     @FXML
     private void handleAddService() {
         if (!isNacosConnected) {
@@ -640,7 +878,7 @@ public class IpForwardController {
             
             // 添加搜索框
             TextField searchField = new TextField();
-            searchField.setPromptText("搜���服务...");
+            searchField.setPromptText("搜索服务...");
             FilteredList<String> filteredServices = new FilteredList<>(
                 FXCollections.observableArrayList(availableServices)
             );
@@ -673,15 +911,21 @@ public class IpForwardController {
         }
     }
 
+    /**
+     * 添加服务转发
+     * 为指定服务配置端口转发和HTTP代理
+     * @param serviceName 服务名称
+     */
     private void addServiceForward(String serviceName) {
         try {
-            // 获取服务实例时传入分组名称
+            // 获取服务实例
             List<Instance> instances = nacosService.getServiceInstances(serviceName, groupNameProperty.get());
             if (!instances.isEmpty()) {
+                // 获取第一个实例
                 Instance instance = instances.get(0);
                 String target = instance.getIp() + ":" + instance.getPort();
                 
-                // 添加服务映射
+                // 添加HTTP代理映射
                 httpProxyService.addServiceMapping(serviceName + ".service", target);
                 
                 // 创建SSH端口转发
@@ -692,6 +936,7 @@ public class IpForwardController {
                     instance.getPort()
                 );
                 
+                // 显示成功提示
                 NotificationUtil.showSuccess("转发成功", 
                     String.format("服务 %s 已添加到转发列表", serviceName));
             }
@@ -702,6 +947,10 @@ public class IpForwardController {
         }
     }
 
+    /**
+     * 初始化服务搜索功能
+     * 配置搜索框的过滤功能
+     */
     private void initializeServiceSearch() {
         serviceSearchField.textProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue == null || newValue.trim().isEmpty()) {
@@ -716,6 +965,10 @@ public class IpForwardController {
         });
     }
 
+    /**
+     * 启动自动重连定时器
+     * 在连接断开时自动尝试重新连接
+     */
     private void startReconnectTimer() {
         reconnectTimer = new java.util.Timer(true);
         reconnectTimer.scheduleAtFixedRate(new java.util.TimerTask() {
@@ -745,6 +998,10 @@ public class IpForwardController {
         }, 5000, 5000);
     }
 
+    /**
+     * 停止所有服务
+     * 关闭所有连接和转发
+     */
     public void stop() {
         if (reconnectTimer != null) {
             reconnectTimer.cancel();
@@ -754,6 +1011,10 @@ public class IpForwardController {
         httpProxyService.shutdown();
     }
 
+    /**
+     * 导出SSH配置
+     * 将当前SSH配置保存到JSON文件
+     */
     @FXML
     private void handleExportSshConfig() {
         try {
@@ -772,6 +1033,10 @@ public class IpForwardController {
         }
     }
 
+    /**
+     * 导入SSH配置
+     * 从JSON文件加载SSH配置
+     */
     @FXML
     private void handleImportSshConfig() {
         try {
@@ -795,6 +1060,10 @@ public class IpForwardController {
         }
     }
 
+    /**
+     * 导出Nacos配置
+     * 将当前Nacos配置保存到JSON文件
+     */
     @FXML
     private void handleExportNacosConfig() {
         try {
@@ -814,6 +1083,10 @@ public class IpForwardController {
         }
     }
 
+    /**
+     * 导入Nacos配置
+     * 从JSON文件加载Nacos配置
+     */
     @FXML
     private void handleImportNacosConfig() {
         try {
@@ -838,12 +1111,16 @@ public class IpForwardController {
         }
     }
 
+    /**
+     * 停止所有服务
+     * 关闭���有连接和转发，并重置UI状态
+     */
     @FXML
     private void handleStopAll() {
         // 停止所有服务
         stop();
         
-        // 重置状态
+        // 重置状态标志
         isConnected = false;
         isNacosConnected = false;
         isNacosForwarding = false;
@@ -854,6 +1131,7 @@ public class IpForwardController {
         updateNacosButtonStatus();
         updateNacosStatusLabel();
         
+        // 显示成功提示
         NotificationUtil.showSuccess("停止成功", "所有服务已停止");
     }
 }

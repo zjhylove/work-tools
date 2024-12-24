@@ -16,10 +16,9 @@ public class SshService {
     private Session session;
 
     /**
-     * 建立SSH连接
-     *
-     * @param host     SSH服务器地址
-     * @param port     SSH服务器端口
+     * 连接SSH服务器
+     * @param host SSH服务器地址
+     * @param port SSH服务器端口
      * @param username 用户名
      * @param password 密码
      * @throws Exception 连接异常
@@ -38,10 +37,9 @@ public class SshService {
     }
 
     /**
-     * 添加端口转发
-     *
-     * @param localHost  本地监听地址
-     * @param localPort  本地监听端口
+     * 添加端口转发规则
+     * @param localHost 本地监听地址
+     * @param localPort 本地监听端口
      * @param remoteHost 远程目标地址
      * @param remotePort 远程目标端口
      * @throws Exception 转发异常

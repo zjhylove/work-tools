@@ -12,7 +12,7 @@ import java.util.Properties;
 
 /**
  * Nacos服务类
- * 处理与Nacos的交互
+ * 处理与Nacos服务器的交互
  */
 public class NacosService {
     private static final Logger LOGGER = LoggerFactory.getLogger(NacosService.class);
@@ -20,6 +20,7 @@ public class NacosService {
 
     /**
      * 连接Nacos服务器
+     * @param config Nacos连接配置
      */
     public void connect(NacosConfig config) throws Exception {
         Properties properties = new Properties();
@@ -34,6 +35,9 @@ public class NacosService {
 
     /**
      * 获取服务实例列表
+     * @param serviceName 服务名称
+     * @param groupName 分组名称
+     * @return 服务实例列表
      */
     public List<Instance> getServiceInstances(String serviceName, String groupName) throws Exception {
         if (namingService == null) {
