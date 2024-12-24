@@ -6,7 +6,6 @@ import com.dlsc.formsfx.model.structure.Group;
 import com.dlsc.formsfx.model.validators.CustomValidator;
 import com.dlsc.formsfx.view.renderer.FormRenderer;
 import com.zjhy.love.worktools.common.util.HistoryUtil;
-import com.zjhy.love.worktools.common.util.MockUtil;
 import com.zjhy.love.worktools.common.util.NotificationUtil;
 import com.zjhy.love.worktools.model.ApiDocConfig;
 import com.zjhy.love.worktools.service.ApiDocService;
@@ -46,10 +45,10 @@ public class ApiDocFormController {
         form = Form.of(
                 Group.of(
                         Field.ofStringType(packagePathProperty)
-                                .label("包路径")
+                                .label("JAR包路径")
                                 .validate(CustomValidator.forPredicate(
                                         value -> !value.trim().isEmpty(),
-                                        "包路径不能为空"
+                                        "JAR包路径不能为空"
                                 ))
                                 .validate(CustomValidator.forPredicate(
                                         value -> value.toLowerCase().endsWith(".jar"),

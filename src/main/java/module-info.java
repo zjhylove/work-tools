@@ -20,7 +20,7 @@ module com.zjhy.love.worktools {
     requires org.apache.logging.log4j.core;
     requires org.apache.logging.log4j;
     requires java.sql;
-    requires java.base;
+    requires java.desktop;
 
     // 导出和打开我们自己的包
     opens com.zjhy.love.worktools to javafx.fxml;

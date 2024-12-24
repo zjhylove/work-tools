@@ -82,7 +82,10 @@ public class LayoutUiController {
                     FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/api-doc-form.fxml"));
                     yield loader.load();
                 }
-                case "DB文档" -> new DbDocFormController();
+                case "DB文档" -> {
+                    FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/db-doc-form.fxml"));
+                    yield loader.load();
+                }
                 case "IP转发" -> new IpForwardController();
                 case "身份验证" -> new AuthController();
                 case "对象存储" -> new ObjectStorageController();
