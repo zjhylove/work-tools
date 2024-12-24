@@ -45,7 +45,7 @@
         <httpcore.version>4.4.13</httpcore.version>
         
         <!-- Office -->
-        <poi.version>5.2.5</poi.version>
+        <poi.version>5.2.3</poi.version>
         <spire.version>12.8.0</spire.version>
         
         <!-- SSH -->
@@ -56,6 +56,10 @@
         
         <!-- 测试 -->
         <junit.version>5.10.2</junit.version>
+        
+        <!-- Office 相关依赖版本统一 -->
+        <commons-collections4.version>4.4</commons-collections4.version>
+        <xmlbeans.version>5.1.1</xmlbeans.version>
     </properties>
 
     <dependencyManagement>
@@ -284,20 +288,46 @@
         <!-- Office -->
         <dependency>
             <groupId>org.apache.poi</groupId>
-            <artifactId>poi-ooxml</artifactId>
+            <artifactId>poi</artifactId>
             <version>${poi.version}</version>
             <exclusions>
                 <exclusion>
-                    <artifactId>log4j-api</artifactId>
-                    <groupId>org.apache.logging.log4j</groupId>
+                    <groupId>org.apache.commons</groupId>
+                    <artifactId>commons-compress</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>commons-codec</groupId>
                     <artifactId>commons-codec</artifactId>
                 </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>${poi.version}</version>
+            <exclusions>
                 <exclusion>
                     <groupId>org.apache.commons</groupId>
                     <artifactId>commons-compress</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.xmlbeans</groupId>
+                    <artifactId>xmlbeans</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.commons</groupId>
+                    <artifactId>commons-collections4</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml-lite</artifactId>
+            <version>${poi.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.xmlbeans</groupId>
+                    <artifactId>xmlbeans</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -332,6 +362,19 @@
             <artifactId>junit-jupiter-engine</artifactId>
             <version>${junit.version}</version>
             <scope>test</scope>
+        </dependency>
+        
+        <!-- Apache POI 及其相关依赖 -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-collections4</artifactId>
+            <version>${commons-collections4.version}</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.apache.xmlbeans</groupId>
+            <artifactId>xmlbeans</artifactId>
+            <version>${xmlbeans.version}</version>
         </dependency>
     </dependencies>
 
