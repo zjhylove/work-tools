@@ -747,6 +747,7 @@ public class IpForwardController {
         deleteCol.setPrefWidth(60);
 
         // 设置列
+        serviceTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         serviceTable.getColumns().setAll(serviceNameCol, deleteCol);
 
         // 绑定数据源

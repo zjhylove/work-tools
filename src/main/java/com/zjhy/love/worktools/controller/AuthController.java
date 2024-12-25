@@ -58,6 +58,7 @@ public class AuthController  {
 
     private void initializeAuthTable() {
         authTable.getStyleClass().addAll("table", "table-hover", "table-striped");
+        authTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         
         // 账户列
         TableColumn<AuthEntry, String> nameColumn = new TableColumn<>("账户");
@@ -214,7 +215,7 @@ public class AuthController  {
             // 设置按钮栏样式
             dialogPane.lookup(".button-bar").getStyleClass().addAll("panel");
             
-            // 设置对话框最小宽度
+            // 设置对话框���小宽度
             dialog.getDialogPane().setMinWidth(300);
             
             dialog.showAndWait();
