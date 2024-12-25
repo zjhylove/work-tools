@@ -2,6 +2,8 @@ package com.zjhy.love.worktools.common.util;
 
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.json.JSONUtil;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,6 +13,7 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiFunction;
 
 /**
  * 用户操作历史记录工具类
@@ -62,15 +65,34 @@ public class HistoryUtil {
      * @return 历史参数
      */
     public static <T> T getHistory(String toolName, Class<T> type) {
+        return getHistory(toolName,(mapper,json)-> {
+            try {
+                return mapper.readValue(json,type);
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    public static <T> T getHistory(String toolName, TypeReference<T> typeReference) {
+        return getHistory(toolName,(mapper,json)-> {
+            try {
+                return mapper.readValue(json,typeReference);
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    public static <T> T getHistory(String toolName, BiFunction<ObjectMapper,String, T> readMethod) {
         Object history = HISTORY_CACHE.get(toolName);
         if (history == null) {
             return null;
         }
-
         try {
             ObjectMapper mapper = new ObjectMapper();
             String json = JSONUtil.toJsonStr(HISTORY_CACHE.get(toolName));
-            return mapper.readValue(json, type);
+            return readMethod.apply(mapper,json);
         } catch (Exception e) {
             NotificationUtil.showError("读取历史记录失败 ", e.getMessage());
             return null;
@@ -96,7 +118,6 @@ public class HistoryUtil {
             if (!FileUtil.exist(historyPath.toFile())) {
                 return;
             }
-
             String historyJson = FileUtil.readUtf8String(historyPath.toFile());
             Map<String, Object> history = JSONUtil.toBean(historyJson, HashMap.class);
             HISTORY_CACHE.putAll(history);

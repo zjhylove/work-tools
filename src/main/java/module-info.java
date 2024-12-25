@@ -3,6 +3,7 @@ module com.zjhy.love.worktools {
     requires javafx.fxml;
     requires javafx.graphics;
     requires javafx.base;
+    requires javafx.swing;
 
     requires com.dlsc.formsfx;
     requires net.synedra.validatorfx;
@@ -22,14 +23,12 @@ module com.zjhy.love.worktools {
     requires java.sql;
     requires java.desktop;
     requires jsch;
-    requires io.netty.transport;
-    requires io.netty.codec.http;
-    requires io.netty.codec;
-    requires io.netty.handler;
-    requires io.netty.buffer;
-    requires io.netty.common;
     requires nacos.client;
     requires com.fasterxml.jackson.databind;
+    requires org.apache.tomcat.embed.core;
+    requires org.apache.commons.codec;
+    requires com.google.zxing;
+    requires com.google.zxing.javase;
 
     // 导出和打开我们自己的包
     opens com.zjhy.love.worktools to javafx.fxml;

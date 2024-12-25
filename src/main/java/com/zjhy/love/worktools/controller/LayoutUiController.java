@@ -92,7 +92,10 @@ public class LayoutUiController {
                     FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/ip-forward-form.fxml"));
                     yield loader.load();
                 }
-                case "身份验证" -> new AuthController();
+                case "身份验证" -> {
+                    FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/auth-view.fxml"));
+                    yield loader.load();
+                }
                 case "对象存储" -> new ObjectStorageController();
                 default -> null;
             };
