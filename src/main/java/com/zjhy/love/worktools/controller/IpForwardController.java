@@ -27,6 +27,7 @@ import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.util.StringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -354,74 +355,112 @@ public class IpForwardController {
      * 设置表格列和编辑功能
      */
     private void initializeForwardTable() {
-        // 设置表格可编辑
+        // 启用表格编辑
         forwardTable.setEditable(true);
 
-        // 创建列
-        TableColumn<ForwardEntry, String> localHostCol = new TableColumn<>("本地地址");
-        localHostCol.setCellValueFactory(cellData ->
-                new SimpleStringProperty(cellData.getValue().getLocalHost()));
+        // 名称列
+        TableColumn<ForwardEntry, String> nameCol = new TableColumn<>("名称");
+        nameCol.setCellValueFactory(cellData -> cellData.getValue().nameProperty());
+        nameCol.setCellFactory(TextFieldTableCell.forTableColumn());
+        nameCol.setEditable(true);  // 确保列可编辑
+        nameCol.setOnEditCommit(event -> {
+            TablePosition<ForwardEntry, String> pos = event.getTablePosition();
+            String newValue = event.getNewValue();
+            int row = pos.getRow();
+            ForwardEntry entry = event.getTableView().getItems().get(row);
+            entry.setName(newValue);
+            saveHistory();
+        });
+
+        // 本地监听地址列
+        TableColumn<ForwardEntry, String> localHostCol = new TableColumn<>("本地监听地址");
+        localHostCol.setCellValueFactory(cellData -> cellData.getValue().localHostProperty());
         localHostCol.setCellFactory(TextFieldTableCell.forTableColumn());
+        localHostCol.setEditable(true);  // 确保列可编辑
         localHostCol.setOnEditCommit(event -> {
+            TablePosition<ForwardEntry, String> pos = event.getTablePosition();
             String newValue = event.getNewValue();
             if (newValue == null || newValue.trim().isEmpty()) {
                 newValue = "127.0.0.1";
             }
-            event.getRowValue().setLocalHost(newValue);
+            int row = pos.getRow();
+            ForwardEntry entry = event.getTableView().getItems().get(row);
+            entry.setLocalHost(newValue);
+            saveHistory();
         });
 
-        TableColumn<ForwardEntry, String> localPortCol = new TableColumn<>("本地端口");
-        localPortCol.setCellValueFactory(cellData ->
-                new SimpleStringProperty(String.valueOf(cellData.getValue().getLocalPort())));
+        // 本地监听端口列
+        TableColumn<ForwardEntry, String> localPortCol = new TableColumn<>("本地监听端口");
+        localPortCol.setCellValueFactory(cellData -> {
+            ForwardEntry entry = cellData.getValue();
+            return new SimpleStringProperty(String.valueOf(entry.getLocalPort()));
+        });
         localPortCol.setCellFactory(TextFieldTableCell.forTableColumn());
+        localPortCol.setEditable(true);  // 确保列可编辑
         localPortCol.setOnEditCommit(event -> {
             try {
-                int port = Integer.parseInt(event.getNewValue());
+                TablePosition<ForwardEntry, String> pos = event.getTablePosition();
+                String newValue = event.getNewValue();
+                int row = pos.getRow();
+                ForwardEntry entry = event.getTableView().getItems().get(row);
+                int port = Integer.parseInt(newValue);
                 if (port > 0 && port < 65536) {
-                    event.getRowValue().setLocalPort(port);
+                    entry.setLocalPort(port);
+                    saveHistory();
                 } else {
-                    throw new NumberFormatException("端口范围必须在1-65535之间");
+                    NotificationUtil.showError("输入错误", "端口范围必须在1-65535之间");
                 }
             } catch (NumberFormatException e) {
-                NotificationUtil.showError("输入错误", "请输入有效的端口号(1-65535)");
-                forwardTable.refresh();
+                NotificationUtil.showError("输入错误", "请输入有效的端口号");
             }
         });
 
-        TableColumn<ForwardEntry, String> remoteHostCol = new TableColumn<>("远程地址");
-        remoteHostCol.setCellValueFactory(cellData ->
-                new SimpleStringProperty(cellData.getValue().getRemoteHost()));
+        // 远程目标地址列
+        TableColumn<ForwardEntry, String> remoteHostCol = new TableColumn<>("远程目标地址");
+        remoteHostCol.setCellValueFactory(cellData -> cellData.getValue().remoteHostProperty());
         remoteHostCol.setCellFactory(TextFieldTableCell.forTableColumn());
+        remoteHostCol.setEditable(true);  // 确保列可编辑
         remoteHostCol.setOnEditCommit(event -> {
+            TablePosition<ForwardEntry, String> pos = event.getTablePosition();
             String newValue = event.getNewValue();
+            int row = pos.getRow();
+            ForwardEntry entry = event.getTableView().getItems().get(row);
             if (newValue != null && !newValue.trim().isEmpty()) {
-                event.getRowValue().setRemoteHost(newValue);
+                entry.setRemoteHost(newValue);
+                saveHistory();
             } else {
                 NotificationUtil.showError("输入错误", "远程地址不能为空");
-                forwardTable.refresh();
             }
         });
 
-        TableColumn<ForwardEntry, String> remotePortCol = new TableColumn<>("远程端口");
-        remotePortCol.setCellValueFactory(cellData ->
-                new SimpleStringProperty(String.valueOf(cellData.getValue().getRemotePort())));
+        // 远程目标端口列
+        TableColumn<ForwardEntry, String> remotePortCol = new TableColumn<>("远程目标端口");
+        remotePortCol.setCellValueFactory(cellData -> {
+            ForwardEntry entry = cellData.getValue();
+            return new SimpleStringProperty(String.valueOf(entry.getRemotePort()));
+        });
         remotePortCol.setCellFactory(TextFieldTableCell.forTableColumn());
+        remotePortCol.setEditable(true);  // 确保列可编辑
         remotePortCol.setOnEditCommit(event -> {
             try {
-                int port = Integer.parseInt(event.getNewValue());
+                TablePosition<ForwardEntry, String> pos = event.getTablePosition();
+                String newValue = event.getNewValue();
+                int row = pos.getRow();
+                ForwardEntry entry = event.getTableView().getItems().get(row);
+                int port = Integer.parseInt(newValue);
                 if (port > 0 && port < 65536) {
-                    event.getRowValue().setRemotePort(port);
+                    entry.setRemotePort(port);
+                    saveHistory();
                 } else {
-                    throw new NumberFormatException("端口范围必须在1-65535之间");
+                    NotificationUtil.showError("输入错误", "端口范围必须在1-65535之间");
                 }
             } catch (NumberFormatException e) {
-                NotificationUtil.showError("输入错误", "请输入有效的端口号(1-65535)");
-                forwardTable.refresh();
+                NotificationUtil.showError("输入错误", "请输入有效的端口号");
             }
         });
 
-        // 添加删除列
-        TableColumn<ForwardEntry, Void> deleteCol = new TableColumn<>("操作");
+        // 删除列
+        TableColumn<ForwardEntry, Void> deleteCol = new TableColumn<>("");
         deleteCol.setCellFactory(param -> new TableCell<>() {
             private final Button deleteButton = new Button("删除");
 
@@ -429,6 +468,7 @@ public class IpForwardController {
                 deleteButton.setOnAction(event -> {
                     ForwardEntry entry = getTableView().getItems().get(getIndex());
                     forwardEntries.remove(entry);
+                    saveHistory();
                 });
             }
 
@@ -443,18 +483,21 @@ public class IpForwardController {
             }
         });
 
-        forwardTable.getColumns().addAll(localHostCol, localPortCol, remoteHostCol, remotePortCol, deleteCol);
-        forwardTable.setItems(forwardEntries);
+        // 设置列宽
+        nameCol.setPrefWidth(100);
+        localHostCol.setPrefWidth(120);
+        localPortCol.setPrefWidth(100);
+        remoteHostCol.setPrefWidth(120);
+        remotePortCol.setPrefWidth(100);
+        deleteCol.setPrefWidth(60);
 
-        // 优化表格编辑体验
-        forwardTable.setOnKeyPressed(event -> {
-            if (event.getCode() == KeyCode.DELETE) {
-                ForwardEntry selectedEntry = forwardTable.getSelectionModel().getSelectedItem();
-                if (selectedEntry != null) {
-                    forwardEntries.remove(selectedEntry);
-                }
-            }
-        });
+        // 添加所有列到表格
+        forwardTable.getColumns().setAll(
+            nameCol, localHostCol, localPortCol, remoteHostCol, remotePortCol, deleteCol
+        );
+
+        // 绑定数据源
+        forwardTable.setItems(forwardEntries);
     }
 
     private void loadHistory() {
@@ -533,8 +576,10 @@ public class IpForwardController {
     @FXML
     private void handleAddForward() {
         ForwardEntry entry = new ForwardEntry();
-        entry.setLocalPort(1080);  // 设置默认端口
-        entry.setRemotePort(1080);
+        entry.setName("新转发规则");  // 设默认名称
+        entry.setLocalHost("127.0.0.1");
+        entry.setLocalPort(0);
+        entry.setRemotePort(0);
         forwardEntries.add(entry);
         saveHistory();
     }
@@ -578,7 +623,7 @@ public class IpForwardController {
             }
         }
 
-        NotificationUtil.showSuccess("转发成功", "所有端口转发规则已启动");
+        NotificationUtil.showSuccess("转发成功", "所有端口转发规则启动");
         saveHistory();
     }
 
@@ -620,7 +665,7 @@ public class IpForwardController {
 
     /**
      * 初始化Nacos配置表单
-     * 创���并配置Nacos连接所需的输入字段
+     * 创建并配置Nacos连接所需的输入字段
      */
     private void initializeNacosForm() {
         nacosForm = Form.of(
@@ -650,7 +695,7 @@ public class IpForwardController {
                                 .label("用户名")
                                 .validate(CustomValidator.forPredicate(
                                         value -> !value.trim().isEmpty(),
-                                        "用户名不能���空"
+                                        "用户名不能为空"
                                 )),
 
                         Field.ofStringType(nacosPasswordProperty)
@@ -800,7 +845,7 @@ public class IpForwardController {
         }
 
         if (!sshService.isConnected()) {
-            NotificationUtil.showError("错误", "请先建立SSH连���");
+            NotificationUtil.showError("错误", "请先建立SSH连接");
             return;
         }
 
@@ -1117,7 +1162,7 @@ public class IpForwardController {
 
     /**
      * 停止所有服务
-     * 关闭���有连接和转发，并重置UI状态
+     * 关闭所有连接和转发，并重置UI状态
      */
     @FXML
     private void handleStopAll() {

@@ -1,16 +1,19 @@
 package com.zjhy.love.worktools.service;
 
+import cn.hutool.core.exceptions.ExceptionUtil;
+import cn.hutool.core.io.FileUtil;
 import com.zjhy.love.worktools.common.util.OfficeDocUtil;
+import com.zjhy.love.worktools.model.ColumnInfo;
 import com.zjhy.love.worktools.model.DbDocConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.zjhy.love.worktools.model.TableInfo;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.File;
-import java.nio.file.Paths;
 import java.sql.*;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 数据库文档生成服务
@@ -19,146 +22,204 @@ import java.util.*;
  * @author zhengjun
  */
 public class DbDocService {
-    
-    private static final Logger LOGGER = LoggerFactory.getLogger(DbDocService.class);
-    
+
+    private static final Logger LOGGER = LogManager.getLogger(DbDocService.class);
+
+
+    /**
+     * 查询表对应的列sql
+     */
+    private static final String SELECT_TABLE_COLUMN_SQL = "SELECT " +
+            "t.COLUMN_NAME, " +
+            "t.DATA_TYPE, " +
+            "IFNULL( t.CHARACTER_MAXIMUM_LENGTH, IFNULL( t.NUMERIC_PRECISION, t.DATETIME_PRECISION ) ) COLUMN_LENGTH, " +
+            "CASE " +
+            "t.COLUMN_KEY  " +
+            "WHEN 'PRI' THEN " +
+            "'是' ELSE ''  " +
+            "END, " +
+            "CASE " +
+            "t.IS_NULLABLE  " +
+            "WHEN 'NO' THEN " +
+            "'否' ELSE '是'  " +
+            "END, " +
+            "t.COLUMN_COMMENT  " +
+            "FROM " +
+            "information_schema.COLUMNS t  " +
+            "WHERE " +
+            "t.TABLE_NAME = ?  " +
+            "AND t.TABLE_SCHEMA = ?  " +
+            "ORDER BY " +
+            "t.ORDINAL_POSITION ASC;";
+
+    /**
+     * 查询表概述sql
+     */
+    private static final String SELECT_TABLE_COMMENT_SQL = "select t.TABLE_COMMENT  " +
+            "from information_schema.TABLES t " +
+            "where t.TABLE_NAME = ? " +
+            "  and t.TABLE_SCHEMA = ? ";
+
+    /**
+     * 查询索引信息
+     */
+    private static final String SELECT_TABLE_INDEX_SQL = "SELECT INDEX_NAME,group_concat(column_name order by seq_in_index) INDEX_FIELD " +
+            "FROM information_schema.STATISTICS " +
+            "WHERE TABLE_NAME = ? " +
+            "AND TABLE_SCHEMA = ? GROUP BY index_name ORDER BY CHAR_LENGTH(index_name);";
+
+
     /**
      * 生成数据库设计文档
-     * 
+     *
      * @param config 数据库文档配置信息
      * @return 生成的文档路径
      * @throws Exception 如果生成过程中发生错误
      */
     public String generateDoc(DbDocConfig config) throws Exception {
-        // 获取数据库表结构信息
-        List<TableInfo> tables = getTableInfo(config);
-        
-        // 生成文档
-        String fileName = "数据库设计文档_" + 
-            LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss")) + 
-            ".docx";
-        String docPath = Paths.get(config.getOutputDir(), fileName).toString();
-        
-        // 使用模板生成文档
-        Map<String, Object> dataModel = new HashMap<>();
-        dataModel.put("tables", tables);
-        dataModel.put("generateTime", LocalDateTime.now().format(
-            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-        
-        // 渲染模板
-        String xmlPath = docPath + ".xml";
-        OfficeDocUtil.openOfficeXmlRender("db-doc.ftl", dataModel, xmlPath);
-        
-        // 转换为Word文档
-        OfficeDocUtil.openOfficeXml2Docx(xmlPath, docPath);
-        
-        // 删除临时XML文件
-        new File(xmlPath).delete();
-        
-        return docPath;
-    }
-    
-    /**
-     * 获取数据库表结构信息
-     * 
-     * @param config 数据库配置信息
-     * @return 表结构信息列表
-     * @throws Exception 如果获取过程中发生错误
-     */
-    private List<TableInfo> getTableInfo(DbDocConfig config) throws Exception {
-        List<TableInfo> tables = new ArrayList<>();
-        
-        try (Connection conn = DriverManager.getConnection(
-                config.getJdbcUrl(), 
-                config.getUsername(), 
-                config.getPassword())) {
-            
-            DatabaseMetaData metaData = conn.getMetaData();
-            
-            for (String tableName : config.getTables()) {
-                TableInfo table = new TableInfo();
-                table.setTableName(tableName);
-                
-                // 获取表注释
-                try (ResultSet rs = metaData.getTables(null, null, tableName, null)) {
-                    if (rs.next()) {
-                        table.setTableComment(rs.getString("REMARKS"));
-                    }
-                }
-                
-                // 获取列信息
-                List<ColumnInfo> columns = new ArrayList<>();
-                try (ResultSet rs = metaData.getColumns(null, null, tableName, null)) {
-                    while (rs.next()) {
-                        ColumnInfo column = new ColumnInfo();
-                        column.setColumnName(rs.getString("COLUMN_NAME"));
-                        column.setDataType(rs.getString("TYPE_NAME"));
-                        column.setColumnSize(rs.getInt("COLUMN_SIZE"));
-                        column.setNullable(rs.getInt("NULLABLE") == DatabaseMetaData.columnNullable);
-                        column.setColumnComment(rs.getString("REMARKS"));
-                        columns.add(column);
-                    }
-                }
-                
-                // 获取主键信息
-                try (ResultSet rs = metaData.getPrimaryKeys(null, null, tableName)) {
-                    while (rs.next()) {
-                        String columnName = rs.getString("COLUMN_NAME");
-                        columns.stream()
-                            .filter(c -> c.getColumnName().equals(columnName))
-                            .findFirst()
-                            .ifPresent(c -> c.setPrimaryKey(true));
-                    }
-                }
-                
-                table.setColumns(columns);
-                tables.add(table);
+        //导出word
+        findTableInfo(config).forEach(t -> {
+            String filePrefix = config.getOutputDir() + File.separator + t.getTableName();
+            String renderXmlFile = filePrefix + ".xml";
+            String docxFile = filePrefix + ".docx";
+            try {
+                OfficeDocUtil.openOfficeXmlRender("db-doc-template.ftl", t, renderXmlFile);
+                OfficeDocUtil.openOfficeXml2Docx(renderXmlFile, docxFile);
+            } catch (Exception e) {
+                LOGGER.error(() -> "表【" + t + "】导出文档失败", e);
+                ExceptionUtil.wrapAndThrow(e);
+            } finally {
+                FileUtil.del(renderXmlFile);
             }
+        });
+        return config.getOutputDir();
+    }
+
+
+    /**
+     * 查询表信息
+     *
+     * @return 表信息
+     * @throws SQLException 异常
+     */
+    public List<TableInfo> findTableInfo(DbDocConfig config) throws SQLException {
+        try (Connection conn = DriverManager.getConnection(
+                config.getJdbcUrl(),
+                config.getUsername(),
+                config.getPassword())) {
+            String database = database(config.getJdbcUrl());
+            return parseTableInfo(conn, database, config.getTables());
         }
-        
-        return tables;
     }
-    
+
     /**
-     * 表信息内部类
-     * 用于存储单个数据库表的结构信息
+     * 构建表信息
+     *
+     * @param exportTables 导出的表列表
+     * @return 解析后的表信息
      */
-    private static class TableInfo {
-        private String tableName;
-        private String tableComment;
-        private List<ColumnInfo> columns;
-        
-        public String getTableName() { return tableName; }
-        public void setTableName(String tableName) { this.tableName = tableName; }
-        public String getTableComment() { return tableComment; }
-        public void setTableComment(String tableComment) { this.tableComment = tableComment; }
-        public List<ColumnInfo> getColumns() { return columns; }
-        public void setColumns(List<ColumnInfo> columns) { this.columns = columns; }
+    private List<TableInfo> parseTableInfo(Connection connection, String database, List<String> exportTables) throws SQLException {
+        try (PreparedStatement ps1 = connection.prepareStatement(SELECT_TABLE_COLUMN_SQL);
+             PreparedStatement ps2 = connection.prepareStatement(SELECT_TABLE_COMMENT_SQL);
+             PreparedStatement ps3 = connection.prepareStatement(SELECT_TABLE_INDEX_SQL)) {
+            return exportTables.stream().map(t -> {
+                TableInfo table = new TableInfo();
+                //名称
+                table.setTableName(t);
+                //列信息
+                try {
+                    List<ColumnInfo> columnInfoList = findColumnInfo(ps1, database, t);
+                    table.setFieldList(columnInfoList);
+                } catch (SQLException e) {
+                    LOGGER.error(e);
+                    throw ExceptionUtil.wrapRuntime(e);
+                }
+                //表概述
+                try {
+                    table.setTableComment(findTableComment(ps2, database, t));
+                } catch (SQLException e) {
+                    LOGGER.error(e);
+                    throw ExceptionUtil.wrapRuntime(e);
+                }
+                //索引信息
+                try {
+                    table.setIndexNameList(findTableIndex(ps3, database, t));
+                } catch (SQLException e) {
+                    LOGGER.error(e);
+                    throw ExceptionUtil.wrapRuntime(e);
+                }
+                return table;
+            }).collect(Collectors.toList());
+        }
     }
-    
+
     /**
-     * 列信息内部类
-     * 用于存储单个数据库列的详细信息
+     * 查询表对应的列信息
+     *
+     * @param ps       预编译对象
+     * @param database 数据库
+     * @param table    实际表名称
+     * @return 列信息
+     * @throws SQLException sql 异常
      */
-    private static class ColumnInfo {
-        private String columnName;
-        private String dataType;
-        private int columnSize;
-        private boolean nullable;
-        private boolean primaryKey;
-        private String columnComment;
-        
-        public String getColumnName() { return columnName; }
-        public void setColumnName(String columnName) { this.columnName = columnName; }
-        public String getDataType() { return dataType; }
-        public void setDataType(String dataType) { this.dataType = dataType; }
-        public int getColumnSize() { return columnSize; }
-        public void setColumnSize(int columnSize) { this.columnSize = columnSize; }
-        public boolean isNullable() { return nullable; }
-        public void setNullable(boolean nullable) { this.nullable = nullable; }
-        public boolean isPrimaryKey() { return primaryKey; }
-        public void setPrimaryKey(boolean primaryKey) { this.primaryKey = primaryKey; }
-        public String getColumnComment() { return columnComment; }
-        public void setColumnComment(String columnComment) { this.columnComment = columnComment; }
+    private List<ColumnInfo> findColumnInfo(PreparedStatement ps, String database, String table) throws SQLException {
+        ps.setString(1, table);
+        ps.setString(2, database);
+        ResultSet resultSet = ps.executeQuery();
+        List<ColumnInfo> columnList = new ArrayList<>();
+        while (resultSet.next()) {
+            ColumnInfo columnInfo = new ColumnInfo();
+            columnInfo.setField(resultSet.getObject(1, String.class));
+            columnInfo.setFieldType(resultSet.getObject(2, String.class));
+            columnInfo.setFieldLength(resultSet.getObject(3, long.class));
+            columnInfo.setIsPrimary(resultSet.getObject(4, String.class));
+            columnInfo.setNullable(resultSet.getObject(5, String.class));
+            columnInfo.setFieldComment(resultSet.getObject(6, String.class));
+            columnList.add(columnInfo);
+        }
+        return columnList;
     }
-} 
+
+    /**
+     * 查询表对应的列信息
+     *
+     * @param ps       预编译对象
+     * @param database 数据库
+     * @param table    实际表名称
+     * @return 列信息
+     * @throws SQLException sql 异常
+     */
+    private String findTableComment(PreparedStatement ps, String database, String table) throws SQLException {
+        ps.setString(1, table);
+        ps.setString(2, database);
+        ResultSet resultSet = ps.executeQuery();
+        resultSet.next();
+        return resultSet.getObject(1, String.class);
+    }
+
+    /**
+     * 查询表对应的索引信息
+     *
+     * @param ps       预编译对象
+     * @param database 数据库
+     * @param table    实际表名称
+     * @return 索引信息
+     * @throws SQLException sql 异常
+     */
+    private List<String> findTableIndex(PreparedStatement ps, String database, String table) throws SQLException {
+        ps.setString(1, table);
+        ps.setString(2, database);
+        ResultSet resultSet = ps.executeQuery();
+        List<String> indexList = new ArrayList<>();
+        while (resultSet.next()) {
+            String indexName = resultSet.getObject(1, String.class);
+            String indexField = resultSet.getObject(2, String.class);
+            indexList.add(indexName + "(" + indexField + ")");
+        }
+        return indexList;
+    }
+
+    private String database(String JdbcUrl) {
+        return JdbcUrl.substring(JdbcUrl.lastIndexOf("/") + 1);
+    }
+}
