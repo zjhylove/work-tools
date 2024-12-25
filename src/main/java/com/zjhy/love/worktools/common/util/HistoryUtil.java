@@ -2,6 +2,7 @@ package com.zjhy.love.worktools.common.util;
 
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.json.JSONUtil;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,7 +61,6 @@ public class HistoryUtil {
      * @param toolName 工具名称
      * @return 历史参数
      */
-    @SuppressWarnings("unchecked")
     public static <T> T getHistory(String toolName, Class<T> type) {
         Object history = HISTORY_CACHE.get(toolName);
         if (history == null) {
@@ -68,11 +68,9 @@ public class HistoryUtil {
         }
 
         try {
-            // 将Map转换为指定类型
-            if (history instanceof Map) {
-                return JSONUtil.toBean(JSONUtil.toJsonStr(history), type);
-            }
-            return (T) history;
+            ObjectMapper mapper = new ObjectMapper();
+            String json = JSONUtil.toJsonStr(HISTORY_CACHE.get(toolName));
+            return mapper.readValue(json, type);
         } catch (Exception e) {
             NotificationUtil.showError("读取历史记录失败 ", e.getMessage());
             return null;

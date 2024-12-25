@@ -35,7 +35,7 @@ public class ApiDocService {
      */
     private static final Logger LOGGER = LoggerFactory.getLogger(ApiDocService.class);
 
-    public void generateDoc(ApiDocConfig config){
+    public String generateDoc(ApiDocConfig config){
         List<ApiInfo> apiInfoList = new ArrayList<>();
         try {
             apiInfoList = getApiInfoList(config);
@@ -66,6 +66,7 @@ public class ApiDocService {
                 FileUtil.del(docxFile);
             }
         });
+        return exportDir;
     }
 
     private List<ApiInfo> getApiInfoList(ApiDocConfig config) throws Exception {

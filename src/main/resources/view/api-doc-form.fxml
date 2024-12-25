@@ -21,7 +21,7 @@
                 styleClass="btn,btn-primary"/>
         <Button text="重置" onAction="#handleReset" 
                 styleClass="btn,btn-warning"/>
-        <Button text="提交" onAction="#handleSubmit" 
+        <Button text="导出文档" onAction="#handleSubmit"
                 styleClass="btn,btn-success"/>
     </HBox>
     

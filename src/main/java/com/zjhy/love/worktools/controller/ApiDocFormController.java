@@ -18,8 +18,10 @@ import javafx.stage.Window;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.awt.*;
 import java.io.File;
 import java.util.*;
+import java.util.List;
 
 /**
  * API文档表单控制器
@@ -174,13 +176,15 @@ public class ApiDocFormController {
 
                 // 调用服务生成文档
                 ApiDocService service = new ApiDocService();
-                service.generateDoc(config);
+                String docPath = service.generateDoc(config);
 
                 // 隐藏处理中提示
                 NotificationUtil.hidePersist();
                 // 显示成功提示
                 NotificationUtil.showSuccess("文档生成成功！");
 
+                // 打开文档所在目录
+                Desktop.getDesktop().open(new File(docPath));
             } catch (Exception e) {
                 LOGGER.error("生成文档失败", e);
                 // 隐藏处理中提示

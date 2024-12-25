@@ -89,7 +89,7 @@ public class LayoutUiController {
                     yield loader.load();
                 }
                 case "IP转发" -> {
-                    FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/ip-forward.fxml"));
+                    FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/ip-forward-form.fxml"));
                     yield loader.load();
                 }
                 case "身份验证" -> new AuthController();

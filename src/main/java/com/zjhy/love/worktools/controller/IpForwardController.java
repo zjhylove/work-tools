@@ -287,11 +287,11 @@ public class IpForwardController {
         // 初始化SSH配置表单
         initializeSshForm();
 
-        // 初始化转发规则表格
-        initializeForwardTable();
-
         // 加载历史配置
         loadHistory();
+
+        // 初始化转发规则表格
+        initializeForwardTable();
 
         // 初始化Nacos配置表单
         initializeNacosForm();

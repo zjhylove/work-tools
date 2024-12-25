@@ -148,7 +148,7 @@ public class DbDocFormController {
                 NotificationUtil.showSuccess("文档生成成功！");
                 
                 // 打开文档所在目录
-                Desktop.getDesktop().open(new File(docPath).getParentFile());
+                Desktop.getDesktop().open(new File(docPath));
                 
             } catch (Exception e) {
                 LOGGER.error("生成文档失败", e);
