@@ -28,9 +28,9 @@
                     <padding>
                         <Insets top="8" right="15" bottom="8" left="15"/>
                     </padding>
-                    <Button fx:id="connectButton" text="连接" 
+                    <Button fx:id="connectButton" text="连接" onAction="#handleConnect"
                             styleClass="btn, btn-primary"/>
-                    <Button fx:id="disconnectButton" text="断开" 
+                    <Button fx:id="disconnectButton" text="断开" onAction="#handleDisconnect"
                             styleClass="btn, btn-danger"/>
                     <Label fx:id="statusLabel" text="未连接" styleClass="label"/>
                 </HBox>
@@ -86,9 +86,9 @@
                     <padding>
                         <Insets top="8" right="15" bottom="8" left="15"/>
                     </padding>
-                    <Button fx:id="nacosConnectButton" text="连接Nacos" 
+                    <Button fx:id="nacosConnectButton" text="连接Nacos" onAction="#handleNacosConnect"
                             styleClass="btn, btn-primary"/>
-                    <Button fx:id="nacosDisconnectButton" text="断开" 
+                    <Button fx:id="nacosDisconnectButton" text="断开" onAction="#handleNacosDisconnect"
                             styleClass="btn, btn-danger"/>
                     <Label fx:id="nacosStatusLabel" text="未连接" styleClass="label"/>
                 </HBox>
@@ -123,7 +123,7 @@
                             <Button text="导出配置" onAction="#handleExportNacosConfig" 
                                     styleClass="btn, btn-default"/>
                             <Separator orientation="VERTICAL"/>
-                            <Button text="停���所有服务" onAction="#handleStopAll" 
+                            <Button text="停止所有服务" onAction="#handleStopAll"
                                     styleClass="btn, btn-warning"/>
                         </HBox>
                     </VBox>

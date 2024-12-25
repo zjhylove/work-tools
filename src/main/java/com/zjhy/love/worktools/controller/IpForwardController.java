@@ -47,7 +47,7 @@ public class IpForwardController {
      */
     @FXML
     private VBox sshFormContainer;
-    
+
     /**
      * 转发规则表格
      * 显示和编辑端口转发规则
@@ -84,7 +84,7 @@ public class IpForwardController {
      * 用于绑定表单输入
      */
     private final StringProperty passwordProperty = new SimpleStringProperty("");
-    
+
     /**
      * SSH服务实例
      * 处理SSH连接和端口转发
@@ -116,14 +116,14 @@ public class IpForwardController {
      */
     @FXML
     private Button connectButton;
-    
+
     /**
      * 断开连接按钮
      * 用于断开SSH连接
      */
     @FXML
     private Button disconnectButton;
-    
+
     /**
      * 开始转发按钮
      * 用于启动端口转发
@@ -137,14 +137,14 @@ public class IpForwardController {
      */
     @FXML
     private TabPane tabPane;
-    
+
     /**
      * Nacos配置表单容器
      * 用于放置Nacos连接配置的表单
      */
     @FXML
     private VBox nacosFormContainer;
-    
+
     /**
      * 服务列表表格
      * 显示Nacos中的服务列表
@@ -163,7 +163,7 @@ public class IpForwardController {
      * 处理HTTP请求的转发
      */
     private final HttpProxyService httpProxyService = new HttpProxyService();
-    
+
     /**
      * Nacos配置表单
      * 包含Nacos连接的所有配置字段
@@ -206,28 +206,28 @@ public class IpForwardController {
      */
     @FXML
     private Label nacosStatusLabel;
-    
+
     /**
      * Nacos连接按钮
      * 用于连接Nacos服务器
      */
     @FXML
     private Button nacosConnectButton;
-    
+
     /**
      * Nacos断开连接按钮
      * 用于断开Nacos连接
      */
     @FXML
     private Button nacosDisconnectButton;
-    
+
     /**
      * 开始Nacos转发按钮
      * 用于启动Nacos服务转发
      */
     @FXML
     private Button startNacosForwardButton;
-    
+
     /**
      * Nacos连接状态
      * true表示已连接，false表示未连接
@@ -251,7 +251,7 @@ public class IpForwardController {
      * 两次重试之间的等待时间（毫秒）
      */
     private static final long RETRY_DELAY_MS = 1000;
-    
+
     /**
      * 服务搜索输入框
      * 用于过滤服务列表
@@ -259,12 +259,6 @@ public class IpForwardController {
     @FXML
     private TextField serviceSearchField;
 
-    /**
-     * 所有服务列表
-     * 存储Nacos中的所有可用服务
-     */
-    private final ObservableList<String> allServices = FXCollections.observableArrayList();
-    
     /**
      * 重连定时器
      * 用于自动重连功能
@@ -291,24 +285,27 @@ public class IpForwardController {
     public void initialize() {
         // 初始化SSH配置表单
         initializeSshForm();
-        
+
         // 初始化转发规则表格
         initializeForwardTable();
-        
+
         // 加载历史配置
         loadHistory();
-        
+
         // 初始化Nacos配置表单
         initializeNacosForm();
-        
+
         // 初始化服务搜索功能
         initializeServiceSearch();
-        
+
         // 加载Nacos历史配置
         loadNacosHistory();
-        
+
+        //初始化nacos服务列表
+        initializeServiceTable();
+
         // 启动自动重连定时器
-        startReconnectTimer();
+        //startReconnectTimer();
     }
 
     /**
@@ -317,35 +314,35 @@ public class IpForwardController {
      */
     private void initializeSshForm() {
         sshForm = Form.of(
-            Group.of(
-                Field.ofStringType(hostProperty)
-                    .label("SSH服务器地址")
-                    .validate(CustomValidator.forPredicate(
-                        value -> !value.trim().isEmpty(),
-                        "SSH服务器地址不能为空"
-                    )),
-                    
-                Field.ofStringType(portProperty)
-                    .label("SSH服务器端口")
-                    .validate(CustomValidator.forPredicate(
-                        value -> value.matches("\\d+"),
-                        "端口必须是数字"
-                    )),
-                    
-                Field.ofStringType(usernameProperty)
-                    .label("用户名")
-                    .validate(CustomValidator.forPredicate(
-                        value -> !value.trim().isEmpty(),
-                        "用户名不能为空"
-                    )),
-                    
-                Field.ofStringType(passwordProperty)
-                    .label("密码")
-                    .validate(CustomValidator.forPredicate(
-                        value -> !value.trim().isEmpty(),
-                        "密码不能为空"
-                    ))
-            )
+                Group.of(
+                        Field.ofStringType(hostProperty)
+                                .label("SSH服务器地址")
+                                .validate(CustomValidator.forPredicate(
+                                        value -> !value.trim().isEmpty(),
+                                        "SSH服务器地址不能为空"
+                                )),
+
+                        Field.ofStringType(portProperty)
+                                .label("SSH服务器端口")
+                                .validate(CustomValidator.forPredicate(
+                                        value -> value.matches("\\d+"),
+                                        "端口必须是数字"
+                                )),
+
+                        Field.ofStringType(usernameProperty)
+                                .label("用户名")
+                                .validate(CustomValidator.forPredicate(
+                                        value -> !value.trim().isEmpty(),
+                                        "用户名不能为空"
+                                )),
+
+                        Field.ofStringType(passwordProperty)
+                                .label("密码")
+                                .validate(CustomValidator.forPredicate(
+                                        value -> !value.trim().isEmpty(),
+                                        "密码不能为空"
+                                ))
+                )
         );
 
         FormRenderer formRenderer = new FormRenderer(sshForm);
@@ -359,11 +356,11 @@ public class IpForwardController {
     private void initializeForwardTable() {
         // 设置表格可编辑
         forwardTable.setEditable(true);
-        
+
         // 创建列
         TableColumn<ForwardEntry, String> localHostCol = new TableColumn<>("本地地址");
-        localHostCol.setCellValueFactory(cellData -> 
-            new SimpleStringProperty(cellData.getValue().getLocalHost()));
+        localHostCol.setCellValueFactory(cellData ->
+                new SimpleStringProperty(cellData.getValue().getLocalHost()));
         localHostCol.setCellFactory(TextFieldTableCell.forTableColumn());
         localHostCol.setOnEditCommit(event -> {
             String newValue = event.getNewValue();
@@ -374,8 +371,8 @@ public class IpForwardController {
         });
 
         TableColumn<ForwardEntry, String> localPortCol = new TableColumn<>("本地端口");
-        localPortCol.setCellValueFactory(cellData -> 
-            new SimpleStringProperty(String.valueOf(cellData.getValue().getLocalPort())));
+        localPortCol.setCellValueFactory(cellData ->
+                new SimpleStringProperty(String.valueOf(cellData.getValue().getLocalPort())));
         localPortCol.setCellFactory(TextFieldTableCell.forTableColumn());
         localPortCol.setOnEditCommit(event -> {
             try {
@@ -392,8 +389,8 @@ public class IpForwardController {
         });
 
         TableColumn<ForwardEntry, String> remoteHostCol = new TableColumn<>("远程地址");
-        remoteHostCol.setCellValueFactory(cellData -> 
-            new SimpleStringProperty(cellData.getValue().getRemoteHost()));
+        remoteHostCol.setCellValueFactory(cellData ->
+                new SimpleStringProperty(cellData.getValue().getRemoteHost()));
         remoteHostCol.setCellFactory(TextFieldTableCell.forTableColumn());
         remoteHostCol.setOnEditCommit(event -> {
             String newValue = event.getNewValue();
@@ -406,8 +403,8 @@ public class IpForwardController {
         });
 
         TableColumn<ForwardEntry, String> remotePortCol = new TableColumn<>("远程端口");
-        remotePortCol.setCellValueFactory(cellData -> 
-            new SimpleStringProperty(String.valueOf(cellData.getValue().getRemotePort())));
+        remotePortCol.setCellValueFactory(cellData ->
+                new SimpleStringProperty(String.valueOf(cellData.getValue().getRemotePort())));
         remotePortCol.setCellFactory(TextFieldTableCell.forTableColumn());
         remotePortCol.setOnEditCommit(event -> {
             try {
@@ -427,6 +424,7 @@ public class IpForwardController {
         TableColumn<ForwardEntry, Void> deleteCol = new TableColumn<>("操作");
         deleteCol.setCellFactory(param -> new TableCell<>() {
             private final Button deleteButton = new Button("删除");
+
             {
                 deleteButton.setOnAction(event -> {
                     ForwardEntry entry = getTableView().getItems().get(getIndex());
@@ -486,29 +484,32 @@ public class IpForwardController {
      */
     @FXML
     private void handleConnect() {
-        try {
-            // 获取表单配置
-            String host = hostProperty.get();
-            int port = Integer.parseInt(portProperty.get());
-            String username = usernameProperty.get();
-            String password = passwordProperty.get();
-            
-            // 建立SSH连接
-            sshService.connect(host, port, username, password);
-            
-            // 更新连接状态
-            isConnected = true;
-            updateButtonStatus();
-            updateStatusLabel();
-            
-            // 保存配置到历史记录
-            saveHistory();
-            
-            // 显示成功提示
-            NotificationUtil.showSuccess("连接成功", "SSH连接已建立");
-        } catch (Exception e) {
-            LOGGER.error("SSH连接失败", e);
-            NotificationUtil.showError("连接失败", e.getMessage());
+        if(sshForm.isValid()){
+            sshForm.persist();
+            try {
+                // 获取表单配置
+                String host = hostProperty.get();
+                int port = Integer.parseInt(portProperty.get());
+                String username = usernameProperty.get();
+                String password = passwordProperty.get();
+
+                // 建立SSH连接
+                sshService.connect(host, port, username, password);
+
+                // 更新连接状态
+                isConnected = true;
+                updateButtonStatus();
+                updateStatusLabel();
+
+                // 保存配置到历史记录
+                saveHistory();
+
+                // 显示成功提示
+                NotificationUtil.showSuccess("连接成功", "SSH连接已建立");
+            } catch (Exception e) {
+                LOGGER.error("SSH连接失败", e);
+                NotificationUtil.showError("连接失败", e.getMessage());
+            }
         }
     }
 
@@ -565,10 +566,10 @@ public class IpForwardController {
         for (ForwardEntry entry : forwardEntries) {
             try {
                 sshService.addPortForwarding(
-                    entry.getLocalHost(),
-                    entry.getLocalPort(),
-                    entry.getRemoteHost(),
-                    entry.getRemotePort()
+                        entry.getLocalHost(),
+                        entry.getLocalPort(),
+                        entry.getRemoteHost(),
+                        entry.getRemotePort()
                 );
             } catch (Exception e) {
                 LOGGER.error("添加端口转发失败", e);
@@ -576,7 +577,7 @@ public class IpForwardController {
                 return;
             }
         }
-        
+
         NotificationUtil.showSuccess("转发成功", "所有端口转发规则已启动");
         saveHistory();
     }
@@ -586,17 +587,17 @@ public class IpForwardController {
             NotificationUtil.showError("验证失败", "远程地址不能为空");
             return false;
         }
-        
+
         if (entry.getLocalPort() <= 0 || entry.getLocalPort() > 65535) {
             NotificationUtil.showError("验证失败", "本地端口必须在1-65535之间");
             return false;
         }
-        
+
         if (entry.getRemotePort() <= 0 || entry.getRemotePort() > 65535) {
             NotificationUtil.showError("验证失败", "远程端口必须在1-65535之间");
             return false;
         }
-        
+
         return true;
     }
 
@@ -623,42 +624,42 @@ public class IpForwardController {
      */
     private void initializeNacosForm() {
         nacosForm = Form.of(
-            Group.of(
-                Field.ofStringType(serverAddrProperty)
-                    .label("Nacos地址")
-                    .validate(CustomValidator.forPredicate(
-                        value -> !value.trim().isEmpty(),
-                        "Nacos地址不能为空"
-                    )),
-                    
-                Field.ofStringType(namespaceProperty)
-                    .label("命名空间")
-                    .validate(CustomValidator.forPredicate(
-                        value -> !value.trim().isEmpty(),
-                        "命名空间不能为空"
-                    )),
-                    
-                Field.ofStringType(groupNameProperty)
-                    .label("分组名称")
-                    .validate(CustomValidator.forPredicate(
-                        value -> !value.trim().isEmpty(),
-                        "分组名称不能为空"
-                    )),
-                    
-                Field.ofStringType(nacosUsernameProperty)
-                    .label("用户名")
-                    .validate(CustomValidator.forPredicate(
-                        value -> !value.trim().isEmpty(),
-                        "用户名不能���空"
-                    )),
-                    
-                Field.ofStringType(nacosPasswordProperty)
-                    .label("密码")
-                    .validate(CustomValidator.forPredicate(
-                        value -> !value.trim().isEmpty(),
-                        "密码不能为空"
-                    ))
-            )
+                Group.of(
+                        Field.ofStringType(serverAddrProperty)
+                                .label("Nacos地址")
+                                .validate(CustomValidator.forPredicate(
+                                        value -> !value.trim().isEmpty(),
+                                        "Nacos地址不能为空"
+                                )),
+
+                        Field.ofStringType(namespaceProperty)
+                                .label("命名空间")
+                                .validate(CustomValidator.forPredicate(
+                                        value -> !value.trim().isEmpty(),
+                                        "命名空间不能为空"
+                                )),
+
+                        Field.ofStringType(groupNameProperty)
+                                .label("分组名称")
+                                .validate(CustomValidator.forPredicate(
+                                        value -> !value.trim().isEmpty(),
+                                        "分组名称不能为空"
+                                )),
+
+                        Field.ofStringType(nacosUsernameProperty)
+                                .label("用户名")
+                                .validate(CustomValidator.forPredicate(
+                                        value -> !value.trim().isEmpty(),
+                                        "用户名不能���空"
+                                )),
+
+                        Field.ofStringType(nacosPasswordProperty)
+                                .label("密码")
+                                .validate(CustomValidator.forPredicate(
+                                        value -> !value.trim().isEmpty(),
+                                        "密码不能为空"
+                                ))
+                )
         );
 
         FormRenderer formRenderer = new FormRenderer(nacosForm);
@@ -668,11 +669,12 @@ public class IpForwardController {
     private void initializeServiceTable() {
         TableColumn<String, String> serviceNameCol = new TableColumn<>("服务名称");
         serviceNameCol.setCellValueFactory(data -> new SimpleStringProperty(data.getValue()));
-        
+
         // 添加删除列
         TableColumn<String, Void> deleteCol = new TableColumn<>("操作");
         deleteCol.setCellFactory(param -> new TableCell<>() {
             private final Button deleteButton = new Button("删除");
+
             {
                 deleteButton.setOnAction(event -> {
                     String serviceName = getTableView().getItems().get(getIndex());
@@ -694,7 +696,7 @@ public class IpForwardController {
 
         serviceTable.getColumns().addAll(serviceNameCol, deleteCol);
         serviceTable.setItems(serviceNames);
-        
+
         // 添加键盘删除支持
         serviceTable.setOnKeyPressed(event -> {
             if (event.getCode() == KeyCode.DELETE) {
@@ -736,7 +738,8 @@ public class IpForwardController {
      */
     @FXML
     private void handleNacosConnect() {
-        if (!isNacosConnected) {
+        if ((!isNacosConnected)&& nacosForm.isValid()) {
+            nacosForm.persist();
             try {
                 // 创建Nacos配置对象
                 NacosConfig config = new NacosConfig();
@@ -744,18 +747,18 @@ public class IpForwardController {
                 config.setNamespace(namespaceProperty.get());
                 config.setUsername(nacosUsernameProperty.get());
                 config.setPassword(nacosPasswordProperty.get());
-                
+
                 // 连接Nacos服务器
                 nacosService.connect(config);
-                
+
                 // 更新连接状态
                 isNacosConnected = true;
                 updateNacosButtonStatus();
                 updateNacosStatusLabel();
-                
+
                 // 保存配置到历史记录
                 saveNacosHistory();
-                
+
                 // 显示成功提示
                 NotificationUtil.showSuccess("连接成功", "Nacos连接已建立");
             } catch (Exception e) {
@@ -811,15 +814,15 @@ public class IpForwardController {
                 if (!instances.isEmpty()) {
                     Instance instance = instances.get(0);
                     String target = instance.getIp() + ":" + instance.getPort();
-                    
+
                     // 添加服务映射
                     httpProxyService.addServiceMapping(serviceName + ".service", target);
-                    
+
                     // 创建SSH端口转发
                     sshService.addPortForwarding("127.0.0.1", instance.getPort(), instance.getIp(), instance.getPort());
                 }
             }
-            
+
             isNacosForwarding = true;
             updateNacosButtonStatus();
             updateNacosStatusLabel();
@@ -869,36 +872,36 @@ public class IpForwardController {
         try {
             // 获取可用服务列表，传入分组名称
             List<String> availableServices = nacosService.getServiceList(groupNameProperty.get());
-            
+
             // 创建服务选择对话框
             ChoiceDialog<String> dialog = new ChoiceDialog<>();
             dialog.setTitle("添加服务");
             dialog.setHeaderText("请选择要添加的服务");
             dialog.getItems().addAll(availableServices);
-            
+
             // 添加搜索框
             TextField searchField = new TextField();
             searchField.setPromptText("搜索服务...");
             FilteredList<String> filteredServices = new FilteredList<>(
-                FXCollections.observableArrayList(availableServices)
+                    FXCollections.observableArrayList(availableServices)
             );
             searchField.textProperty().addListener((observable, oldValue, newValue) -> {
                 filteredServices.setPredicate(service ->
-                    newValue == null || newValue.trim().isEmpty() ||
-                    service.toLowerCase().contains(newValue.toLowerCase())
+                        newValue == null || newValue.trim().isEmpty() ||
+                                service.toLowerCase().contains(newValue.toLowerCase())
                 );
             });
-            
+
             ListView<String> serviceListView = new ListView<>(filteredServices);
             dialog.getDialogPane().setContent(new VBox(10, searchField, serviceListView));
-            
+
             // 显示对话框
             Optional<String> result = dialog.showAndWait();
             result.ifPresent(serviceName -> {
                 if (!serviceNames.contains(serviceName)) {
                     serviceNames.add(serviceName);
                     saveNacosHistory();
-                    
+
                     // 如果已经在转发中，则为新服务添加转发
                     if (isNacosForwarding) {
                         addServiceForward(serviceName);
@@ -914,6 +917,7 @@ public class IpForwardController {
     /**
      * 添加服务转发
      * 为指定服务配置端口转发和HTTP代理
+     *
      * @param serviceName 服务名称
      */
     private void addServiceForward(String serviceName) {
@@ -924,26 +928,26 @@ public class IpForwardController {
                 // 获取第一个实例
                 Instance instance = instances.get(0);
                 String target = instance.getIp() + ":" + instance.getPort();
-                
+
                 // 添加HTTP代理映射
                 httpProxyService.addServiceMapping(serviceName + ".service", target);
-                
+
                 // 创建SSH端口转发
                 sshService.addPortForwarding(
-                    "127.0.0.1", 
-                    instance.getPort(), 
-                    instance.getIp(), 
-                    instance.getPort()
+                        "127.0.0.1",
+                        instance.getPort(),
+                        instance.getIp(),
+                        instance.getPort()
                 );
-                
+
                 // 显示成功提示
-                NotificationUtil.showSuccess("转发成功", 
-                    String.format("服务 %s 已添加到转发列表", serviceName));
+                NotificationUtil.showSuccess("转发成功",
+                        String.format("服务 %s 已添加到转发列表", serviceName));
             }
         } catch (Exception e) {
             LOGGER.error("添加服务转发失败", e);
-            NotificationUtil.showError("转发失败", 
-                String.format("服务 %s 转发失败: %s", serviceName, e.getMessage()));
+            NotificationUtil.showError("转发失败",
+                    String.format("服务 %s 转发失败: %s", serviceName, e.getMessage()));
         }
     }
 
@@ -958,7 +962,7 @@ public class IpForwardController {
             } else {
                 String searchText = newValue.toLowerCase();
                 ObservableList<String> filteredList = serviceNames.filtered(
-                    service -> service.toLowerCase().contains(searchText)
+                        service -> service.toLowerCase().contains(searchText)
                 );
                 serviceTable.setItems(filteredList);
             }
@@ -978,18 +982,18 @@ public class IpForwardController {
                     javafx.application.Platform.runLater(() -> {
                         try {
                             RetryUtil.retry(
-                                () -> {
-                                    handleConnect();
-                                    return null;
-                                },
-                                e -> true,
-                                MAX_RETRY_ATTEMPTS,
-                                RETRY_DELAY_MS
+                                    () -> {
+                                        handleConnect();
+                                        return null;
+                                    },
+                                    e -> true,
+                                    MAX_RETRY_ATTEMPTS,
+                                    RETRY_DELAY_MS
                             );
                         } catch (Exception e) {
                             LOGGER.error("自动重连失败", e);
-                            NotificationUtil.showError("重连失败", 
-                                String.format("尝试重连%d次均失败，请检查网络连接", MAX_RETRY_ATTEMPTS));
+                            NotificationUtil.showError("重连失败",
+                                    String.format("尝试重连%d次均失败，请检查网络连接", MAX_RETRY_ATTEMPTS));
                             autoReconnect = false;
                         }
                     });
@@ -1024,9 +1028,9 @@ public class IpForwardController {
             config.setUsername(usernameProperty.get());
             config.setPassword(passwordProperty.get());
             config.setForwardEntries(new ArrayList<>(forwardEntries));
-            
-            FileUtil.exportToJson(config, "导出SSH转发配置", 
-                sshFormContainer.getScene().getWindow());
+
+            FileUtil.exportToJson(config, "导出SSH转发配置",
+                    sshFormContainer.getScene().getWindow());
         } catch (Exception e) {
             LOGGER.error("导出配置失败", e);
             NotificationUtil.showError("导出失败", e.getMessage());
@@ -1041,11 +1045,11 @@ public class IpForwardController {
     private void handleImportSshConfig() {
         try {
             IpForwardConfig config = FileUtil.importFromJson(
-                IpForwardConfig.class,
-                "导入SSH转发配置",
-                sshFormContainer.getScene().getWindow()
+                    IpForwardConfig.class,
+                    "导入SSH转发配置",
+                    sshFormContainer.getScene().getWindow()
             );
-            
+
             if (config != null) {
                 hostProperty.set(config.getHost());
                 portProperty.set(String.valueOf(config.getPort()));
@@ -1074,9 +1078,9 @@ public class IpForwardController {
             config.setUsername(nacosUsernameProperty.get());
             config.setPassword(nacosPasswordProperty.get());
             config.setServiceNames(new ArrayList<>(serviceNames));
-            
-            FileUtil.exportToJson(config, "导出Nacos转发配置", 
-                nacosFormContainer.getScene().getWindow());
+
+            FileUtil.exportToJson(config, "导出Nacos转发配置",
+                    nacosFormContainer.getScene().getWindow());
         } catch (Exception e) {
             LOGGER.error("导出配置失败", e);
             NotificationUtil.showError("导出失败", e.getMessage());
@@ -1091,11 +1095,11 @@ public class IpForwardController {
     private void handleImportNacosConfig() {
         try {
             NacosConfig config = FileUtil.importFromJson(
-                NacosConfig.class,
-                "导入Nacos转发配置",
-                nacosFormContainer.getScene().getWindow()
+                    NacosConfig.class,
+                    "导入Nacos转发配置",
+                    nacosFormContainer.getScene().getWindow()
             );
-            
+
             if (config != null) {
                 serverAddrProperty.set(config.getServerAddr());
                 namespaceProperty.set(config.getNamespace());
@@ -1119,18 +1123,18 @@ public class IpForwardController {
     private void handleStopAll() {
         // 停止所有服务
         stop();
-        
+
         // 重置状态标志
         isConnected = false;
         isNacosConnected = false;
         isNacosForwarding = false;
-        
+
         // 更新UI状态
         updateButtonStatus();
         updateStatusLabel();
         updateNacosButtonStatus();
         updateNacosStatusLabel();
-        
+
         // 显示成功提示
         NotificationUtil.showSuccess("停止成功", "所有服务已停止");
     }
