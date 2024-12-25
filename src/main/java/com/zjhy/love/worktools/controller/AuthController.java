@@ -57,6 +57,8 @@ public class AuthController  {
     }
 
     private void initializeAuthTable() {
+        authTable.getStyleClass().addAll("table", "table-hover", "table-striped");
+        
         // 账户列
         TableColumn<AuthEntry, String> nameColumn = new TableColumn<>("账户");
         nameColumn.setCellValueFactory(cellData -> cellData.getValue().nameProperty());
@@ -68,7 +70,7 @@ public class AuthController  {
         // 验证码列
         TableColumn<AuthEntry, String> codeColumn = new TableColumn<>("验证码");
         codeColumn.setCellFactory(column -> new TableCell<>() {
-            private final HBox container = new HBox(5);  // 5是组件之间的间距
+            private final HBox container = new HBox(5);  // 5��组件之间的间距
             private final Label codeLabel = new Label();
             private final Button copyButton = new Button("复制");
             
@@ -190,7 +192,10 @@ public class AuthController  {
         Dialog<AuthEntry> dialog = new Dialog<>();
         dialog.setTitle("添加验证器");
         dialog.setHeaderText(null);
-        dialog.getDialogPane().getStyleClass().add("bootstrap-dialog");
+        
+        // 设置对话框样式
+        DialogPane dialogPane = dialog.getDialogPane();
+        dialogPane.getStylesheets().addAll(authTable.getScene().getStylesheets());
         
         // 创建表单
         StringField nameField = Field.ofStringType("")
@@ -261,31 +266,36 @@ public class AuthController  {
 
         // 创建表单渲染器
         FormRenderer formRenderer = new FormRenderer(form);
-        formRenderer.getStyleClass().add("bootstrap-form");
-
-        // 添加按钮
-        ButtonType addButton = new ButtonType("添加", ButtonBar.ButtonData.OK_DONE);
-        dialog.getDialogPane().getButtonTypes().addAll(addButton, ButtonType.CANCEL);
 
         // 设置对话框内容
         VBox content = new VBox(10);
-        content.getStyleClass().add("bootstrap-panel");
+        content.getStyleClass().addAll("panel", "panel-body");
         content.getChildren().add(formRenderer);
         content.setPadding(new Insets(20));
 
         // 设置对话框内容
-        dialog.getDialogPane().setContent(content);
+        dialogPane.setContent(content);
+
+        // 添加对话框按钮
+        ButtonType addButton = new ButtonType("添加", ButtonBar.ButtonData.OK_DONE);
+        dialogPane.getButtonTypes().addAll(addButton, ButtonType.CANCEL);
 
         // 设置对话框按钮样式
-        Node addButtonNode = dialog.getDialogPane().lookupButton(addButton);
-        if (addButtonNode instanceof Button) {
-            addButtonNode.getStyleClass().addAll("btn", "btn-primary");
+        Node addButtonNode = dialogPane.lookupButton(addButton);
+        if (addButtonNode instanceof Button btn) {
+            btn.getStyleClass().setAll("btn", "btn-primary");
         }
         
-        Node cancelButtonNode = dialog.getDialogPane().lookupButton(ButtonType.CANCEL);
-        if (cancelButtonNode instanceof Button) {
-            cancelButtonNode.getStyleClass().addAll("btn", "btn-default");
+        Node cancelButtonNode = dialogPane.lookupButton(ButtonType.CANCEL);
+        if (cancelButtonNode instanceof Button btn) {
+            btn.getStyleClass().setAll("btn", "btn-default");
         }
+
+        // 设置按钮栏样式
+        dialogPane.lookup(".button-bar").getStyleClass().addAll("panel");
+        
+        // 设置对话框最小宽度，确保内容不会被压缩
+        dialog.getDialogPane().setMinWidth(450);
 
         // 设置结果转换器
         dialog.setResultConverter(dialogButton -> {
