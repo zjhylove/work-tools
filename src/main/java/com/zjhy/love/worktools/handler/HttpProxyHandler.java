@@ -1,5 +1,6 @@
 package com.zjhy.love.worktools.handler;
 
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.*;
@@ -28,19 +29,52 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<FullHttpReques
             return;
         }
 
-        // 获取目标服务地址
-        String target = serviceMapping.get(host);
-        if (target == null) {
-            LOGGER.warn("未找到服务映射: {}", host);
-            sendError(ctx, HttpResponseStatus.NOT_FOUND);
-            return;
-        }
+        try {
+            // 获取目标服务地址
+            String target = serviceMapping.get(host);
+            
+            // 保留原始URI（包含路径和查询参数）
+            String uri = request.uri();
 
-        // 修改请求
-        request.headers().set(HttpHeaderNames.HOST, target);
-        
-        // 转发请求
-        ctx.fireChannelRead(request.retain());
+            // 获取请求体内容
+            ByteBuf content = request.content().copy();
+
+            // 创建新的请求对象
+            DefaultFullHttpRequest forwardRequest = new DefaultFullHttpRequest(
+                request.protocolVersion(),
+                request.method(),
+                uri,
+                content,
+                request.headers().copy(),
+                request.trailingHeaders().copy()
+            );
+            
+            if (target != null) {
+                LOGGER.debug("找到服务映射: {} -> {}, URI: {}", host, target, uri);
+                forwardRequest.headers().set(HttpHeaderNames.HOST, target);
+            } else {
+                LOGGER.debug("未找到服务映射，使用原始地址: {}, URI: {}", host, uri);
+            }
+            
+            // 更新Content-Length头
+            forwardRequest.headers().set(
+                HttpHeaderNames.CONTENT_LENGTH, 
+                content.readableBytes()
+            );
+            
+            // 保持连接
+            forwardRequest.headers().set(
+                HttpHeaderNames.CONNECTION,
+                HttpHeaderValues.KEEP_ALIVE
+            );
+            
+            // 转发请求
+            ctx.fireChannelRead(forwardRequest);
+            
+        } catch (Exception e) {
+            LOGGER.error("处理请求时发生错误", e);
+            sendError(ctx, HttpResponseStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     private void sendError(ChannelHandlerContext ctx, HttpResponseStatus status) {

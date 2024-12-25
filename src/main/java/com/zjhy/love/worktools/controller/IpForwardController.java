@@ -22,18 +22,19 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
+import javafx.geometry.Insets;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.TextFieldTableCell;
-import javafx.scene.input.KeyCode;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
-import javafx.util.StringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.net.ServerSocket;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * IP转发控制器
@@ -493,7 +494,7 @@ public class IpForwardController {
 
         // 添加所有列到表格
         forwardTable.getColumns().setAll(
-            nameCol, localHostCol, localPortCol, remoteHostCol, remotePortCol, deleteCol
+                nameCol, localHostCol, localPortCol, remoteHostCol, remotePortCol, deleteCol
         );
 
         // 绑定数据源
@@ -527,7 +528,7 @@ public class IpForwardController {
      */
     @FXML
     private void handleConnect() {
-        if(sshForm.isValid()){
+        if (sshForm.isValid()) {
             sshForm.persist();
             try {
                 // 获取表单配置
@@ -586,7 +587,7 @@ public class IpForwardController {
 
     /**
      * 开始端口转发
-     * 根据表格中的规则配置SSH端口转发
+     * 根���表格中的规则配置SSH端口转发
      */
     @FXML
     private void handleStartForward() {
@@ -711,12 +712,17 @@ public class IpForwardController {
         nacosFormContainer.getChildren().add(formRenderer);
     }
 
+    /**
+     * 初始化服务列表表格
+     */
     private void initializeServiceTable() {
+        // 创建服务名称列
         TableColumn<String, String> serviceNameCol = new TableColumn<>("服务名称");
-        serviceNameCol.setCellValueFactory(data -> new SimpleStringProperty(data.getValue()));
+        serviceNameCol.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue()));
+        serviceNameCol.setPrefWidth(200);
 
-        // 添加删除列
-        TableColumn<String, Void> deleteCol = new TableColumn<>("操作");
+        // 创建删除列
+        TableColumn<String, Void> deleteCol = new TableColumn<>("");
         deleteCol.setCellFactory(param -> new TableCell<>() {
             private final Button deleteButton = new Button("删除");
 
@@ -738,20 +744,13 @@ public class IpForwardController {
                 }
             }
         });
+        deleteCol.setPrefWidth(60);
 
-        serviceTable.getColumns().addAll(serviceNameCol, deleteCol);
+        // 设置列
+        serviceTable.getColumns().setAll(serviceNameCol, deleteCol);
+
+        // 绑定数据源
         serviceTable.setItems(serviceNames);
-
-        // 添加键盘删除支持
-        serviceTable.setOnKeyPressed(event -> {
-            if (event.getCode() == KeyCode.DELETE) {
-                String selectedService = serviceTable.getSelectionModel().getSelectedItem();
-                if (selectedService != null) {
-                    serviceNames.remove(selectedService);
-                    saveNacosHistory();
-                }
-            }
-        });
     }
 
     private void loadNacosHistory() {
@@ -766,13 +765,16 @@ public class IpForwardController {
         }
     }
 
+    /**
+     * 保存Nacos配置历史
+     */
     private void saveNacosHistory() {
         NacosConfig config = new NacosConfig();
         config.setServerAddr(serverAddrProperty.get());
         config.setNamespace(namespaceProperty.get());
-        config.setGroupName(groupNameProperty.get());
         config.setUsername(nacosUsernameProperty.get());
         config.setPassword(nacosPasswordProperty.get());
+        config.setGroupName(groupNameProperty.get());
         config.setServiceNames(new ArrayList<>(serviceNames));
         HistoryUtil.saveHistory("nacos", config);
     }
@@ -783,7 +785,7 @@ public class IpForwardController {
      */
     @FXML
     private void handleNacosConnect() {
-        if ((!isNacosConnected)&& nacosForm.isValid()) {
+        if ((!isNacosConnected) && nacosForm.isValid()) {
             nacosForm.persist();
             try {
                 // 创建Nacos配置对象
@@ -859,12 +861,16 @@ public class IpForwardController {
                 if (!instances.isEmpty()) {
                     Instance instance = instances.get(0);
                     String target = instance.getIp() + ":" + instance.getPort();
-
+                    // 查找可用的本地端口（从10000到65535之间）
+                    int localPort = findAvailablePort(10000, 65535);
+                    if (localPort == -1) {
+                        throw new RuntimeException("无法找到可用的本地端口");
+                    }
+                    LOGGER.debug("启动服务转发 - 服务: {}, 本地端口: {}, 目标: {}", serviceName, localPort, target);
                     // 添加服务映射
-                    httpProxyService.addServiceMapping(serviceName + ".service", target);
-
+                    httpProxyService.addServiceMapping(serviceName + ".service", "127.0.0.1:" + localPort);
                     // 创建SSH端口转发
-                    sshService.addPortForwarding("127.0.0.1", instance.getPort(), instance.getIp(), instance.getPort());
+                    sshService.addPortForwarding("127.0.0.1", localPort, instance.getIp(), instance.getPort());
                 }
             }
 
@@ -905,7 +911,6 @@ public class IpForwardController {
 
     /**
      * 添加Nacos服务
-     * 从Nacos服务器获取可用服务列表并让用户选择
      */
     @FXML
     private void handleAddService() {
@@ -915,18 +920,32 @@ public class IpForwardController {
         }
 
         try {
-            // 获取可用服务列表，传入分组名称
+            // 获取可用服务列表
             List<String> availableServices = nacosService.getServiceList(groupNameProperty.get());
 
-            // 创建服务选择对话框
-            ChoiceDialog<String> dialog = new ChoiceDialog<>();
+            // 创建自定义对话框
+            Dialog<String> dialog = new Dialog<>();
             dialog.setTitle("添加服务");
             dialog.setHeaderText("请选择要添加的服务");
-            dialog.getItems().addAll(availableServices);
+
+            // 添加确定和取消按钮
+            ButtonType confirmButtonType = new ButtonType("确定", ButtonBar.ButtonData.OK_DONE);
+            dialog.getDialogPane().getButtonTypes().addAll(confirmButtonType, ButtonType.CANCEL);
+
+            // 创建对话框内容
+            VBox content = new VBox(10);
+            content.setPadding(new Insets(10));
 
             // 添加搜索框
             TextField searchField = new TextField();
             searchField.setPromptText("搜索服务...");
+
+            // 创建服务列表视图
+            ListView<String> serviceListView = new ListView<>();
+            serviceListView.getItems().addAll(availableServices);
+            serviceListView.setPrefHeight(300);
+
+            // 配置搜索功能
             FilteredList<String> filteredServices = new FilteredList<>(
                     FXCollections.observableArrayList(availableServices)
             );
@@ -936,15 +955,35 @@ public class IpForwardController {
                                 service.toLowerCase().contains(newValue.toLowerCase())
                 );
             });
+            serviceListView.setItems(filteredServices);
 
-            ListView<String> serviceListView = new ListView<>(filteredServices);
-            dialog.getDialogPane().setContent(new VBox(10, searchField, serviceListView));
+            // 设置对话框内容
+            content.getChildren().addAll(searchField, serviceListView);
+            dialog.getDialogPane().setContent(content);
 
-            // 显示对话框
-            Optional<String> result = dialog.showAndWait();
-            result.ifPresent(serviceName -> {
+            // 配置结果转换器
+            dialog.setResultConverter(dialogButton -> {
+                if (dialogButton == confirmButtonType) {
+                    return serviceListView.getSelectionModel().getSelectedItem();
+                }
+                return null;
+            });
+
+            // 禁用确定按钮，直到选择了服务
+            Node confirmButton = dialog.getDialogPane().lookupButton(confirmButtonType);
+            confirmButton.setDisable(true);
+
+            // 当选择服务时启用确定按钮
+            serviceListView.getSelectionModel().selectedItemProperty().addListener(
+                    (observable, oldValue, newValue) -> confirmButton.setDisable(newValue == null));
+
+            // 显示对话框���处理结果
+            dialog.showAndWait().ifPresent(serviceName -> {
                 if (!serviceNames.contains(serviceName)) {
+                    LOGGER.debug("添加服务: {}", serviceName);
+                    // 添加到列表
                     serviceNames.add(serviceName);
+                    // 保存历史记录
                     saveNacosHistory();
 
                     // 如果已经在转发中，则为新服务添加转发
@@ -953,10 +992,31 @@ public class IpForwardController {
                     }
                 }
             });
+
         } catch (Exception e) {
             LOGGER.error("获取服务列表失败", e);
             NotificationUtil.showError("错误", "获取服务列表失败: " + e.getMessage());
         }
+    }
+
+    /**
+     * 获取可用的随机端口
+     * 在指定范围内查找未被占用的端口
+     *
+     * @param startPort 起始端口号
+     * @param endPort   结束端口号
+     * @return 可用的端口号，如果没有可用端口则返回-1
+     */
+    private int findAvailablePort(int startPort, int endPort) {
+        for (int port = startPort; port <= endPort; port++) {
+            try (ServerSocket socket = new ServerSocket(port)) {
+                socket.close();
+                return port;
+            } catch (IOException ignored) {
+                // 端口被占用，继续尝试下一个端口
+            }
+        }
+        return -1;
     }
 
     /**
@@ -972,22 +1032,34 @@ public class IpForwardController {
             if (!instances.isEmpty()) {
                 // 获取第一个实例
                 Instance instance = instances.get(0);
-                String target = instance.getIp() + ":" + instance.getPort();
+                int remotePort = instance.getPort();
+
+                // 查找可用的本地端口（从10000到65535之间）
+                int localPort = findAvailablePort(10000, 65535);
+                if (localPort == -1) {
+                    throw new RuntimeException("无法找到可用的本地端口");
+                }
+
+                String target = instance.getIp() + ":" + remotePort;
+                LOGGER.debug("添加服务转发 - 服务: {}, 本地端口: {}, 目标: {}", serviceName, localPort, target);
 
                 // 添加HTTP代理映射
-                httpProxyService.addServiceMapping(serviceName + ".service", target);
+                httpProxyService.addServiceMapping(serviceName + ".service", "127.0.0.1:" + localPort);
 
                 // 创建SSH端口转发
                 sshService.addPortForwarding(
                         "127.0.0.1",
-                        instance.getPort(),
+                        localPort,      // 使用找到的可用端口
                         instance.getIp(),
-                        instance.getPort()
+                        remotePort
                 );
 
                 // 显示成功提示
                 NotificationUtil.showSuccess("转发成功",
-                        String.format("服务 %s 已添加到转发列表", serviceName));
+                        String.format("服务 %s 已添加到转发列表\n本地端口: %d -> 远程端口: %d",
+                                serviceName, localPort, remotePort));
+            } else {
+                throw new RuntimeException("服务没有可用的实例");
             }
         } catch (Exception e) {
             LOGGER.error("添加服务转发失败", e);
