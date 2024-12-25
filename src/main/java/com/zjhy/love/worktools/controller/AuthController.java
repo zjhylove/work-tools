@@ -176,9 +176,46 @@ public class AuthController  {
             
             Dialog<Void> dialog = new Dialog<>();
             dialog.setTitle("二维码");
-            dialog.setHeaderText(entry.getName());
-            dialog.getDialogPane().setContent(imageView);
-            dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
+            dialog.setHeaderText(null);  // 移除标题，使用面板标题代替
+            
+            // 设置对话框样式
+            DialogPane dialogPane = dialog.getDialogPane();
+            dialogPane.getStylesheets().addAll(authTable.getScene().getStylesheets());
+            
+            // 创建内容面板
+            VBox content = new VBox(10);
+            content.getStyleClass().addAll("panel", "panel-body");
+            content.setAlignment(Pos.CENTER);
+            content.setPadding(new Insets(20));
+            
+            // 添加标题标签
+            Label titleLabel = new Label(entry.getName());
+            titleLabel.getStyleClass().add("h4");
+            
+            // 添加发行方标签
+            Label issuerLabel = new Label(entry.getIssuer());
+            issuerLabel.getStyleClass().add("text-muted");
+            
+            content.getChildren().addAll(titleLabel, issuerLabel, imageView);
+            
+            // 设置对话框内容
+            dialogPane.setContent(content);
+            
+            // 添加关闭按钮
+            ButtonType closeButton = new ButtonType("关闭", ButtonBar.ButtonData.OK_DONE);
+            dialogPane.getButtonTypes().add(closeButton);
+            
+            // 设置按钮样式
+            Node closeButtonNode = dialogPane.lookupButton(closeButton);
+            if (closeButtonNode instanceof Button btn) {
+                btn.getStyleClass().setAll("btn", "btn-primary");
+            }
+            
+            // 设置按钮栏样式
+            dialogPane.lookup(".button-bar").getStyleClass().addAll("panel");
+            
+            // 设置对话框最小宽度
+            dialog.getDialogPane().setMinWidth(300);
             
             dialog.showAndWait();
         } catch (Exception e) {
