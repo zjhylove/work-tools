@@ -1,6 +1,7 @@
 package com.zjhy.love.worktools.service;
 
 import cn.hutool.core.io.StreamProgress;
+import cn.hutool.core.io.resource.InputStreamResource;
 import cn.hutool.core.text.CharSequenceUtil;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.http.HttpRequest;
@@ -12,6 +13,7 @@ import org.apache.catalina.startup.Tomcat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.servlet.ServletInputStream;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -97,7 +99,7 @@ public class HttpProxyService {
         String originHost = req.getHeader("host");
         LOGGER.info("originHost:{}", originHost);
         String forwardHost = serviceMapping.get(originHost);
-        if (Objects.isNull(originHost)) {
+        if (Objects.isNull(forwardHost)) {
             forwardHost = originHost;
         }
         LOGGER.info("远程请求代理为本地请求:{}", forwardHost);
@@ -113,12 +115,15 @@ public class HttpProxyService {
             String name = headerNames.nextElement();
             httpRequest.header(name, req.getHeader(name));
         }
-        try (HttpResponse response = httpRequest.execute()) {
-            response.charset(StandardCharsets.UTF_8);
-            Map<String, List<String>> headers = response.headers();
-            headers.forEach((k, v) -> resp.setHeader(k, ArrayUtil.join(v.toArray(), ",")));
-            try (ServletOutputStream outputStream = resp.getOutputStream()) {
-                response.writeBody(outputStream, true, STREAM_PROGRESS);
+        try (ServletInputStream inputStream = req.getInputStream()){
+            httpRequest.body(new InputStreamResource(inputStream));
+            try (HttpResponse response = httpRequest.execute()) {
+                response.charset(StandardCharsets.UTF_8);
+                Map<String, List<String>> headers = response.headers();
+                headers.forEach((k, v) -> resp.setHeader(k, ArrayUtil.join(v.toArray(), ",")));
+                try (ServletOutputStream outputStream = resp.getOutputStream()) {
+                    response.writeBody(outputStream, true, STREAM_PROGRESS);
+                }
             }
         }
     }

@@ -461,7 +461,7 @@ public class IpForwardController {
         });
 
         // 删除列
-        TableColumn<ForwardEntry, Void> deleteCol = new TableColumn<>("");
+        TableColumn<ForwardEntry, Void> deleteCol = new TableColumn<>("操作");
         deleteCol.setCellFactory(param -> new TableCell<>() {
             private final Button deleteButton = new Button("删除");
 
@@ -492,10 +492,9 @@ public class IpForwardController {
         remotePortCol.setPrefWidth(100);
         deleteCol.setPrefWidth(60);
 
+        forwardTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         // 添加所有列到表格
-        forwardTable.getColumns().setAll(
-                nameCol, localHostCol, localPortCol, remoteHostCol, remotePortCol, deleteCol
-        );
+        forwardTable.getColumns().addAll(nameCol, localHostCol, localPortCol, remoteHostCol, remotePortCol, deleteCol);
 
         // 绑定数据源
         forwardTable.setItems(forwardEntries);
@@ -722,7 +721,7 @@ public class IpForwardController {
         serviceNameCol.setPrefWidth(200);
 
         // 创建删除列
-        TableColumn<String, Void> deleteCol = new TableColumn<>("");
+        TableColumn<String, Void> deleteCol = new TableColumn<>("操作");
         deleteCol.setCellFactory(param -> new TableCell<>() {
             private final Button deleteButton = new Button("删除");
 
@@ -748,7 +747,7 @@ public class IpForwardController {
 
         // 设置列
         serviceTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        serviceTable.getColumns().setAll(serviceNameCol, deleteCol);
+        serviceTable.getColumns().addAll(serviceNameCol, deleteCol);
 
         // 绑定数据源
         serviceTable.setItems(serviceNames);
@@ -869,7 +868,7 @@ public class IpForwardController {
                     }
                     LOGGER.debug("启动服务转发 - 服务: {}, 本地端口: {}, 目标: {}", serviceName, localPort, target);
                     // 添加服务映射
-                    httpProxyService.addServiceMapping(serviceName + ".service", "127.0.0.1:" + localPort);
+                    httpProxyService.addServiceMapping(target, "127.0.0.1:" + localPort);
                     // 创建SSH端口转发
                     sshService.addPortForwarding("127.0.0.1", localPort, instance.getIp(), instance.getPort());
                 }
@@ -1045,7 +1044,7 @@ public class IpForwardController {
                 LOGGER.debug("添加服务转发 - 服务: {}, 本地端口: {}, 目标: {}", serviceName, localPort, target);
 
                 // 添加HTTP代理映射
-                httpProxyService.addServiceMapping(serviceName + ".service", "127.0.0.1:" + localPort);
+                httpProxyService.addServiceMapping(target, "127.0.0.1:" + localPort);
 
                 // 创建SSH端口转发
                 sshService.addPortForwarding(
