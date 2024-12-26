@@ -18,9 +18,9 @@ import java.util.Objects;
 /**
  * @author zhengjun
  */
-public class ToolsApplication extends Application {
+public class WorkToolsApplication extends Application {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ToolsApplication.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(WorkToolsApplication.class);
 
     private LayoutUiController layoutController;
 
@@ -43,7 +43,7 @@ public class ToolsApplication extends Application {
             // 设置标题样式
             stage.setTitle("✨ Work Tools ⚡");
             // 设置应用图标
-            stage.getIcons().add(new Image(Objects.requireNonNull(ToolsApplication.class.getResourceAsStream("/images/tools-icon.png"))));
+            stage.getIcons().add(new Image(Objects.requireNonNull(WorkToolsApplication.class.getResourceAsStream("/images/tools-icon.png"))));
 
             // 初始化通知工具
             NotificationUtil.initStage(stage);

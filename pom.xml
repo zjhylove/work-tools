@@ -24,7 +24,7 @@
         <maven.compiler.target>17</maven.compiler.target>
         
         <!-- JavaFX -->
-        <javafx.version>22</javafx.version>
+        <javafx.version>17.0.9</javafx.version>
         <controlsfx.version>11.1.0</controlsfx.version>
         <bootstrapfx.version>0.4.0</bootstrapfx.version>
         <formsfx.version>11.6.0</formsfx.version>
@@ -63,6 +63,8 @@
         
         <!-- Netty -->
         <netty.version>4.1.94.Final</netty.version>
+        
+        <java.version>17</java.version>
     </properties>
 
     <dependencyManagement>
@@ -477,33 +479,6 @@
                             <version>${log4j.version}</version>
                         </path>
                     </annotationProcessorPaths>
-                </configuration>
-            </plugin>
-            
-            <plugin>
-                <groupId>org.openjfx</groupId>
-                <artifactId>javafx-maven-plugin</artifactId>
-                <version>0.0.8</version>
-                <configuration>
-                    <mainClass>com.zjhy.love.worktools.ToolsApplication</mainClass>
-                    <options>
-                        <option>--add-exports</option>
-                        <option>javafx.graphics/com.sun.javafx.scene.traversal=org.controlsfx.controls</option>
-                        <option>--add-exports</option>
-                        <option>javafx.controls/com.sun.javafx.scene.control.behavior=org.controlsfx.controls</option>
-                        <option>--add-exports</option>
-                        <option>javafx.controls/com.sun.javafx.scene.control=org.controlsfx.controls</option>
-                        <option>--add-exports</option>
-                        <option>javafx.base/com.sun.javafx.binding=org.controlsfx.controls</option>
-                        <option>--add-exports</option>
-                        <option>javafx.graphics/com.sun.javafx.stage=org.controlsfx.controls</option>
-                        <option>--add-exports</option>
-                        <option>javafx.base/com.sun.javafx.event=org.controlsfx.controls</option>
-                        <option>--add-opens</option>
-                        <option>java.base/java.lang=ALL-UNNAMED</option>
-                        <option>--add-opens</option>
-                        <option>javafx.graphics/javafx.scene=ALL-UNNAMED</option>
-                    </options>
                 </configuration>
             </plugin>
         </plugins>
