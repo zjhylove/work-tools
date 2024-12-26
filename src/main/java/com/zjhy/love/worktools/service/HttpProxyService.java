@@ -108,7 +108,7 @@ public class HttpProxyService {
         if (CharSequenceUtil.isNotBlank(queryString)) {
             forwardUrl += "?" + queryString;
         }
-        LOGGER.info("请求地址：{}", forwardUrl);
+        LOGGER.info("请求地地址：{}", forwardUrl);
         HttpRequest httpRequest = proxyCreator.apply("http://" + forwardUrl);
         Enumeration<String> headerNames = req.getHeaderNames();
         while (headerNames.hasMoreElements()) {
@@ -141,7 +141,7 @@ public class HttpProxyService {
     }
 
     /**
-     * 关闭代理服务器
+     * 关闭���理服务器
      * 清理所有资源并停止服务
      */
     public void shutdown() {
@@ -161,5 +161,14 @@ public class HttpProxyService {
             }
         }
         LOGGER.info("HTTP代理服务器已关闭");
+    }
+
+    /**
+     * 获取服务映射地址
+     * @param domain 域名
+     * @return 映射的目标地址
+     */
+    public String getServiceMapping(String domain) {
+        return serviceMapping.get(domain);
     }
 }

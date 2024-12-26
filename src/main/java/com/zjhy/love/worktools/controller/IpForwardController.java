@@ -34,7 +34,9 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * IP转发控制器
@@ -720,6 +722,29 @@ public class IpForwardController {
         serviceNameCol.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue()));
         serviceNameCol.setPrefWidth(200);
 
+        // 创建本地映射地址列
+        TableColumn<String, String> localMappingAddrCol = new TableColumn<>("本地映射地址");
+        localMappingAddrCol.setCellValueFactory(cellData -> {
+            String serviceName = cellData.getValue();
+            String target = null;
+            if (isNacosForwarding) {
+                List<Instance> instances = null;
+                try {
+                    instances = nacosService.getServiceInstances(serviceName, groupNameProperty.get());
+                } catch (Exception e) {
+                    LOGGER.error(e.getMessage(), e);
+                    instances = Collections.emptyList();
+                }
+                if (!instances.isEmpty()) {
+                    Instance instance = instances.get(0);
+                    String remote = instance.getIp() + ":" + instance.getPort();
+                    // 从 httpProxyService 获取本地映射地址
+                    target = httpProxyService.getServiceMapping(remote);
+                }
+            }
+            return new SimpleStringProperty(Objects.requireNonNullElse(target, ""));
+        });
+
         // 创建删除列
         TableColumn<String, Void> deleteCol = new TableColumn<>("操作");
         deleteCol.setCellFactory(param -> new TableCell<>() {
@@ -747,7 +772,7 @@ public class IpForwardController {
 
         // 设置列
         serviceTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        serviceTable.getColumns().addAll(serviceNameCol, deleteCol);
+        serviceTable.getColumns().addAll(serviceNameCol, localMappingAddrCol, deleteCol);
 
         // 绑定数据源
         serviceTable.setItems(serviceNames);
@@ -873,10 +898,11 @@ public class IpForwardController {
                     sshService.addPortForwarding("127.0.0.1", localPort, instance.getIp(), instance.getPort());
                 }
             }
-
             isNacosForwarding = true;
             updateNacosButtonStatus();
             updateNacosStatusLabel();
+            //刷新服务列表，展示映射端口
+            serviceTable.refresh();
             NotificationUtil.showSuccess("转发成功", "服务转发已启动");
         } catch (Exception e) {
             LOGGER.error("启动服务转发失败", e);
