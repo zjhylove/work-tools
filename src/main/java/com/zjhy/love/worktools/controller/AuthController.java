@@ -63,44 +63,57 @@ public class AuthController  {
         // 账户列
         TableColumn<AuthEntry, String> nameColumn = new TableColumn<>("账户");
         nameColumn.setCellValueFactory(cellData -> cellData.getValue().nameProperty());
+        nameColumn.setCellFactory(column -> new TableCell<>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty) {
+                    setText(null);
+                } else {
+                    setText(item);
+                    setAlignment(Pos.CENTER);
+                }
+            }
+        });
         
         // 发行方列
         TableColumn<AuthEntry, String> issuerColumn = new TableColumn<>("发行方");
         issuerColumn.setCellValueFactory(cellData -> cellData.getValue().issuerProperty());
+        issuerColumn.setCellFactory(column -> new TableCell<>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty) {
+                    setText(null);
+                } else {
+                    setText(item);
+                    setAlignment(Pos.CENTER);
+                }
+            }
+        });
         
         // 验证码列
         TableColumn<AuthEntry, String> codeColumn = new TableColumn<>("验证码");
         codeColumn.setCellFactory(column -> new TableCell<>() {
-            private final HBox container = new HBox(5);  // 5��组件之间的间距
-            private final Label codeLabel = new Label();
-            private final Button copyButton = new Button("复制");
-            
             {
-                // 设置复制按钮样式
-                copyButton.getStyleClass().addAll("btn", "btn-default", "btn-xs");
-                copyButton.setOnAction(event -> {
-                    // 获取验证码并复制到剪贴板
-                    String code = codeLabel.getText();
-                    if (code != null && !code.isEmpty()) {
+                // 添加点击事件
+                setOnMouseClicked(event -> {
+                    if (!isEmpty()) {
+                        String code = getText();
                         final Clipboard clipboard = Clipboard.getSystemClipboard();
                         final ClipboardContent content = new ClipboardContent();
                         content.putString(code);
                         clipboard.setContent(content);
-                        
-                        // 显示复制成功提示
                         NotificationUtil.showSuccess("复制成功", "验证码已复制到剪贴板");
                     }
                 });
-                
-                // 将标签和按钮添加到容器中
-                container.setAlignment(Pos.CENTER_LEFT);
-                container.getChildren().addAll(codeLabel, copyButton);
             }
             
             @Override
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
                 if (empty) {
+                    setText(null);
                     setGraphic(null);
                 } else {
                     AuthEntry entry = getTableView().getItems().get(getIndex());
@@ -109,8 +122,13 @@ public class AuthController  {
                         entry.getDigits(),
                         entry.getPeriod()
                     );
-                    codeLabel.setText(code);
-                    setGraphic(container);
+                    setText(code);
+                    setAlignment(Pos.CENTER);
+                    // 设置醒目的样式
+                    setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #0b2190;");
+                    // 添加鼠标悬停效果
+                    setOnMouseEntered(e -> setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #1976D2; -fx-cursor: hand;"));
+                    setOnMouseExited(e -> setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #2196F3;"));
                 }
             }
         });
@@ -120,10 +138,11 @@ public class AuthController  {
         actionColumn.setCellFactory(column -> new TableCell<>() {
             private final Button deleteButton = new Button("删除");
             private final Button qrButton = new Button("查看二维码");
+            private final HBox container = new HBox(5);
             
             {
-                deleteButton.getStyleClass().addAll("btn", "btn-danger", "btn-sm");
-                qrButton.getStyleClass().addAll("btn", "btn-info", "btn-sm");
+                deleteButton.getStyleClass().addAll("btn", "btn-danger", "btn-xs");
+                qrButton.getStyleClass().addAll("btn", "btn-info", "btn-xs");
                 
                 deleteButton.setOnAction(event -> {
                     AuthEntry entry = getTableView().getItems().get(getIndex());
@@ -134,20 +153,26 @@ public class AuthController  {
                     AuthEntry entry = getTableView().getItems().get(getIndex());
                     showQRCode(entry);
                 });
+                
+                container.setAlignment(Pos.CENTER);
+                container.getChildren().addAll(qrButton, deleteButton);
             }
             
             @Override
             protected void updateItem(Void item, boolean empty) {
                 super.updateItem(item, empty);
-                if (empty) {
-                    setGraphic(null);
-                } else {
-                    HBox box = new HBox(5);
-                    box.getChildren().addAll(qrButton, deleteButton);
-                    setGraphic(box);
+                setGraphic(empty ? null : container);
+                if (!empty) {
+                    setAlignment(Pos.CENTER);
                 }
             }
         });
+
+        // 设置列宽
+        nameColumn.prefWidthProperty().bind(authTable.widthProperty().multiply(0.25));
+        issuerColumn.prefWidthProperty().bind(authTable.widthProperty().multiply(0.25));
+        codeColumn.prefWidthProperty().bind(authTable.widthProperty().multiply(0.25));
+        actionColumn.prefWidthProperty().bind(authTable.widthProperty().multiply(0.25));
         
         authTable.getColumns().setAll(nameColumn, issuerColumn, codeColumn, actionColumn);
         authTable.setItems(authEntries);
@@ -215,7 +240,7 @@ public class AuthController  {
             // 设置按钮栏样式
             dialogPane.lookup(".button-bar").getStyleClass().addAll("panel");
             
-            // 设置对话框���小宽度
+            // 设置对话框最小宽度
             dialog.getDialogPane().setMinWidth(300);
             
             dialog.showAndWait();
