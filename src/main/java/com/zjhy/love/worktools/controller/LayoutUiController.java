@@ -96,7 +96,10 @@ public class LayoutUiController {
                     FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/auth-view.fxml"));
                     yield loader.load();
                 }
-                case "对象存储" -> new ObjectStorageController();
+                case "对象存储" -> {
+                    FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/object-storage-view.fxml"));
+                    yield loader.load();
+                }
                 default -> null;
             };
 

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox spacing="10" xmlns:fx="http://javafx.com/fxml" 
+      fx:controller="com.zjhy.love.worktools.controller.ObjectStorageController"
+      styleClass="panel, panel-primary">
+    <padding>
+        <Insets top="15" right="15" bottom="15" left="15"/>
+    </padding>
+
+    <HBox spacing="10" alignment="CENTER_LEFT">
+        <ComboBox fx:id="providerComboBox" promptText="选择存储服务"/>
+        <TextField fx:id="searchField" promptText="搜索对象" HBox.hgrow="ALWAYS" 
+                  onAction="#handleSearch"/>
+        <Button text="搜索" onAction="#handleSearch" 
+                styleClass="btn, btn-default"/>
+        <Button text="上传" onAction="#handleUpload" 
+                styleClass="btn, btn-primary"/>
+        <Button text="刷新" onAction="#handleSearch" 
+                styleClass="btn, btn-default"/>
+    </HBox>
+
+    <TableView fx:id="objectTable" VBox.vgrow="ALWAYS" 
+               styleClass="table, table-hover, table-striped">
+        <placeholder>
+            <Label text="没有对象" styleClass="text-muted"/>
+        </placeholder>
+    </TableView>
+
+    <HBox spacing="10" alignment="CENTER_LEFT">
+        <Label fx:id="statusLabel" styleClass="text-muted"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <ProgressBar fx:id="progressBar" progress="0.0" prefWidth="200"/>
+    </HBox>
+</VBox> 

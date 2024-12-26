@@ -29,6 +29,8 @@ module com.zjhy.love.worktools {
     requires org.apache.commons.codec;
     requires com.google.zxing;
     requires com.google.zxing.javase;
+    requires aliyun.sdk.oss;
+    requires cos.api;
 
     // 导出和打开我们自己的包
     opens com.zjhy.love.worktools to javafx.fxml;
