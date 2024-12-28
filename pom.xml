@@ -22,6 +22,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.release>17</maven.compiler.release>
         
         <!-- JavaFX -->
         <javafx.version>17.0.9</javafx.version>
@@ -60,11 +61,10 @@
         <!-- Office 相关依赖版本统一 -->
         <commons-collections4.version>4.4</commons-collections4.version>
         <xmlbeans.version>5.1.1</xmlbeans.version>
-        
-        <!-- Netty -->
-        <netty.version>4.1.94.Final</netty.version>
-        
+
         <java.version>17</java.version>
+
+        <mainClassName>com.zjhy.love.worktools.Startup</mainClassName>
     </properties>
 
     <dependencyManagement>
@@ -479,6 +479,27 @@
                             <version>${log4j.version}</version>
                         </path>
                     </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.openjfx</groupId>
+                <artifactId>javafx-maven-plugin</artifactId>
+                <version>0.0.8</version>
+                <configuration>
+                    <mainClass>${mainClassName}</mainClass>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>io.gitee.podigua</groupId>
+                <artifactId>maven-jfx-plugin</artifactId>
+                <version>0.0.4</version>
+                <configuration>
+                    <mainClass>${mainClassName}</mainClass>
+                    <appVersion>100</appVersion>
+                    <copyright>zjhy.love</copyright>
+                    <description>码农工作工具包</description>
+                    <icon>${project.basedir}/src/main/resources/images/tools-icon.icns</icon>
+                    <aboutUrl>https://github.com/zjhylove/work-tools</aboutUrl>
                 </configuration>
             </plugin>
         </plugins>

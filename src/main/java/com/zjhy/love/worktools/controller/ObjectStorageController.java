@@ -190,11 +190,11 @@ public class ObjectStorageController {
             config.getBucket() : "";
 
         StringField accessKeyField = Field.ofStringType(initialAccessKey)
-            .label("AccessKey ID")
+            .label("AccessID")
             .required("请输入AccessKey ID");
             
         StringField secretField = Field.ofStringType(initialSecret)
-            .label("AccessKey Secret")
+            .label("AccessSecret")
             .required("请输入AccessKey Secret");
             
         StringField endpointField = Field.ofStringType(initialEndpoint)
@@ -241,10 +241,10 @@ public class ObjectStorageController {
 
         // 创建表单渲染器
         FormRenderer formRenderer = new FormRenderer(form);
-        formRenderer.setPadding(new Insets(20));
+        formRenderer.setPadding(new Insets(5));
 
         // 设置对话框内容
-        VBox content = new VBox(10);
+        VBox content = new VBox(5);
         content.getStyleClass().addAll("panel", "panel-body");
         content.getChildren().add(formRenderer);
         dialogPane.setContent(content);
@@ -271,6 +271,7 @@ public class ObjectStorageController {
         final StringField finalRegionField = regionField;
         dialog.setResultConverter(dialogButton -> {
             if (dialogButton == saveButton && form.isValid()) {
+                form.persist();
                 try {
                     ObjectStorageConfig config = new ObjectStorageConfig();
                     config.setProvider(provider);
@@ -291,7 +292,7 @@ public class ObjectStorageController {
         });
 
         // 设置对话框最小宽度
-        dialog.getDialogPane().setMinWidth(400);
+        dialog.getDialogPane().setMinWidth(600);
 
         // 显示对话框并处理结果
         dialog.showAndWait().ifPresent(cfg -> {
@@ -437,7 +438,7 @@ public class ObjectStorageController {
             config = savedConfig;
             providerComboBox.setValue(config.getProvider());
             initializeStorageService();
-            refreshObjects();
+            //refreshObjects();
         }
     }
 }
