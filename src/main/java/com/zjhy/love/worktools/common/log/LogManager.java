@@ -24,8 +24,8 @@ public class LogManager {
     /**
      * 添加日志
      */
-    public static void addLog(String level, String message) {
-        LogEntry entry = new LogEntry(LocalDateTime.now(), level, message);
+    public static void addLog(String level, String message,Throwable throwable) {
+        LogEntry entry = new LogEntry(LocalDateTime.now(), level, message,throwable);
         logQueue.offerLast(entry);
         
         // 如果超出最大容量，移除最旧的日志
@@ -58,5 +58,20 @@ public class LogManager {
      */
     public static void clearLogs() {
         logQueue.clear();
+    }
+    
+    public static void error(String message, Throwable throwable) {
+        LogEntry entry = new LogEntry(LocalDateTime.now(), "ERROR", message, throwable);
+        logQueue.add(entry);
+    }
+    
+    public static void warn(String message) {
+        LogEntry entry = new LogEntry(LocalDateTime.now(), "WARN", message);
+        logQueue.add(entry);
+    }
+    
+    public static void info(String message) {
+        LogEntry entry = new LogEntry(LocalDateTime.now(), "INFO", message);
+        logQueue.add(entry);
     }
 } 

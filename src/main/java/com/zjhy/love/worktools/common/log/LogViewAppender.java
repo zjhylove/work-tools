@@ -55,6 +55,6 @@ public class LogViewAppender extends AbstractAppender {
     public void append(LogEvent event) {
         String level = event.getLevel().toString();
         String message = event.getMessage().getFormattedMessage();
-        LogManager.addLog(level, message);
+        LogManager.addLog(level, message,event.getThrown());
     }
 } 

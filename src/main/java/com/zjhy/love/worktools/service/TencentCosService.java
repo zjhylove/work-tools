@@ -97,8 +97,7 @@ public class TencentCosService implements ObjectStorageService {
                 objects.add(new StorageObject(
                     summary.getKey(),
                     summary.getSize(),
-                    summary.getLastModified().toString(),
-                    summary.getETag()
+                    summary.getLastModified().toString()
                 ));
             }
             return objects;

@@ -33,7 +33,7 @@ public class FileUtil {
         if (file != null) {
             String json = MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(data);
             Files.writeString(file.toPath(), json);
-            NotificationUtil.showSuccess("导出成功", "配置��保存到: " + file.getName());
+            NotificationUtil.showSuccess("导出成功", "配置保存到: " + file.getName());
         }
     }
 

@@ -2,10 +2,10 @@ package com.zjhy.love.worktools.service;
 
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.Session;
+import javafx.beans.property.ReadOnlyBooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Properties;
 
 /**
  * SSH服务类
@@ -14,9 +14,24 @@ import java.util.Properties;
 public class SshService {
     private static final Logger LOGGER = LoggerFactory.getLogger(SshService.class);
     private Session session;
+    private final SimpleBooleanProperty connected = new SimpleBooleanProperty(false);
 
     /**
-     * 连接SSH服务器
+     * 获取连接状态属性
+     */
+    public ReadOnlyBooleanProperty connectedProperty() {
+        return connected;
+    }
+
+    /**
+     * 检查是否已连接
+     */
+    public boolean isConnected() {
+        return connected.get();
+    }
+
+    /**
+     * 连接到SSH服务器
      * @param host SSH服务器地址
      * @param port SSH服务器端口
      * @param username 用户名
@@ -27,13 +42,17 @@ public class SshService {
         JSch jsch = new JSch();
         session = jsch.getSession(username, host, port);
         session.setPassword(password);
-
-        Properties config = new Properties();
-        config.put("StrictHostKeyChecking", "no");
-        session.setConfig(config);
-
-        session.connect(30000);
-        LOGGER.info("SSH连接成功: {}@{}", username, host);
+        session.setConfig("StrictHostKeyChecking", "no");
+        
+        try {
+            session.connect();
+            connected.set(true);
+            LOGGER.info("SSH连接成功: {}:{}", host, port);
+        } catch (Exception e) {
+            session = null;
+            connected.set(false);
+            throw e;
+        }
     }
 
     /**
@@ -56,18 +75,25 @@ public class SshService {
      * 断开SSH连接
      */
     public void disconnect() {
-        if (session != null && session.isConnected()) {
+        if (session != null) {
             session.disconnect();
-            LOGGER.info("SSH连接已断开");
+            session = null;
         }
+        connected.set(false);
+        LOGGER.info("SSH连接已断开");
     }
 
     /**
-     * 检查SSH连接状态
-     *
-     * @return 是否已连接
+     * 移除端口转发规则
+     * @param localHost 本地监听地址
+     * @param localPort 本地监听端口
+     * @throws Exception 移除异常
      */
-    public boolean isConnected() {
-        return session != null && session.isConnected();
+    public void removePortForwarding(String localHost, int localPort) throws Exception {
+        if (session == null || !session.isConnected()) {
+            throw new IllegalStateException("SSH未连接");
+        }
+        session.delPortForwardingL(localHost, localPort);
+        LOGGER.info("移除端口转发: {}:{}", localHost, localPort);
     }
 } 

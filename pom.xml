@@ -20,16 +20,16 @@
     <properties>
         <!-- 基础配置 -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
-        <maven.compiler.release>17</maven.compiler.release>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <maven.compiler.source>23</maven.compiler.source>
+        <maven.compiler.target>23</maven.compiler.target>
+        <maven.compiler.release>23</maven.compiler.release>
+        <java.version>23</java.version>
         
         <!-- JavaFX -->
         <javafx.version>17.0.9</javafx.version>
-        <controlsfx.version>11.1.0</controlsfx.version>
-        <bootstrapfx.version>0.4.0</bootstrapfx.version>
-        <formsfx.version>11.6.0</formsfx.version>
-        <validatorfx.version>0.5.0</validatorfx.version>
+        <atlantafx.version>2.0.1</atlantafx.version>
+        <controlfx.version>11.2.1</controlfx.version>
         
         <!-- 日志 -->
         <log4j.version>2.20.0</log4j.version>
@@ -40,6 +40,8 @@
         <commons-codec.version>1.15</commons-codec.version>
         <commons-compress.version>1.21</commons-compress.version>
         <freemarker.version>2.3.9</freemarker.version>
+        <sshd.version>2.9.2</sshd.version>
+        <jackson.version>2.12.6</jackson.version>
         
         <!-- HTTP -->
         <httpclient.version>4.5.13</httpclient.version>
@@ -48,23 +50,11 @@
         <!-- Office -->
         <poi.version>5.2.3</poi.version>
         <spire.version>12.8.0</spire.version>
-        
-        <!-- SSH -->
-        <sshd.version>2.9.2</sshd.version>
-        
-        <!-- JSON -->
-        <jackson.version>2.12.6</jackson.version>
-        
-        <!-- 测试 -->
-        <junit.version>5.10.2</junit.version>
-        
-        <!-- Office 相关依赖版本统一 -->
         <commons-collections4.version>4.4</commons-collections4.version>
         <xmlbeans.version>5.1.1</xmlbeans.version>
 
-        <java.version>17</java.version>
-
-        <mainClassName>com.zjhy.love.worktools.Startup</mainClassName>
+        <!-- 启动类-->
+        <mainClassName>com.zjhy.love.worktools.WorkToolsStartup</mainClassName>
     </properties>
 
     <dependencyManagement>
@@ -174,85 +164,9 @@
             </dependencies>
         </profile>
 
-        <!-- Linux -->
-        <profile>
-            <id>linux</id>
-            <activation>
-                <os>
-                    <family>unix</family>
-                </os>
-            </activation>
-            <dependencies>
-                <dependency>
-                    <groupId>org.openjfx</groupId>
-                    <artifactId>javafx-controls</artifactId>
-                    <version>${javafx.version}</version>
-                    <classifier>linux</classifier>
-                </dependency>
-                <dependency>
-                    <groupId>org.openjfx</groupId>
-                    <artifactId>javafx-fxml</artifactId>
-                    <version>${javafx.version}</version>
-                    <classifier>linux</classifier>
-                </dependency>
-                <dependency>
-                    <groupId>org.openjfx</groupId>
-                    <artifactId>javafx-graphics</artifactId>
-                    <version>${javafx.version}</version>
-                    <classifier>linux</classifier>
-                </dependency>
-                <dependency>
-                    <groupId>org.openjfx</groupId>
-                    <artifactId>javafx-base</artifactId>
-                    <version>${javafx.version}</version>
-                    <classifier>linux</classifier>
-                </dependency>
-                <dependency>
-                    <groupId>org.openjfx</groupId>
-                    <artifactId>javafx-swing</artifactId>
-                    <version>${javafx.version}</version>
-                    <classifier>linux</classifier>
-                </dependency>
-            </dependencies>
-        </profile>
     </profiles>
 
     <dependencies>
-        <!-- UI Controls -->
-        <dependency>
-            <groupId>org.controlsfx</groupId>
-            <artifactId>controlsfx</artifactId>
-            <version>${controlsfx.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.kordamp.bootstrapfx</groupId>
-            <artifactId>bootstrapfx-core</artifactId>
-            <version>${bootstrapfx.version}</version>
-        </dependency>
-        
-        <!-- Forms -->
-        <dependency>
-            <groupId>com.dlsc.formsfx</groupId>
-            <artifactId>formsfx-core</artifactId>
-            <version>${formsfx.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.openjfx</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>net.synedra</groupId>
-            <artifactId>validatorfx</artifactId>
-            <version>${validatorfx.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.openjfx</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
 
         <!-- 日志 -->
         <dependency>
@@ -271,6 +185,12 @@
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-slf4j-impl</artifactId>
+            <exclusions>
+                <exclusion>
+                    <artifactId>slf4j-api</artifactId>
+                    <groupId>org.slf4j</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <!-- 工具库 -->
@@ -359,63 +279,50 @@
             <artifactId>spire.doc</artifactId>
             <version>12.8.4</version>
         </dependency>
-
-        <!-- SSH -->
-        <dependency>
-            <groupId>org.apache.sshd</groupId>
-            <artifactId>sshd-core</artifactId>
-            <version>${sshd.version}</version>
-            <exclusions>
-                <exclusion>
-                    <artifactId>slf4j-api</artifactId>
-                    <groupId>org.slf4j</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <!-- 测试 -->
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-api</artifactId>
-            <version>${junit.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-engine</artifactId>
-            <version>${junit.version}</version>
-            <scope>test</scope>
-        </dependency>
-        
-        <!-- Apache POI 及其相关依赖 -->
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-collections4</artifactId>
             <version>${commons-collections4.version}</version>
         </dependency>
-        
+
         <dependency>
             <groupId>org.apache.xmlbeans</groupId>
             <artifactId>xmlbeans</artifactId>
             <version>${xmlbeans.version}</version>
         </dependency>
 
+        <!-- SSH -->
         <dependency>
             <groupId>com.jcraft</groupId>
             <artifactId>jsch</artifactId>
             <version>0.1.55</version>
         </dependency>
 
+        <!-- nacos-->
         <dependency>
             <groupId>com.alibaba.nacos</groupId>
             <artifactId>nacos-client</artifactId>
             <version>2.2.0</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>httpclient</artifactId>
+                    <groupId>org.apache.httpcomponents</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>httpcore</artifactId>
+                    <groupId>org.apache.httpcomponents</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
+
+        <!-- tomcat-->
         <dependency>
             <groupId>org.apache.tomcat.embed</groupId>
             <artifactId>tomcat-embed-core</artifactId>
             <version>9.0.63</version>
         </dependency>
+
+        <!-- 数据库-->
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
@@ -440,6 +347,20 @@
             <groupId>com.aliyun.oss</groupId>
             <artifactId>aliyun-sdk-oss</artifactId>
             <version>3.17.1</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>gson</artifactId>
+                    <groupId>com.google.code.gson</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>httpclient</artifactId>
+                    <groupId>org.apache.httpcomponents</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>slf4j-api</artifactId>
+                    <groupId>org.slf4j</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <!-- 腾讯云 COS -->
@@ -447,10 +368,57 @@
             <groupId>com.qcloud</groupId>
             <artifactId>cos_api</artifactId>
             <version>5.6.155</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>commons-codec</artifactId>
+                    <groupId>commons-codec</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>gson</artifactId>
+                    <groupId>com.google.code.gson</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>jaxb-api</artifactId>
+                    <groupId>javax.xml.bind</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>slf4j-api</artifactId>
+                    <groupId>org.slf4j</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>okio</artifactId>
+                    <groupId>com.squareup.okio</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
+
+        <!-- AtlantaFX 依赖 -->
+        <dependency>
+            <groupId>io.github.mkpaz</groupId>
+            <artifactId>atlantafx-base</artifactId>
+            <version>${atlantafx.version}</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>javafx-controls</artifactId>
+                    <groupId>org.openjfx</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <!-- AtlantaFX 样式主题 -->
+        <dependency>
+            <groupId>io.github.mkpaz</groupId>
+            <artifactId>atlantafx-styles</artifactId>
+            <version>${atlantafx.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.controlsfx</groupId>
+            <artifactId>controlsfx</artifactId>
+            <version>${controlfx.version}</version>
+        </dependency>
+
     </dependencies>
-
-
 
     <build>
         <resources>
@@ -487,6 +455,18 @@
                 <version>0.0.8</version>
                 <configuration>
                     <mainClass>${mainClassName}</mainClass>
+                    <options>
+                        <option>--add-opens</option>
+                        <option>javafx.graphics/javafx.scene=ALL-UNNAMED</option>
+                        <option>--add-opens</option>
+                        <option>javafx.controls/javafx.scene.control=ALL-UNNAMED</option>
+                        <option>--add-opens</option>
+                        <option>javafx.base/javafx.beans=ALL-UNNAMED</option>
+                        <option>--add-opens</option>
+                        <option>javafx.base/javafx.collections=ALL-UNNAMED</option>
+                        <option>--add-opens</option>
+                        <option>javafx.base/javafx.util=ALL-UNNAMED</option>
+                    </options>
                 </configuration>
             </plugin>
             <plugin>

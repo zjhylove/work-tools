@@ -4,11 +4,10 @@ import com.aliyun.oss.OSS;
 import com.aliyun.oss.OSSClientBuilder;
 import com.aliyun.oss.event.ProgressEventType;
 import com.aliyun.oss.model.*;
-import com.aliyun.oss.common.utils.DateUtil;
 import com.zjhy.love.worktools.model.ObjectStorageConfig;
 import com.zjhy.love.worktools.model.StorageObject;
-import javafx.beans.property.DoubleProperty;
 import javafx.application.Platform;
+import javafx.beans.property.DoubleProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -109,8 +108,7 @@ public class AliyunOssService implements ObjectStorageService {
                 objects.add(new StorageObject(
                     summary.getKey(),
                     summary.getSize(),
-                    summary.getLastModified().toString(),
-                    summary.getETag()
+                    summary.getLastModified().toString()
                 ));
             }
             return objects;

@@ -70,7 +70,7 @@ public class HttpProxyService {
      */
     public void start(int port) {
         tomcat = new Tomcat();
-        tomcat.setPort(80);
+        tomcat.setPort(port);
         ctx = tomcat.addContext("", null);
         try {
             Tomcat.addServlet(ctx, "hostProxy", new HttpServlet() {
@@ -141,7 +141,7 @@ public class HttpProxyService {
     }
 
     /**
-     * 关闭���理服务器
+     * 关闭理服务器
      * 清理所有资源并停止服务
      */
     public void shutdown() {
@@ -170,5 +170,44 @@ public class HttpProxyService {
      */
     public String getServiceMapping(String domain) {
         return serviceMapping.get(domain);
+    }
+
+    /**
+     * 注册服务映射
+     * 将服务名和本地端口映射到域名
+     *
+     * @param domain 域名
+     * @param serviceName 服务名称
+     * @param localPort 本地端口
+     */
+    public void registerService(String domain, String serviceName, int localPort) {
+        String target = "127.0.0.1:" + localPort;
+        addServiceMapping(domain, target);
+        LOGGER.info("注册服务映射: {} ({}) -> {}", domain, serviceName, target);
+    }
+
+    /**
+     * 移除服务映射
+     * 删除域名和目标地址的映射关系
+     *
+     * @param domain 域名
+     */
+    public void removeServiceMapping(String domain) {
+        serviceMapping.remove(domain);
+        LOGGER.info("移除服务映射: {}", domain);
+    }
+
+    /**
+     * 检查服务是否正在运行
+     */
+    public boolean isRunning() {
+        return tomcat != null && tomcat.getServer().getState().isAvailable();
+    }
+
+    /**
+     * 停止代理服务
+     */
+    public void stop() {
+        shutdown();
     }
 }

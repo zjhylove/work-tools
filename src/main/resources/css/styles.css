@@ -1,0 +1,80 @@
+/* 通知样式 */
+.notification {
+    /* 通知框背景色，使用渐变效果 */
+    -fx-background-color: ladder(
+        -fx-background,
+        derive(-fx-background, 5%) 20%,
+        derive(-fx-background, 2%) 90%
+    );
+    /* 圆角边框 */
+    -fx-background-radius: 4;
+    -fx-border-radius: 4;
+    /* 边框颜色，略深于背景色 */
+    -fx-border-color: derive(-fx-background, -10%);
+    /* 内边距和间距 */
+    -fx-padding: 12;
+    -fx-spacing: 10;
+    /* 阴影效果 */
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.2), 10, 0, 0, 3);
+}
+
+/* 通知文本样式 */
+.notification .text {
+    -fx-font-size: 13px;
+}
+
+/* 通知图标样式 */
+.notification .glyph-font {
+    -fx-font-size: 16px;
+}
+
+/* 不同类型通知的图标颜色 */
+.notification.success .glyph-font {
+    -fx-fill: rgb(40, 167, 69);  /* #28a745 - 成功绿色 */
+}
+
+.notification.error .glyph-font {
+    -fx-fill: rgb(220, 53, 69);  /* #dc3545 - 错误红色 */
+}
+
+.notification.warning .glyph-font {
+    -fx-fill: rgb(255, 193, 7);  /* #ffc107 - 警告黄色 */
+}
+
+/* 确认对话框样式 */
+.dialog-pane.surface-card {
+    -fx-background-color: -fx-background;
+}
+
+.dialog-pane.surface-card .button-bar .button {
+    -fx-min-width: 80px;
+}
+
+.dialog-pane.surface-card .content {
+    -fx-padding: 20;
+}
+
+/* 日志级别样式 */
+.log-info {
+    -fx-text-fill: rgb(26, 115, 232);  /* #1a73e8 */
+}
+
+.log-warn {
+    -fx-text-fill: rgb(245, 158, 11);  /* #f59e0b */
+}
+
+.log-error {
+    -fx-text-fill: rgb(220, 38, 38);  /* #dc2626 */
+}
+
+.text-warning {
+    -fx-text-fill: rgb(245, 158, 11);  /* #f59e0b */
+}
+
+.text-danger {
+    -fx-text-fill: rgb(220, 38, 38);  /* #dc2626 */
+}
+
+.text-bold {
+    -fx-font-weight: bold;
+} 

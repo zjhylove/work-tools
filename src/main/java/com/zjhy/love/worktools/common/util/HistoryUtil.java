@@ -67,6 +67,9 @@ public class HistoryUtil {
     public static <T> T getHistory(String toolName, Class<T> type) {
         return getHistory(toolName,(mapper,json)-> {
             try {
+                if (type == String.class) {
+                    return (T)json;
+                }
                 return mapper.readValue(json,type);
             } catch (JsonProcessingException e) {
                 throw new RuntimeException(e);
@@ -88,6 +91,9 @@ public class HistoryUtil {
         Object history = HISTORY_CACHE.get(toolName);
         if (history == null) {
             return null;
+        }
+        if (history instanceof String) {
+            return (T)history;
         }
         try {
             ObjectMapper mapper = new ObjectMapper();
