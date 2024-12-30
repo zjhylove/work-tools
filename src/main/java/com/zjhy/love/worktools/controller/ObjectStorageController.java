@@ -155,13 +155,12 @@ public class ObjectStorageController {
                     parent.getChildren().add(index, providerBox);
                 }
             }
-        });
-        
-        // 监听选择变化
-        providerComboBox.getSelectionModel().selectedItemProperty().addListener((obs, old, val) -> {
-            if (val != null && !val.equals(old) && old == null) {  // 只在首次选择时弹出配置框
-                showConfigDialog(val);
-            }
+            // 监听选择变化
+            providerComboBox.getSelectionModel().selectedItemProperty().addListener((obs, old, val) -> {
+                if (val != null && !val.equals(old) && old == null) {  // 只在首次选择时弹出配置框
+                    showConfigDialog(val);
+                }
+            });
         });
     }
 

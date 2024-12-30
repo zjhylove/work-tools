@@ -98,6 +98,9 @@
                     <family>windows</family>
                 </os>
             </activation>
+            <properties>
+                <icon>src/main/resources/images/tools-icon.ico</icon>
+            </properties>
             <dependencies>
                 <dependency>
                     <groupId>org.openjfx</groupId>
@@ -140,6 +143,9 @@
                     <family>mac</family>
                 </os>
             </activation>
+            <properties>
+                <icon>src/main/resources/images/tools-icon.icns</icon>
+            </properties>
             <dependencies>
                 <dependency>
                     <groupId>org.openjfx</groupId>
@@ -495,10 +501,10 @@
                 <version>0.0.4</version>
                 <configuration>
                     <mainClass>${mainClassName}</mainClass>
-                    <appVersion>100</appVersion>
+                    <appVersion>1.0.0</appVersion>
                     <copyright>zjhy.love</copyright>
                     <description>码农工作工具包</description>
-                    <icon>${project.basedir}/src/main/resources/images/tools-icon.icns</icon>
+                    <icon>${project.basedir}/${icon}</icon>
                     <aboutUrl>https://github.com/zjhylove/work-tools</aboutUrl>
                 </configuration>
             </plugin>
