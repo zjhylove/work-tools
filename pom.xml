@@ -120,6 +120,25 @@
                     <classifier>win</classifier>
                 </dependency>
             </dependencies>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>io.gitee.podigua</groupId>
+                        <artifactId>maven-jfx-plugin</artifactId>
+                        <version>0.0.4</version>
+                        <configuration>
+                            <mainClass>${mainClassName}</mainClass>
+                            <appVersion>100</appVersion>
+                            <copyright>zjhy.love</copyright>
+                            <description>码农工作工具包</description>
+                            <icon>${project.basedir}/src/main/resources/images/tools-win.ico</icon>
+                            <aboutUrl>https://github.com/zjhylove/work-tools</aboutUrl>
+                            <winDirChooser>true</winDirChooser>
+                            <winShortcut>true</winShortcut>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
         </profile>
 
         <!-- macOS -->
@@ -416,6 +435,12 @@
             <groupId>org.controlsfx</groupId>
             <artifactId>controlsfx</artifactId>
             <version>${controlfx.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.dustinredmond.fxtrayicon</groupId>
+            <artifactId>FXTrayIcon</artifactId>
+            <version>4.2.0</version>
         </dependency>
 
     </dependencies>
