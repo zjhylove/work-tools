@@ -1,5 +1,6 @@
 package com.zjhy.love.worktools.view;
 
+import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.nacos.api.naming.pojo.Instance;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -9,10 +10,10 @@ import com.zjhy.love.worktools.common.util.NotificationUtil;
 import com.zjhy.love.worktools.model.ForwardEntry;
 import com.zjhy.love.worktools.model.IpForwardConfig;
 import com.zjhy.love.worktools.model.NacosConfig;
+import com.zjhy.love.worktools.model.NacosServiceItem;
 import com.zjhy.love.worktools.service.HttpProxyService;
 import com.zjhy.love.worktools.service.NacosService;
 import com.zjhy.love.worktools.service.SshService;
-import com.zjhy.love.worktools.model.NacosServiceItem;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -92,10 +93,10 @@ public class IpForwardView extends BaseView {
         TabPane tabPane = new TabPane();
         configureTabPane(tabPane);
         VBox.setVgrow(tabPane, Priority.ALWAYS);
-        
+
         // 使用基类方法添加内容
         addContent(tabPane);
-        
+
         // 加载历史配置
         loadHistory();
     }
@@ -144,18 +145,18 @@ public class IpForwardView extends BaseView {
         TableColumn<ForwardEntry, String> localHostColumn = new TableColumn<>("本地主机");
         TableColumn<ForwardEntry, Integer> localPortColumn = new TableColumn<>("本地端口");
         TableColumn<ForwardEntry, String> remoteHostColumn = new TableColumn<>("远程主机");
-        TableColumn<ForwardEntry ,Integer> remotePortColumn = new TableColumn<>("远程端口");
+        TableColumn<ForwardEntry, Integer> remotePortColumn = new TableColumn<>("远程端口");
         TableColumn<ForwardEntry, Boolean> enabledColumn = new TableColumn<>("状态");
         TableColumn<ForwardEntry, Void> actionColumn = new TableColumn<>("操作");
 
         // 配置列数据
         configureTableColumns(nameColumn, localHostColumn, localPortColumn,
-                            remoteHostColumn, remotePortColumn, enabledColumn, actionColumn);
+                remoteHostColumn, remotePortColumn, actionColumn);
 
         // 添加列到表格
         forwardTable.getColumns().addAll(
-            nameColumn, localHostColumn, localPortColumn,
-            remoteHostColumn, remotePortColumn, enabledColumn, actionColumn
+                nameColumn, localHostColumn, localPortColumn,
+                remoteHostColumn, remotePortColumn, enabledColumn, actionColumn
         );
 
         // 设置表格数据源
@@ -171,7 +172,7 @@ public class IpForwardView extends BaseView {
      */
     private void loadHistory() {
         try {
-            IpForwardConfig config = HistoryUtil.getHistory("ip-forward",IpForwardConfig.class);
+            IpForwardConfig config = HistoryUtil.getHistory("ip-forward", IpForwardConfig.class);
             if (config != null) {
                 loadSshConfig(config);
                 loadNacosConfig(config);
@@ -193,7 +194,7 @@ public class IpForwardView extends BaseView {
             saveNacosConfig(config);
             saveForwardEntries(config);
 
-            HistoryUtil.saveHistory("ip-forward",config);
+            HistoryUtil.saveHistory("ip-forward", config);
         } catch (Exception e) {
             LOGGER.error("保存配置失败", e);
             NotificationUtil.showError("保存失败", "保存配置失败: " + e.getMessage());
@@ -256,7 +257,7 @@ public class IpForwardView extends BaseView {
         exportButton.setOnAction(e -> handleExportRules());
 
         toolbar.getChildren().addAll(addButton, new Separator(Orientation.VERTICAL),
-            importButton, exportButton);
+                importButton, exportButton);
 
         return toolbar;
     }
@@ -267,24 +268,24 @@ public class IpForwardView extends BaseView {
     private VBox createNacosConfigSection() {
         VBox container = new VBox(15);
         container.getStyleClass().addAll("form-section", "surface-card");
-        
+
         // 创建表单网格
         GridPane grid = new GridPane();
         grid.setHgap(10);
         grid.setVgap(10);
         grid.setAlignment(Pos.CENTER_LEFT);
-        
+
         // 配置输入字段
         serverAddrField.setPromptText("Nacos服务器地址");
         namespaceField.setPromptText("命名空间");
         nacosUserField.setPromptText("用户名");
         nacosPasswordField.setPromptText("密码");
         groupField.setPromptText("分组");
-        
+
         nacosConnectButton.getStyleClass().addAll("button-outlined", "accent");
         nacosConnectButton.setGraphic(new Glyph("FontAwesome", "PLUG"));
         nacosConnectButton.setOnAction(e -> handleNacosConnect());
-        
+
         // 添加到网格
         grid.addRow(0, new Label("服务器:"), serverAddrField);
         grid.addRow(1, new Label("命名空间:"), namespaceField);
@@ -292,14 +293,14 @@ public class IpForwardView extends BaseView {
         grid.addRow(3, new Label("密码:"), nacosPasswordField);
         grid.addRow(4, new Label("分组:"), groupField);
         grid.add(nacosConnectButton, 0, 5, 2, 1);
-        
+
         // 创建服务列表视图
         NacosServiceListView serviceListView = new NacosServiceListView();
         VBox.setVgrow(serviceListView, Priority.ALWAYS);
-        
+
         // 创建 HTTP 代理配置
         VBox proxyConfig = createHttpProxySection();
-        
+
         // 添加组件
         container.getChildren().addAll(grid, serviceListView, proxyConfig);
         return container;
@@ -430,13 +431,11 @@ public class IpForwardView extends BaseView {
 
                 // 添加转发规则
                 sshService.addPortForwarding(
-                    entry.getLocalHost(),
-                    entry.getLocalPort(),
-                    entry.getRemoteHost(),
-                    entry.getRemotePort()
+                        entry.getLocalHost(),
+                        entry.getLocalPort(),
+                        entry.getRemoteHost(),
+                        entry.getRemotePort()
                 );
-
-                entry.setEnabled(true);
                 forwardEntries.add(entry);
                 saveHistory();
                 NotificationUtil.showSuccess("添加成功", "转发规则已添加");
@@ -446,44 +445,6 @@ public class IpForwardView extends BaseView {
                 NotificationUtil.showError("添加失败", e.getMessage());
             }
         });
-    }
-
-    /**
-     * 处理规则状态变更
-     */
-    private void handleRuleStateChange(ForwardEntry entry) {
-        if (!sshService.isConnected()) {
-            NotificationUtil.showWarning("操作失败", "请先连接SSH服务器");
-            entry.setEnabled(!entry.isEnabled()); // 恢复状态
-            return;
-        }
-
-        try {
-            if (entry.isEnabled()) {
-                // 启用规则
-                if (isPortInUse(entry.getLocalPort())) {
-                    NotificationUtil.showError("启用失败", "本地端口已被占用");
-                    entry.setEnabled(false);
-                    return;
-                }
-                sshService.addPortForwarding(
-                    entry.getLocalHost(),
-                    entry.getLocalPort(),
-                    entry.getRemoteHost(),
-                    entry.getRemotePort()
-                );
-                NotificationUtil.showSuccess("启用成功", "转发规则已启用");
-            } else {
-                // 停用规则
-                sshService.removePortForwarding(entry.getLocalHost(), entry.getLocalPort());
-                NotificationUtil.showSuccess("停用成功", "转发规则已停用");
-            }
-            saveHistory();
-        } catch (Exception e) {
-            LOGGER.error("更改转发规则状态失败", e);
-            entry.setEnabled(!entry.isEnabled()); // 恢复状态
-            NotificationUtil.showError("操作失败", e.getMessage());
-        }
     }
 
     /**
@@ -498,7 +459,7 @@ public class IpForwardView extends BaseView {
         Optional<ButtonType> result = alert.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK) {
             try {
-                if (entry.isEnabled() && sshService.isConnected()) {
+                if (sshService.isConnected()) {
                     sshService.removePortForwarding(entry.getLocalHost(), entry.getLocalPort());
                 }
                 forwardEntries.remove(entry);
@@ -572,35 +533,41 @@ public class IpForwardView extends BaseView {
         }
 
         try {
-            // 查找可用端口
-            int localPort = findAvailablePort();
-            if (localPort == -1) {
-                NotificationUtil.showError("添加失败", "无法找到可用的本地端口");
-                return;
+            List<Instance> serviceInstances = nacosService.getServiceInstances(serviceItem.getServiceName(), serviceItem.getGroupName());
+            if (CollectionUtil.isNotEmpty(serviceInstances)) {
+                serviceInstances.forEach(instance -> {
+                    // 查找可用端口
+                    int localPort = findAvailablePort();
+                    if (localPort == -1) {
+                        NotificationUtil.showError("添加失败", "无法找到可用的本地端口");
+                        return;
+                    }
+
+                    // 创建转发规则
+                    ForwardEntry entry = new ForwardEntry();
+                    entry.setName(serviceItem.getServiceName());
+                    entry.setLocalHost("127.0.0.1");
+                    entry.setLocalPort(localPort);
+
+                    entry.setRemoteHost(instance.getIp());
+                    entry.setRemotePort(instance.getPort());
+
+                    // 添加到转发列表
+                    forwardEntries.add(entry);
+                    serviceItem.setStatus("已转发");
+
+                    // 添加域名映射
+                    String domain = serviceItem.getServiceName();
+                    httpProxyService.registerService(domain, serviceItem.getServiceName(), localPort);
+
+                    saveHistory();
+                    NotificationUtil.showSuccess("添加成功",
+                            String.format("服务 %s 已添加转发，本地端口: %d",
+                                    serviceItem.getServiceName(), localPort));
+                });
             }
-
-            // 创建转发规则
-            ForwardEntry entry = new ForwardEntry();
-            entry.setName(serviceItem.getServiceName());
-            entry.setLocalHost("127.0.0.1");
-            entry.setLocalPort(localPort);
-
             // 订阅服务实例
             subscribeServiceInstances(serviceItem);
-
-            // 添加到转发列表
-            forwardEntries.add(entry);
-            serviceItem.setStatus("已转发");
-
-            // 添加域名映射
-            String domain = serviceItem.getServiceName().toLowerCase() + ".service";
-            httpProxyService.registerService(domain, serviceItem.getServiceName(), localPort);
-
-            saveHistory();
-            NotificationUtil.showSuccess("添加成功",
-                String.format("服务 %s 已添加转发，本地端口: %d",
-                    serviceItem.getServiceName(), localPort));
-
         } catch (Exception e) {
             LOGGER.error("添加服务转发失败", e);
             NotificationUtil.showError("添加失败", e.getMessage());
@@ -612,45 +579,45 @@ public class IpForwardView extends BaseView {
      */
     private void handleRemoveNacosService(NacosServiceItem serviceItem) {
         // 查找并删除转发规则
-        ForwardEntry ruleToRemove = forwardEntries.stream()
-            .filter(rule -> rule.getName().equals(serviceItem.getServiceName()))
-            .findFirst()
-            .orElse(null);
+        List<ForwardEntry> ruleToRemoveList = forwardEntries.stream()
+                .filter(rule -> rule.getName().equals(serviceItem.getServiceName()))
+                .toList();
+        if (CollectionUtil.isNotEmpty(ruleToRemoveList)) {
+            ruleToRemoveList.forEach(ruleToRemove -> {
+                try {
+                    // 停止转发
+                    if (sshService.isConnected()) {
+                        sshService.removePortForwarding(
+                                ruleToRemove.getLocalHost(),
+                                ruleToRemove.getLocalPort()
+                        );
+                    }
 
-        if (ruleToRemove != null) {
-            try {
-                // 如果规则已启用，先停止转发
-                if (ruleToRemove.isEnabled() && sshService.isConnected()) {
-                    sshService.removePortForwarding(
-                        ruleToRemove.getLocalHost(),
-                        ruleToRemove.getLocalPort()
+                    // 删除规则
+                    forwardEntries.remove(ruleToRemove);
+
+                    // 取消服务域名映射
+                    String domain = serviceItem.getServiceName();
+                    httpProxyService.removeServiceMapping(domain);
+
+                    // 取消服务实例订阅
+                    nacosService.unsubscribeService(
+                            serviceItem.getServiceName(),
+                            serviceItem.getGroupName()
                     );
+
+                    // 更新服务状态
+                    serviceItem.setStatus("未转发");
+
+                    saveHistory();
+                    NotificationUtil.showSuccess("取消成功",
+                            "服务 " + serviceItem.getServiceName() + " 的转发已取消");
+
+                } catch (Exception e) {
+                    LOGGER.error("取消服务转发失败", e);
+                    NotificationUtil.showError("取消失败", e.getMessage());
                 }
-
-                // 删除规则
-                forwardEntries.remove(ruleToRemove);
-
-                // 取消服务域名映射
-                String domain = serviceItem.getServiceName().toLowerCase() + ".service";
-                httpProxyService.removeServiceMapping(domain);
-
-                // 取消服务实例订阅
-                nacosService.unsubscribeService(
-                    serviceItem.getServiceName(),
-                    serviceItem.getGroupName()
-                );
-
-                // 更新服务状态
-                serviceItem.setStatus("未转发");
-
-                saveHistory();
-                NotificationUtil.showSuccess("取消成功",
-                    "服务 " + serviceItem.getServiceName() + " 的转发已取消");
-
-            } catch (Exception e) {
-                LOGGER.error("取消服务转发失败", e);
-                NotificationUtil.showError("取消失败", e.getMessage());
-            }
+            });
         }
     }
 
@@ -665,20 +632,20 @@ public class IpForwardView extends BaseView {
                 Platform.runLater(() -> {
                     // 更新服务列表，保持已转发状态
                     Set<String> forwardedServices = nacosServices.stream()
-                        .filter(item -> "已转发".equals(item.getStatus()))
-                        .map(NacosServiceItem::getServiceName)
-                        .collect(Collectors.toSet());
+                            .filter(item -> "已转发".equals(item.getStatus()))
+                            .map(NacosServiceItem::getServiceName)
+                            .collect(Collectors.toSet());
 
                     nacosServices.setAll(
-                        services.stream()
-                            .map(name -> {
-                                NacosServiceItem item = new NacosServiceItem(name,groupName);
-                                item.setServiceName(name);
-                                item.setGroupName(groupName);
-                                item.setStatus(forwardedServices.contains(name) ? "已转发" : "未转发");
-                                return item;
-                            })
-                            .collect(Collectors.toList())
+                            services.stream()
+                                    .map(name -> {
+                                        NacosServiceItem item = new NacosServiceItem(name, groupName);
+                                        item.setServiceName(name);
+                                        item.setGroupName(groupName);
+                                        item.setStatus(forwardedServices.contains(name) ? "已转发" : "未转发");
+                                        return item;
+                                    })
+                                    .collect(Collectors.toList())
                     );
                 });
             });
@@ -694,13 +661,13 @@ public class IpForwardView extends BaseView {
     private void subscribeServiceInstances(NacosServiceItem serviceItem) {
         try {
             nacosService.subscribeService(
-                serviceItem.getServiceName(),
-                serviceItem.getGroupName(),
-                instances -> {
-                    Platform.runLater(() -> {
-                        updateForwardRules(serviceItem, instances);
-                    });
-                }
+                    serviceItem.getServiceName(),
+                    serviceItem.getGroupName(),
+                    instances -> {
+                        Platform.runLater(() -> {
+                            updateForwardRules(serviceItem, instances);
+                        });
+                    }
             );
         } catch (Exception e) {
             LOGGER.error("订阅服务实例失败", e);
@@ -714,8 +681,8 @@ public class IpForwardView extends BaseView {
     private void unsubscribeService(NacosServiceItem serviceItem) {
         try {
             nacosService.unsubscribeService(
-                serviceItem.getServiceName(),
-                serviceItem.getGroupName()
+                    serviceItem.getServiceName(),
+                    serviceItem.getGroupName()
             );
         } catch (Exception e) {
             LOGGER.error("取消服务订阅失败", e);
@@ -729,15 +696,15 @@ public class IpForwardView extends BaseView {
         try {
             List<String> services = nacosService.getServiceList(groupName);
             nacosServices.setAll(
-                services.stream()
-                    .map(name -> {
-                        NacosServiceItem item = new NacosServiceItem(name,groupName);
-                        item.setServiceName(name);
-                        item.setGroupName(groupName);
-                        item.setStatus("未转发");
-                        return item;
-                    })
-                    .collect(Collectors.toList())
+                    services.stream()
+                            .map(name -> {
+                                NacosServiceItem item = new NacosServiceItem(name, groupName);
+                                item.setServiceName(name);
+                                item.setGroupName(groupName);
+                                item.setStatus("未转发");
+                                return item;
+                            })
+                            .collect(Collectors.toList())
             );
         } catch (Exception e) {
             LOGGER.error("刷新服务列表失败", e);
@@ -777,11 +744,12 @@ public class IpForwardView extends BaseView {
     private void handleImportRules() {
         try {
             List<ForwardEntry> entries = FileUtil.importFromJson(
-                new TypeReference<List<ForwardEntry>>() {}, 
-                "导入转发规则",
-                getScene().getWindow()
+                    new TypeReference<>() {
+                    },
+                    "导入转发规则",
+                    getScene().getWindow()
             );
-            
+
             if (entries != null && !entries.isEmpty()) {
                 forwardEntries.addAll(entries);
                 saveHistory();
@@ -834,8 +802,8 @@ public class IpForwardView extends BaseView {
 
             // 添加组件
             getChildren().addAll(
-                createFilterBox(),
-                serviceListView
+                    createFilterBox(),
+                    serviceListView
             );
         }
 
@@ -854,7 +822,7 @@ public class IpForwardView extends BaseView {
             });
 
             filterBox.getChildren().addAll(
-                new Label("搜索:"), nameFilterField
+                    new Label("搜索:"), nameFilterField
             );
 
             return filterBox;
@@ -865,8 +833,8 @@ public class IpForwardView extends BaseView {
                 if (item == null) return false;
 
                 return nameFilter.isEmpty() ||
-                    item.getServiceName().toLowerCase()
-                        .contains(nameFilter.toLowerCase());
+                        item.getServiceName().toLowerCase()
+                                .contains(nameFilter.toLowerCase());
             });
         }
     }
@@ -918,12 +886,12 @@ public class IpForwardView extends BaseView {
 
             // 根据 SSH 连接状态控制转发按钮的显示
             addButton.visibleProperty().bind(
-                Bindings.createBooleanBinding(() ->
-                    sshService.isConnected() &&
-                    getItem() != null &&
-                    !"已转发".equals(getItem().getStatus()),
-                    sshService.connectedProperty()
-                )
+                    Bindings.createBooleanBinding(() ->
+                                    sshService.isConnected() &&
+                                            getItem() != null &&
+                                            !"已转发".equals(getItem().getStatus()),
+                            sshService.connectedProperty()
+                    )
             );
         }
 
@@ -962,8 +930,8 @@ public class IpForwardView extends BaseView {
      */
     private void unsubscribeAllServices() {
         nacosServices.stream()
-            .filter(item -> "已转发".equals(item.getStatus()))
-            .forEach(this::unsubscribeService);
+                .filter(item -> "已转发".equals(item.getStatus()))
+                .forEach(this::unsubscribeService);
     }
 
     /**
@@ -1058,53 +1026,32 @@ public class IpForwardView extends BaseView {
             TableColumn<ForwardEntry, Integer> localPortColumn,
             TableColumn<ForwardEntry, String> remoteHostColumn,
             TableColumn<ForwardEntry, Integer> remotePortColumn,
-            TableColumn<ForwardEntry, Boolean> enabledColumn,
             TableColumn<ForwardEntry, Void> actionColumn) {
 
         // 名称列
         nameColumn.setCellValueFactory(cellData ->
-            new SimpleStringProperty(cellData.getValue().getName()));
+                new SimpleStringProperty(cellData.getValue().getName()));
         nameColumn.setPrefWidth(150);
 
         // 本地主机列
         localHostColumn.setCellValueFactory(cellData ->
-            new SimpleStringProperty(cellData.getValue().getLocalHost()));
+                new SimpleStringProperty(cellData.getValue().getLocalHost()));
         localHostColumn.setPrefWidth(120);
 
         // 本地端口列
         localPortColumn.setCellValueFactory(cellData ->
-            new SimpleIntegerProperty(cellData.getValue().getLocalPort()).asObject());
+                new SimpleIntegerProperty(cellData.getValue().getLocalPort()).asObject());
         localPortColumn.setPrefWidth(100);
 
         // 远程主机列
         remoteHostColumn.setCellValueFactory(cellData ->
-            new SimpleStringProperty(cellData.getValue().getRemoteHost()));
+                new SimpleStringProperty(cellData.getValue().getRemoteHost()));
         remoteHostColumn.setPrefWidth(120);
 
         // 远程端口列
         remotePortColumn.setCellValueFactory(cellData ->
-            new SimpleIntegerProperty(cellData.getValue().getRemotePort()).asObject());
+                new SimpleIntegerProperty(cellData.getValue().getRemotePort()).asObject());
         remotePortColumn.setPrefWidth(100);
-
-        // 状态列
-        enabledColumn.setCellFactory(col -> new TableCell<>() {
-            private final ToggleButton toggleButton = new ToggleButton();
-
-            @Override
-            protected void updateItem(Boolean item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty) {
-                    setGraphic(null);
-                } else {
-                    ForwardEntry entry = getTableView().getItems().get(getIndex());
-                    toggleButton.setSelected(entry.isEnabled());
-                    toggleButton.setText(entry.isEnabled() ? "启用" : "停用");
-                    toggleButton.setOnAction(e -> handleRuleStateChange(entry));
-                    setGraphic(toggleButton);
-                }
-            }
-        });
-        enabledColumn.setPrefWidth(80);
 
         // 操作列
         actionColumn.setCellFactory(col -> new TableCell<>() {
@@ -1132,80 +1079,57 @@ public class IpForwardView extends BaseView {
      */
     private void updateForwardRules(NacosServiceItem serviceItem, List<Instance> instances) {
         // 查找该服务的转发规则
-        ForwardEntry rule = forwardEntries.stream()
-            .filter(r -> r.getName().equals(serviceItem.getServiceName()))
-            .findFirst()
-            .orElse(null);
+        List<ForwardEntry> ruleList = forwardEntries.stream()
+                .filter(r -> r.getName().equals(serviceItem.getServiceName()))
+                .toList();
 
-        if (rule == null) {
-            return; // 如果没有找到规则，说明服务未转发
+        if (CollectionUtil.isEmpty(ruleList)) {
+            // 如果没有找到规则，说明服务未转发
+            return;
         }
 
-        // 获取一个健康的实例
-        Optional<Instance> healthyInstance = instances.stream()
-            .filter(Instance::isHealthy)
-            .findFirst();
+        //获取健康的实例
+        List<Instance> healthyInstances = instances.stream().filter(Instance::isHealthy).toList();
 
-        if (healthyInstance.isPresent()) {
-            Instance instance = healthyInstance.get();
-            // 更新远程主机和端口
-            if (!rule.getRemoteHost().equals(instance.getIp()) ||
-                rule.getRemotePort() != instance.getPort()) {
+        //删除这个服务所有的转发信息，以最新更新为准
+        forwardEntries.removeAll(ruleList);
 
-                // 如果规则已启用，先停止旧的转发
-                if (rule.isEnabled() && sshService.isConnected()) {
-                    try {
-                        sshService.removePortForwarding(
+        //基于连接已经建立
+        if (sshService.isConnected()) {
+            //删除原来转发信息
+            ruleList.forEach(rule -> {
+                try {
+                    sshService.removePortForwarding(
                             rule.getLocalHost(),
                             rule.getLocalPort()
-                        );
-                    } catch (Exception e) {
-                        LOGGER.error("停止转发规则失败", e);
-                    }
+                    );
+                } catch (Exception e) {
+                    LOGGER.error("停止转发规则失败", e);
                 }
-
-                // 更新规则
-                rule.setRemoteHost(instance.getIp());
-                rule.setRemotePort(instance.getPort());
-
-                // 如果规则是启用状态，重新启动转发
-                if (rule.isEnabled() && sshService.isConnected()) {
-                    try {
-                        sshService.addPortForwarding(
+            });
+            //新增转发规则
+            healthyInstances.forEach(instance -> {
+                ForwardEntry rule = new ForwardEntry(serviceItem.getServiceName(), "127.0.0.1", findAvailablePort(), instance.getIp(), instance.getPort());
+                forwardEntries.add(rule);
+                try {
+                    sshService.addPortForwarding(
                             rule.getLocalHost(),
                             rule.getLocalPort(),
                             rule.getRemoteHost(),
                             rule.getRemotePort()
-                        );
-                        NotificationUtil.showSuccess("服务实例已更新",
-                            String.format("服务 %s 的实例已更新到 %s:%d",
-                                serviceItem.getServiceName(),
-                                instance.getIp(),
-                                instance.getPort()));
-                    } catch (Exception e) {
-                        LOGGER.error("重启转发规则失败", e);
-                        NotificationUtil.showError("更新失败",
-                            "更新服务实例失败: " + e.getMessage());
-                    }
-                }
-            }
-        } else {
-            // 如果没有健康的实例，停止转发
-            if (rule.isEnabled() && sshService.isConnected()) {
-                try {
-                    sshService.removePortForwarding(
-                        rule.getLocalHost(),
-                        rule.getLocalPort()
                     );
-                    rule.setEnabled(false);
-                    NotificationUtil.showWarning("服务不可用",
-                        "服务 " + serviceItem.getServiceName() + " 没有健康的实例");
+                    NotificationUtil.showSuccess("服务实例已更新",
+                            String.format("服务 %s 的实例已更新到 %s:%d",
+                                    serviceItem.getServiceName(),
+                                    instance.getIp(),
+                                    instance.getPort()));
                 } catch (Exception e) {
-                    LOGGER.error("停止转发规则失败", e);
+                    LOGGER.error("重启转发规则失败", e);
+                    NotificationUtil.showError("更新失败",
+                            "更新服务实例失败: " + e.getMessage());
                 }
-            }
+            });
         }
-
         saveHistory();
     }
 
@@ -1232,7 +1156,7 @@ public class IpForwardView extends BaseView {
             startProxyButton.setText("停止代理");
             startProxyButton.setGraphic(new Glyph("FontAwesome", "STOP"));
             NotificationUtil.showSuccess("启动成功",
-                String.format("HTTP代理已启动，端口: %d", port));
+                    String.format("HTTP代理已启动，端口: %d", port));
 
         } catch (NumberFormatException e) {
             NotificationUtil.showError("输入错误", "代理端口必须是数字");
@@ -1253,6 +1177,6 @@ public class IpForwardView extends BaseView {
 
         tabPane.getTabs().addAll(sshTab, nacosTab);
 
-        getContentBox().setPadding(new Insets(25,0,15,0));
+        getContentBox().setPadding(new Insets(25, 0, 15, 0));
     }
 }

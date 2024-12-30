@@ -1,6 +1,9 @@
 package com.zjhy.love.worktools.model;
 
-import javafx.beans.property.*;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 
 /**
  * IP转发条目
@@ -38,11 +41,6 @@ public class ForwardEntry {
      */
     private final IntegerProperty remotePort = new SimpleIntegerProperty();
 
-    /**
-     * 是否启用转发规则
-     * 用于控制转发规则的启用状态
-     */
-    private final BooleanProperty enabled = new SimpleBooleanProperty(true);
 
     /**
      * 默认构造函数
@@ -53,21 +51,19 @@ public class ForwardEntry {
     /**
      * 创建转发规则
      *
-     * @param name 规则名称
-     * @param localHost 本地监听地址
-     * @param localPort 本地监听端口
+     * @param name       规则名称
+     * @param localHost  本地监听地址
+     * @param localPort  本地监听端口
      * @param remoteHost 远程目标地址
      * @param remotePort 远程目标端口
-     * @param enabled 是否启用
      */
     public ForwardEntry(String name, String localHost, int localPort,
-                        String remoteHost, int remotePort, boolean enabled) {
+                        String remoteHost, int remotePort) {
         setName(name);
         setLocalHost(localHost);
         setLocalPort(localPort);
         setRemoteHost(remoteHost);
         setRemotePort(remotePort);
-        setEnabled(enabled);
     }
 
     /**
@@ -96,9 +92,11 @@ public class ForwardEntry {
     public String getLocalHost() {
         return localHost.get();
     }
+
     public void setLocalHost(String value) {
         localHost.set(value);
     }
+
     public StringProperty localHostProperty() {
         return localHost;
     }
@@ -107,9 +105,11 @@ public class ForwardEntry {
     public int getLocalPort() {
         return localPort.get();
     }
+
     public void setLocalPort(int value) {
         localPort.set(value);
     }
+
     public IntegerProperty localPortProperty() {
         return localPort;
     }
@@ -118,9 +118,11 @@ public class ForwardEntry {
     public String getRemoteHost() {
         return remoteHost.get();
     }
+
     public void setRemoteHost(String value) {
         remoteHost.set(value);
     }
+
     public StringProperty remoteHostProperty() {
         return remoteHost;
     }
@@ -129,21 +131,13 @@ public class ForwardEntry {
     public int getRemotePort() {
         return remotePort.get();
     }
+
     public void setRemotePort(int value) {
         remotePort.set(value);
     }
+
     public IntegerProperty remotePortProperty() {
         return remotePort;
     }
 
-    // Enabled property
-    public boolean isEnabled() {
-        return enabled.get();
-    }
-    public void setEnabled(boolean value) {
-        enabled.set(value);
-    }
-    public BooleanProperty enabledProperty() {
-        return enabled;
-    }
 }

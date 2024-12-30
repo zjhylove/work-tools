@@ -1,5 +1,6 @@
 package com.zjhy.love.worktools.view;
 
+import cn.hutool.core.io.file.FileNameUtil;
 import com.zjhy.love.worktools.common.util.HistoryUtil;
 import com.zjhy.love.worktools.common.util.NotificationUtil;
 import com.zjhy.love.worktools.model.ObjectStorageConfig;
@@ -357,7 +358,9 @@ public class ObjectStorageView extends BaseView {
             config.setAccessKeySecret(secretKeyField.getText().trim());
             config.setEndpoint(endpointField.getText().trim());
             config.setBucket(bucketField.getText().trim());
-            config.setRegion(regionField.getText().trim());
+            if(TENCENT_COS.equals(provider)){
+                config.setRegion(regionField.getText().trim());
+            }
 
             // 创建存储服务实例
             storageService = ALIYUN_OSS.equals(provider) ? 
@@ -474,7 +477,7 @@ public class ObjectStorageView extends BaseView {
 
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("选择保存位置");
-        fileChooser.setInitialFileName(obj.getKey());
+        fileChooser.setInitialFileName(FileNameUtil.getName(obj.getKey()));
         File file = fileChooser.showSaveDialog(getScene().getWindow());
 
         if (file != null) {
