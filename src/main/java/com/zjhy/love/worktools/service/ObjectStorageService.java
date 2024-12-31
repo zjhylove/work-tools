@@ -15,23 +15,26 @@ public interface ObjectStorageService {
 
     /**
      * 上传文件
-     * @param key 对象键
-     * @param file 本地文件
+     *
+     * @param key      对象键
+     * @param file     本地文件
      * @param progress 进度属性
      */
     void uploadFile(String key, File file, DoubleProperty progress);
 
     /**
      * 下载文件
-     * @param key 对象键
+     *
+     * @param key        对象键
      * @param targetFile 目标文件
-     * @param progress 进度属性
+     * @param progress   进度属性
      */
     void downloadFile(String key, File targetFile, DoubleProperty progress);
 
     /**
      * 列出对象
-     * @param prefix 前缀
+     *
+     * @param prefix  前缀
      * @param maxKeys 最大数量
      * @return 对象列表
      */
@@ -39,12 +42,14 @@ public interface ObjectStorageService {
 
     /**
      * 删除对象
+     *
      * @param key 对象键
      */
     void deleteObject(String key);
 
     /**
      * 获取对象URL
+     *
      * @param key 对象键
      * @return 访问URL
      */

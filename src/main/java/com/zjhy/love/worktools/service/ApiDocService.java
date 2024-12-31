@@ -16,7 +16,10 @@ import cn.hutool.http.HtmlUtil;
 import cn.hutool.json.JSONUtil;
 import com.zjhy.love.worktools.common.util.MockUtil;
 import com.zjhy.love.worktools.common.util.OfficeDocUtil;
-import com.zjhy.love.worktools.model.*;
+import com.zjhy.love.worktools.model.ApiDocConfig;
+import com.zjhy.love.worktools.model.ApiField;
+import com.zjhy.love.worktools.model.ApiInfo;
+import com.zjhy.love.worktools.model.NodeInfo;
 import org.apache.commons.collections4.SetUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +38,7 @@ public class ApiDocService {
      */
     private static final Logger LOGGER = LoggerFactory.getLogger(ApiDocService.class);
 
-    public String generateDoc(ApiDocConfig config){
+    public String generateDoc(ApiDocConfig config) {
         List<ApiInfo> apiInfoList = new ArrayList<>();
         try {
             apiInfoList = getApiInfoList(config);

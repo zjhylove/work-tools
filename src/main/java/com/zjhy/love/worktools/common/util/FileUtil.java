@@ -26,9 +26,9 @@ public class FileUtil {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle(title);
         fileChooser.getExtensionFilters().add(
-            new FileChooser.ExtensionFilter("JSON文件", "*.json")
+                new FileChooser.ExtensionFilter("JSON文件", "*.json")
         );
-        
+
         File file = fileChooser.showSaveDialog(owner);
         if (file != null) {
             String json = MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(data);
@@ -41,9 +41,9 @@ public class FileUtil {
      * 从JSON文件导入对象
      */
     public static <T> T importFromJson(Class<T> type, String title, Window owner) throws Exception {
-        return importFromJson(title,owner, ((objectMapper, json) -> {
+        return importFromJson(title, owner, ((objectMapper, json) -> {
             try {
-                return objectMapper.readValue(json,type);
+                return objectMapper.readValue(json, type);
             } catch (JsonProcessingException e) {
                 throw new RuntimeException(e);
             }
@@ -51,16 +51,16 @@ public class FileUtil {
     }
 
     public static <T> T importFromJson(TypeReference<T> typeReference, String title, Window owner) throws Exception {
-        return importFromJson(title,owner, ((objectMapper, json) -> {
+        return importFromJson(title, owner, ((objectMapper, json) -> {
             try {
-                return objectMapper.readValue(json,typeReference);
+                return objectMapper.readValue(json, typeReference);
             } catch (JsonProcessingException e) {
                 throw new RuntimeException(e);
             }
         }));
     }
 
-    public static <T> T importFromJson(String title, Window owner, BiFunction<ObjectMapper,String,T> readMethod)  throws Exception {
+    public static <T> T importFromJson(String title, Window owner, BiFunction<ObjectMapper, String, T> readMethod) throws Exception {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle(title);
         fileChooser.getExtensionFilters().add(
@@ -70,7 +70,7 @@ public class FileUtil {
         File file = fileChooser.showOpenDialog(owner);
         if (file != null) {
             String json = Files.readString(file.toPath());
-            T data = readMethod.apply(MAPPER,json);
+            T data = readMethod.apply(MAPPER, json);
             NotificationUtil.showSuccess("导入成功", "配置已从文件加载: " + file.getName());
             return data;
         }

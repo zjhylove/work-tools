@@ -13,8 +13,8 @@ import org.slf4j.LoggerFactory;
  */
 public class SshService {
     private static final Logger LOGGER = LoggerFactory.getLogger(SshService.class);
-    private Session session;
     private final SimpleBooleanProperty connected = new SimpleBooleanProperty(false);
+    private Session session;
 
     /**
      * 获取连接状态属性
@@ -32,8 +32,9 @@ public class SshService {
 
     /**
      * 连接到SSH服务器
-     * @param host SSH服务器地址
-     * @param port SSH服务器端口
+     *
+     * @param host     SSH服务器地址
+     * @param port     SSH服务器端口
      * @param username 用户名
      * @param password 密码
      * @throws Exception 连接异常
@@ -43,7 +44,7 @@ public class SshService {
         session = jsch.getSession(username, host, port);
         session.setPassword(password);
         session.setConfig("StrictHostKeyChecking", "no");
-        
+
         try {
             session.connect();
             connected.set(true);
@@ -57,8 +58,9 @@ public class SshService {
 
     /**
      * 添加端口转发规则
-     * @param localHost 本地监听地址
-     * @param localPort 本地监听端口
+     *
+     * @param localHost  本地监听地址
+     * @param localPort  本地监听端口
      * @param remoteHost 远程目标地址
      * @param remotePort 远程目标端口
      * @throws Exception 转发异常
@@ -85,6 +87,7 @@ public class SshService {
 
     /**
      * 移除端口转发规则
+     *
      * @param localHost 本地监听地址
      * @param localPort 本地监听端口
      * @throws Exception 移除异常

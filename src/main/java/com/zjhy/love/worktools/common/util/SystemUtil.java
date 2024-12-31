@@ -24,26 +24,22 @@ public class SystemUtil {
      * 日志记录器
      */
     private static final Logger LOGGER = LoggerFactory.getLogger(SystemUtil.class);
-
-    /**
-     * 系统托盘图标
-     */
-    private static FXTrayIcon trayIcon;
-
-    /**
-     * 主窗口引用
-     */
-    private static Stage primaryStage;
-
     /**
      * 是否为Mac系统
      */
     private static final boolean IS_MAC = System.getProperty("os.name").toLowerCase().contains("mac");
-
     /**
      * 是否为Windows系统
      */
     private static final boolean IS_WINDOWS = System.getProperty("os.name").toLowerCase().contains("windows");
+    /**
+     * 系统托盘图标
+     */
+    private static FXTrayIcon trayIcon;
+    /**
+     * 主窗口引用
+     */
+    private static Stage primaryStage;
 
     private SystemUtil() {
     }

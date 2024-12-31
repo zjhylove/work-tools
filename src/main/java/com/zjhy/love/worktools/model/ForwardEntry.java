@@ -154,11 +154,11 @@ public class ForwardEntry {
         return type.get();
     }
 
-    public StringProperty typeProperty() {
-        return type;
-    }
-
     public void setType(String value) {
         type.set(value);
+    }
+
+    public StringProperty typeProperty() {
+        return type;
     }
 }

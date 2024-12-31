@@ -24,9 +24,9 @@ public class AliyunOssService implements ObjectStorageService {
     @Override
     public void init(ObjectStorageConfig config) {
         ossClient = new OSSClientBuilder().build(
-            config.getEndpoint(),
-            config.getAccessKeyId(),
-            config.getAccessKeySecret()
+                config.getEndpoint(),
+                config.getAccessKeyId(),
+                config.getAccessKeySecret()
         );
         bucket = config.getBucket();
         LOGGER.info("阿里云OSS客户端初始化成功");
@@ -36,7 +36,7 @@ public class AliyunOssService implements ObjectStorageService {
     public void uploadFile(String key, File file, DoubleProperty progress) {
         try {
             PutObjectRequest request = new PutObjectRequest(bucket, key, file);
-            
+
             // 使用 PutObjectRequest 的进度回调
             request.withProgressListener(progressEvent -> {
                 Platform.runLater(() -> {
@@ -55,7 +55,7 @@ public class AliyunOssService implements ObjectStorageService {
                     }
                 });
             });
-            
+
             ossClient.putObject(request);
         } catch (Exception e) {
             LOGGER.error("上传文件失败", e);
@@ -67,11 +67,11 @@ public class AliyunOssService implements ObjectStorageService {
     public void downloadFile(String key, File targetFile, DoubleProperty progress) {
         try {
             GetObjectRequest request = new GetObjectRequest(bucket, key);
-            
+
             // 先获取文件大小
             ObjectMetadata metadata = ossClient.getObjectMetadata(bucket, key);
             long totalSize = metadata.getContentLength();
-            
+
             // 使用 GetObjectRequest 的进度回调
             request.withProgressListener(progressEvent -> {
                 Platform.runLater(() -> {
@@ -86,7 +86,7 @@ public class AliyunOssService implements ObjectStorageService {
                     }
                 });
             });
-            
+
             ossClient.getObject(request, targetFile);
         } catch (Exception e) {
             LOGGER.error("下载文件失败", e);
@@ -100,15 +100,15 @@ public class AliyunOssService implements ObjectStorageService {
             ListObjectsRequest request = new ListObjectsRequest(bucket);
             request.setPrefix(prefix);
             request.setMaxKeys(maxKeys);
-            
+
             ObjectListing result = ossClient.listObjects(request);
             List<StorageObject> objects = new ArrayList<>();
-            
+
             for (OSSObjectSummary summary : result.getObjectSummaries()) {
                 objects.add(new StorageObject(
-                    summary.getKey(),
-                    summary.getSize(),
-                    summary.getLastModified().toString()
+                        summary.getKey(),
+                        summary.getSize(),
+                        summary.getLastModified().toString()
                 ));
             }
             return objects;
@@ -131,8 +131,8 @@ public class AliyunOssService implements ObjectStorageService {
     @Override
     public String getObjectUrl(String key) {
         try {
-            return ossClient.generatePresignedUrl(bucket, key, 
-                new Date(System.currentTimeMillis() + 3600 * 1000)).toString();
+            return ossClient.generatePresignedUrl(bucket, key,
+                    new Date(System.currentTimeMillis() + 3600 * 1000)).toString();
         } catch (Exception e) {
             LOGGER.error("获取对象URL失败", e);
             throw new RuntimeException("获取对象URL失败: " + e.getMessage());

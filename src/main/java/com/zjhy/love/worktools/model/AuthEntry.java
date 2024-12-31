@@ -15,31 +15,31 @@ public class AuthEntry {
      * 用于标识不同的验证账户
      */
     private final StringProperty name = new SimpleStringProperty();
-    
+
     /**
      * 密钥
      * Base32编码的密钥
      */
     private final StringProperty secret = new SimpleStringProperty();
-    
+
     /**
      * 发行方
      * 通常是服务提供商的名称
      */
     private final StringProperty issuer = new SimpleStringProperty();
-    
+
     /**
      * 算法
      * 默认为 SHA1
      */
     private final StringProperty algorithm = new SimpleStringProperty("SHA1");
-    
+
     /**
      * 验证码位数
      * 默认为6位
      */
     private final IntegerProperty digits = new SimpleIntegerProperty(6);
-    
+
     /**
      * 更新间隔（秒）
      * 默认为30秒
@@ -73,6 +73,7 @@ public class AuthEntry {
     public String getIssuer() {
         return issuer.get();
     }
+
     public void setIssuer(String issuer) {
         this.issuer.set(issuer);
     }

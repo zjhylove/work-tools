@@ -5,29 +5,34 @@
 ## 功能特性
 
 ### 1. IP端口转发
+
 - 支持 SSH 隧道转发
 - 可视化管理转发规则
 - 支持规则导入导出
 
 ### 2. Nacos服务发现
+
 - 支持服务列表查看
 - 实时监控服务实例变化
 - 支持服务实例端口转发
 - 多命名空间管理
 
 ### 3. 对象存储管理
+
 - 支持阿里云 OSS
 - 支持腾讯云 COS
 - 文件上传下载
 - 文件列表管理
 
 ### 4. 二次验证工具
+
 - 支持 TOTP 验证码生成
 - 验证码自动更新
 - 支持多账号管理
 - 一键复制验证码
 
 ### 5. 通用功能
+
 - 现代化 UI 界面（AtlantaFX）
 - 支持系统托盘
 - 深色/浅色主题
@@ -48,6 +53,7 @@
 - 阿里云/腾讯云 SDK
 
 ## 项目结构
+
 ```
 src/main/java/com/zjhy/love/worktools/
 ├── WorkToolsApplication.java # 应用程序入口
@@ -69,7 +75,6 @@ src/main/java/com/zjhy/love/worktools/
 └── BaseView.java # 基础视图
 ```
 
-
 ## 开发环境
 
 - JDK 23
@@ -77,6 +82,7 @@ src/main/java/com/zjhy/love/worktools/
 - IDE 推荐：IntelliJ IDEA
 
 ## 构建运行
+
 - bash
 - 克隆项目
 - git clone https://github.com/zjhylove/work-tools.git

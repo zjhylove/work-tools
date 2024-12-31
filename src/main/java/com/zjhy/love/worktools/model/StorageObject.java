@@ -9,7 +9,8 @@ public class StorageObject {
     private final StringProperty size = new SimpleStringProperty();
     private final StringProperty lastModified = new SimpleStringProperty();
 
-    public StorageObject() {}
+    public StorageObject() {
+    }
 
     public StorageObject(String key, long size, String lastModified) {
         setKey(key);
@@ -62,7 +63,7 @@ public class StorageObject {
             return bytes + " B";
         }
         int exp = (int) (Math.log(bytes) / Math.log(1024));
-        String pre = "KMGTPE".charAt(exp-1) + "";
+        String pre = "KMGTPE".charAt(exp - 1) + "";
         return String.format("%.1f %sB", bytes / Math.pow(1024, exp), pre);
     }
 

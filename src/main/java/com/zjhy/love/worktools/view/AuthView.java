@@ -30,7 +30,7 @@ import java.util.List;
 
 public class AuthView extends BaseView {
     private static final Logger LOGGER = LoggerFactory.getLogger(AuthView.class);
-    
+
     private final AuthService authService = new AuthService();
     private final ObservableList<AuthEntry> authEntries = FXCollections.observableArrayList();
     private final TableView<AuthEntry> authTable = new TableView<>();
@@ -41,10 +41,10 @@ public class AuthView extends BaseView {
         HBox toolbar = createToolbar();
         configureAuthTable();
         VBox.setVgrow(authTable, Priority.ALWAYS);
-        
+
         // 使用基类方法添加内容
         addContent(toolbar, authTable);
-        
+
         // 初始化
         initializeData();
 
@@ -55,24 +55,24 @@ public class AuthView extends BaseView {
     private HBox createToolbar() {
         HBox toolbar = new HBox(10);
         toolbar.setAlignment(Pos.CENTER_LEFT);
-        
+
         Button addButton = new Button("添加验证器", new Glyph("FontAwesome", "PLUS"));
         addButton.getStyleClass().addAll(Styles.BUTTON_OUTLINED, Styles.ACCENT);
         addButton.setOnAction(e -> handleAddAuth());
-        
+
         Button importButton = new Button("导入", new Glyph("FontAwesome", "DOWNLOAD"));
         importButton.getStyleClass().add(Styles.BUTTON_OUTLINED);
         importButton.setOnAction(e -> handleImport());
-        
+
         Button exportButton = new Button("导出", new Glyph("FontAwesome", "UPLOAD"));
         exportButton.getStyleClass().add(Styles.BUTTON_OUTLINED);
         exportButton.setOnAction(e -> handleExport());
-        
+
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
-        
+
         countdownLabel.getStyleClass().add(Styles.TEXT_SUBTLE);
-        
+
         toolbar.getChildren().addAll(addButton, importButton, exportButton, spacer, countdownLabel);
         return toolbar;
     }
@@ -90,7 +90,7 @@ public class AuthView extends BaseView {
         nameColumn.setCellValueFactory(data -> data.getValue().nameProperty());
         nameColumn.setPrefWidth(200);
         columns.add(nameColumn);
-        
+
         // 发行方列
         TableColumn<AuthEntry, String> issuerColumn = new TableColumn<>("发行方");
         issuerColumn.setCellValueFactory(data -> data.getValue().issuerProperty());
@@ -122,22 +122,22 @@ public class AuthView extends BaseView {
         return new TableCell<>() {
             private final HBox container = new HBox();
             private final Label codeLabel = new Label();
-            
+
             {
                 container.setAlignment(Pos.CENTER);
                 container.getStyleClass().add("code-container");
                 container.setPadding(new Insets(5, 10, 5, 10));
-                
+
                 codeLabel.getStyleClass().addAll(Styles.TITLE_3, Styles.ACCENT);
                 container.getChildren().add(codeLabel);
-                
+
                 // 添加点击复制功能
                 container.setOnMouseClicked(event -> {
                     if (!isEmpty()) {
                         copyToClipboard(codeLabel.getText());
                     }
                 });
-                
+
                 // 添加鼠标悬停效果
                 container.setOnMouseEntered(e -> {
                     container.setStyle("-fx-background-color: rgba(33, 147, 176, 0.1);");
@@ -148,7 +148,7 @@ public class AuthView extends BaseView {
                     setCursor(javafx.scene.Cursor.DEFAULT);
                 });
             }
-            
+
             @Override
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
@@ -158,9 +158,9 @@ public class AuthView extends BaseView {
                     AuthEntry entry = getTableRow().getItem();
                     if (entry != null) {
                         String code = authService.generateTOTP(
-                            entry.getSecret(),
-                            entry.getDigits(),
-                            entry.getPeriod()
+                                entry.getSecret(),
+                                entry.getDigits(),
+                                entry.getPeriod()
                         );
                         // 每3位数字添加一个空格，提高可读性
                         String formattedCode = code.replaceAll("(.{3})", "$1 ").trim();
@@ -181,21 +181,21 @@ public class AuthView extends BaseView {
             {
                 qrButton.getStyleClass().addAll(Styles.SMALL, Styles.ACCENT);
                 deleteButton.getStyleClass().addAll(Styles.SMALL, Styles.DANGER);
-                
+
                 qrButton.setOnAction(event -> {
                     AuthEntry entry = getTableRow().getItem();
                     if (entry != null) {
                         showQRCode(entry);
                     }
                 });
-                
+
                 deleteButton.setOnAction(event -> {
                     AuthEntry entry = getTableRow().getItem();
                     if (entry != null) {
                         handleDelete(entry);
                     }
                 });
-                
+
                 container.setAlignment(Pos.CENTER);
                 container.getChildren().addAll(qrButton, deleteButton);
             }
@@ -210,38 +210,38 @@ public class AuthView extends BaseView {
 
     private void handleAddAuth() {
         Dialog<AuthEntry> dialog = DialogUtil.createCommonDataDialog("添加验证器");
-        DialogPane dialogPane =  dialog.getDialogPane();
+        DialogPane dialogPane = dialog.getDialogPane();
 
         // 创建表单
         GridPane grid = new GridPane();
         grid.setHgap(10);
         grid.setVgap(10);
         grid.setPadding(new Insets(20));
-        
+
         TextField nameField = new TextField();
         TextField issuerField = new TextField();
         TextField secretField = new TextField();
         ComboBox<String> algorithmBox = new ComboBox<>(
-            FXCollections.observableArrayList("SHA1", "SHA256", "SHA512")
+                FXCollections.observableArrayList("SHA1", "SHA256", "SHA512")
         );
         Spinner<Integer> digitsSpinner = new Spinner<>(6, 8, 6);
         Spinner<Integer> periodSpinner = new Spinner<>(30, 60, 30);
-        
+
         grid.addRow(0, new Label("账户名称:"), nameField);
         grid.addRow(1, new Label("发行方:"), issuerField);
         grid.addRow(2, new Label("密钥:"), secretField);
         grid.addRow(3, new Label("算法:"), algorithmBox);
         grid.addRow(4, new Label("验证码位数:"), digitsSpinner);
         grid.addRow(5, new Label("更新间隔(秒):"), periodSpinner);
-        
+
         // 生成随机密钥按钮
         Button generateButton = new Button("生成密钥", new Glyph("FontAwesome", "RANDOM"));
         generateButton.getStyleClass().add(Styles.BUTTON_OUTLINED);
         generateButton.setOnAction(e -> secretField.setText(authService.generateSecret()));
         grid.add(generateButton, 2, 2);
-        
+
         dialogPane.setContent(grid);
-        
+
         // 添加按钮
         ButtonType addButton = new ButtonType("添加", ButtonBar.ButtonData.OK_DONE);
         dialogPane.getButtonTypes().addAll(addButton, ButtonType.CANCEL);
@@ -265,7 +265,7 @@ public class AuthView extends BaseView {
             }
             return null;
         });
-        
+
         // 显示对话框并处理结果
         dialog.showAndWait().ifPresent(entry -> {
             authEntries.add(entry);
@@ -276,30 +276,30 @@ public class AuthView extends BaseView {
 
     private void showQRCode(AuthEntry entry) {
         Dialog<AuthEntry> dialog = DialogUtil.createCommonDataDialog("二维码");
-        DialogPane dialogPane =  dialog.getDialogPane();
-        
+        DialogPane dialogPane = dialog.getDialogPane();
+
         // 创建二维码图片视图
         ImageView qrView = new ImageView(authService.generateQRCode(entry));
         qrView.setFitWidth(300);
         qrView.setFitHeight(300);
         qrView.setPreserveRatio(true);
-        
+
         // 创建卡片容器
         Card card = new Card();
         card.setMaxWidth(320);
         card.setMaxHeight(320);
         card.setBody(qrView);  // 使用 setBody 方法设置内容
-        
+
         dialogPane.setContent(card);
         dialogPane.getButtonTypes().add(ButtonType.CLOSE);
-        
+
         dialog.show();
     }
 
     private void handleDelete(AuthEntry entry) {
         if (NotificationUtil.showConfirm(
-            "删除验证器",
-            "确定要删除验证器 " + entry.getName() + " 吗？"
+                "删除验证器",
+                "确定要删除验证器 " + entry.getName() + " 吗？"
         )) {
             authEntries.remove(entry);
             saveHistory();
@@ -310,9 +310,10 @@ public class AuthView extends BaseView {
     private void handleImport() {
         try {
             List<AuthEntry> entries = FileUtil.importFromJson(
-                new TypeReference<>() {},
-                "导入验证器配置",
-                getScene().getWindow()
+                    new TypeReference<>() {
+                    },
+                    "导入验证器配置",
+                    getScene().getWindow()
             );
             if (entries != null && !entries.isEmpty()) {
                 authEntries.addAll(entries);
@@ -333,9 +334,9 @@ public class AuthView extends BaseView {
 
         try {
             FileUtil.exportToJson(
-                new ArrayList<>(authEntries),
-                "导出验证器配置",
-                getScene().getWindow()
+                    new ArrayList<>(authEntries),
+                    "导出验证器配置",
+                    getScene().getWindow()
             );
         } catch (Exception e) {
             LOGGER.error("导出验证器失败", e);
@@ -345,7 +346,8 @@ public class AuthView extends BaseView {
 
     private void initializeData() {
         try {
-            List<AuthEntry> entries = HistoryUtil.getHistory("auth", new TypeReference<List<AuthEntry>>() {});
+            List<AuthEntry> entries = HistoryUtil.getHistory("auth", new TypeReference<List<AuthEntry>>() {
+            });
             if (entries != null) {
                 authEntries.setAll(entries);
             }
@@ -374,7 +376,7 @@ public class AuthView extends BaseView {
 
     private void updateCodes() {
         long currentTime = System.currentTimeMillis() / 1000L;
-        int remainingSeconds = 30 - (int)(currentTime % 30);
+        int remainingSeconds = 30 - (int) (currentTime % 30);
         countdownLabel.setText(String.format("%d 秒后更新", remainingSeconds));
         authTable.refresh();
     }
@@ -385,7 +387,7 @@ public class AuthView extends BaseView {
         ClipboardContent content = new ClipboardContent();
         content.putString(code);
         clipboard.setContent(content);
-        
+
         // 直接显示通知，因为已经在构造函数中初始化了通知上下文
         NotificationUtil.showSuccess("验证码已复制到剪贴板");
     }

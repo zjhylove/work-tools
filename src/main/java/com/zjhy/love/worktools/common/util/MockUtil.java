@@ -22,14 +22,13 @@ import java.util.*;
 public class MockUtil {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MockUtil.class);
-
-    private MockUtil() {
-    }
-
     /**
      * 对于集合数据结构默认生成10条数据
      */
     private static final int COLLECTION_SIZE = 2;
+
+    private MockUtil() {
+    }
 
     /**
      * 模拟方法响应对象

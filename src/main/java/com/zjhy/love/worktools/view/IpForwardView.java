@@ -829,6 +829,270 @@ public class IpForwardView extends BaseView implements ShutdownHook {
     }
 
     /**
+     * 取消所有服务订阅
+     */
+    private void unsubscribeAllServices() {
+        nacosServices.stream()
+                .filter(item -> "已转发".equals(item.getStatus()))
+                .forEach(this::unsubscribeService);
+    }
+
+    /**
+     * 关闭所有服务连接
+     */
+    private void closeAllServices() {
+        if (Objects.nonNull(sshService) && sshService.isConnected()) {
+            sshService.disconnect();
+        }
+        if (Objects.nonNull(nacosService) && nacosService.isConnected()) {
+            nacosService.shutdown();
+        }
+        if (Objects.nonNull(httpProxyService) && httpProxyService.isRunning()) {
+            httpProxyService.stop();
+        }
+    }
+
+    /**
+     * 加载 SSH 配置
+     */
+    private void loadSshConfig(IpForwardConfig config) {
+        hostField.setText(config.getHost());
+        portField.setText(String.valueOf(config.getPort()));
+        usernameField.setText(config.getUsername());
+        passwordField.setText(config.getPassword());
+    }
+
+    /**
+     * 加载 Nacos 配置
+     */
+    private void loadNacosConfig(IpForwardConfig config) {
+        NacosConfig nacosConfig = config.getNacosConfig();
+        if (nacosConfig != null) {
+            serverAddrField.setText(nacosConfig.getServerAddr());
+            namespaceField.setText(nacosConfig.getNamespace());
+            nacosUserField.setText(nacosConfig.getUsername());
+            nacosPasswordField.setText(nacosConfig.getPassword());
+            groupField.setText(nacosConfig.getGroupName());
+        }
+    }
+
+    // =============== 配置加载和保存方法 ===============
+
+    /**
+     * 加载转发规则
+     */
+    private void loadForwardEntries(IpForwardConfig config) {
+        List<ForwardEntry> entries = config.getForwardEntries();
+        if (entries != null) {
+            forwardEntries.setAll(entries);
+        }
+    }
+
+    /**
+     * 保存 SSH 配置
+     */
+    private void saveSshConfig(IpForwardConfig config) {
+        config.setHost(hostField.getText());
+        config.setPort(Integer.parseInt(portField.getText()));
+        config.setUsername(usernameField.getText());
+        config.setPassword(passwordField.getText());
+    }
+
+    /**
+     * 保存 Nacos 配置
+     */
+    private void saveNacosConfig(IpForwardConfig config) {
+        NacosConfig nacosConfig = new NacosConfig();
+        nacosConfig.setServerAddr(serverAddrField.getText());
+        nacosConfig.setNamespace(namespaceField.getText());
+        nacosConfig.setUsername(nacosUserField.getText());
+        nacosConfig.setPassword(nacosPasswordField.getText());
+        nacosConfig.setGroupName(groupField.getText());
+        config.setNacosConfig(nacosConfig);
+    }
+
+    /**
+     * 保存转发规则
+     */
+    private void saveForwardEntries(IpForwardConfig config) {
+        config.setForwardEntries(forwardEntries);
+    }
+
+    /**
+     * 配置表格列
+     */
+    private void configureTableColumns(
+            TableColumn<ForwardEntry, String> nameColumn,
+            TableColumn<ForwardEntry, String> localHostColumn,
+            TableColumn<ForwardEntry, Integer> localPortColumn,
+            TableColumn<ForwardEntry, String> remoteHostColumn,
+            TableColumn<ForwardEntry, Integer> remotePortColumn,
+            TableColumn<ForwardEntry, Void> actionColumn) {
+
+        // 名称列
+        nameColumn.setCellValueFactory(cellData ->
+                new SimpleStringProperty(cellData.getValue().getName()));
+        nameColumn.setPrefWidth(150);
+
+        // 本地主机列
+        localHostColumn.setCellValueFactory(cellData ->
+                new SimpleStringProperty(cellData.getValue().getLocalHost()));
+        localHostColumn.setPrefWidth(120);
+
+        // 本地端口列
+        localPortColumn.setCellValueFactory(cellData ->
+                new SimpleIntegerProperty(cellData.getValue().getLocalPort()).asObject());
+        localPortColumn.setPrefWidth(100);
+
+        // 远程主机列
+        remoteHostColumn.setCellValueFactory(cellData ->
+                new SimpleStringProperty(cellData.getValue().getRemoteHost()));
+        remoteHostColumn.setPrefWidth(120);
+
+        // 远程端口列
+        remotePortColumn.setCellValueFactory(cellData ->
+                new SimpleIntegerProperty(cellData.getValue().getRemotePort()).asObject());
+        remotePortColumn.setPrefWidth(100);
+
+        // 操作列
+        actionColumn.setCellFactory(col -> new TableCell<>() {
+            private final Button deleteButton = new Button("删除");
+
+            {
+                deleteButton.getStyleClass().addAll("button-small", "danger");
+                deleteButton.setOnAction(e -> {
+                    ForwardEntry entry = getTableView().getItems().get(getIndex());
+                    handleDeleteRule(entry);
+                });
+            }
+
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                setGraphic(empty ? null : deleteButton);
+            }
+        });
+        actionColumn.setPrefWidth(80);
+    }
+
+    /**
+     * 更新转发规则
+     */
+    private void updateForwardRules(NacosServiceItem serviceItem, List<Instance> instances) {
+        // 查找该服务的转发规则
+        List<ForwardEntry> ruleList = forwardEntries.stream()
+                .filter(r -> r.getName().equals(serviceItem.getServiceName()))
+                .toList();
+
+        if (CollectionUtil.isEmpty(ruleList)) {
+            // 如果没有找到规则，说明服务未转发
+            return;
+        }
+
+        //获取健康的实例
+        List<Instance> healthyInstances = instances.stream().filter(Instance::isHealthy).toList();
+
+        //删除这个服务所有的转发信息，以最新更新为准
+        forwardEntries.removeAll(ruleList);
+
+        //基于连接已经建立
+        if (sshService.isConnected()) {
+            //删除原来转发信息
+            ruleList.forEach(rule -> {
+                try {
+                    sshService.removePortForwarding(
+                            rule.getLocalHost(),
+                            rule.getLocalPort()
+                    );
+                } catch (Exception e) {
+                    LOGGER.error("停止转发规则失败", e);
+                }
+            });
+            //新增转发规则
+            healthyInstances.forEach(instance -> {
+                ForwardEntry rule = new ForwardEntry(serviceItem.getServiceName(), "127.0.0.1", findAvailablePort(), instance.getIp(), instance.getPort());
+                forwardEntries.add(rule);
+                try {
+                    sshService.addPortForwarding(
+                            rule.getLocalHost(),
+                            rule.getLocalPort(),
+                            rule.getRemoteHost(),
+                            rule.getRemotePort()
+                    );
+                    NotificationUtil.showSuccess("服务实例已更新",
+                            String.format("服务 %s 的实例已更新到 %s:%d",
+                                    serviceItem.getServiceName(),
+                                    instance.getIp(),
+                                    instance.getPort()));
+                } catch (Exception e) {
+                    LOGGER.error("重启转发规则失败", e);
+                    NotificationUtil.showError("更新失败",
+                            "更新服务实例失败: " + e.getMessage());
+                }
+            });
+        }
+        saveHistory();
+    }
+
+    // =============== 表格列配置方法 ===============
+
+    /**
+     * 处理启动/停止代理
+     */
+    private void handleStartProxy() {
+        try {
+            if (httpProxyService.isRunning()) {
+                httpProxyService.stop();
+                startProxyButton.setText("启动代理");
+                startProxyButton.setGraphic(new Glyph("FontAwesome", "PLAY"));
+                NotificationUtil.showSuccess("停止成功", "HTTP代理已停止");
+                return;
+            }
+
+            int port = Integer.parseInt(proxyPortField.getText());
+            if (isPortInUse(port)) {
+                NotificationUtil.showError("启动失败", "代理端口已被占用");
+                return;
+            }
+
+            httpProxyService.start(port);
+            startProxyButton.setText("停止代理");
+            startProxyButton.setGraphic(new Glyph("FontAwesome", "STOP"));
+            NotificationUtil.showSuccess("启动成功",
+                    String.format("HTTP代理已启动，端口: %d", port));
+
+        } catch (NumberFormatException e) {
+            NotificationUtil.showError("输入错误", "代理端口必须是数字");
+        } catch (Exception e) {
+            LOGGER.error("HTTP代理操作失败", e);
+            NotificationUtil.showError("操作失败", e.getMessage());
+        }
+    }
+
+    private void configureTabPane(TabPane tabPane) {
+        tabPane.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
+
+        // SSH端口转发选项卡
+        Tab sshTab = createSshTab();
+
+        // Nacos服务转发选项卡
+        Tab nacosTab = createNacosTab();
+
+        tabPane.getTabs().addAll(sshTab, nacosTab);
+
+        getContentBox().setPadding(new Insets(25, 0, 18, 0));
+    }
+
+    @Override
+    public void shutdown() {
+        // 取消服务订阅
+        unsubscribeAllServices();
+
+        // 关闭服务连接
+        closeAllServices();
+    }
+
+    /**
      * 服务列表视图
      * 用于显示和管理 Nacos 服务列表
      */
@@ -991,269 +1255,5 @@ public class IpForwardView extends BaseView implements ShutdownHook {
                 setGraphic(container);
             }
         }
-    }
-
-    /**
-     * 取消所有服务订阅
-     */
-    private void unsubscribeAllServices() {
-        nacosServices.stream()
-                .filter(item -> "已转发".equals(item.getStatus()))
-                .forEach(this::unsubscribeService);
-    }
-
-    /**
-     * 关闭所有服务连接
-     */
-    private void closeAllServices() {
-        if (Objects.nonNull(sshService) && sshService.isConnected()) {
-            sshService.disconnect();
-        }
-        if (Objects.nonNull(nacosService) && nacosService.isConnected()) {
-            nacosService.shutdown();
-        }
-        if (Objects.nonNull(httpProxyService) && httpProxyService.isRunning()) {
-            httpProxyService.stop();
-        }
-    }
-
-    // =============== 配置加载和保存方法 ===============
-
-    /**
-     * 加载 SSH 配置
-     */
-    private void loadSshConfig(IpForwardConfig config) {
-        hostField.setText(config.getHost());
-        portField.setText(String.valueOf(config.getPort()));
-        usernameField.setText(config.getUsername());
-        passwordField.setText(config.getPassword());
-    }
-
-    /**
-     * 加载 Nacos 配置
-     */
-    private void loadNacosConfig(IpForwardConfig config) {
-        NacosConfig nacosConfig = config.getNacosConfig();
-        if (nacosConfig != null) {
-            serverAddrField.setText(nacosConfig.getServerAddr());
-            namespaceField.setText(nacosConfig.getNamespace());
-            nacosUserField.setText(nacosConfig.getUsername());
-            nacosPasswordField.setText(nacosConfig.getPassword());
-            groupField.setText(nacosConfig.getGroupName());
-        }
-    }
-
-    /**
-     * 加载转发规则
-     */
-    private void loadForwardEntries(IpForwardConfig config) {
-        List<ForwardEntry> entries = config.getForwardEntries();
-        if (entries != null) {
-            forwardEntries.setAll(entries);
-        }
-    }
-
-    /**
-     * 保存 SSH 配置
-     */
-    private void saveSshConfig(IpForwardConfig config) {
-        config.setHost(hostField.getText());
-        config.setPort(Integer.parseInt(portField.getText()));
-        config.setUsername(usernameField.getText());
-        config.setPassword(passwordField.getText());
-    }
-
-    /**
-     * 保存 Nacos 配置
-     */
-    private void saveNacosConfig(IpForwardConfig config) {
-        NacosConfig nacosConfig = new NacosConfig();
-        nacosConfig.setServerAddr(serverAddrField.getText());
-        nacosConfig.setNamespace(namespaceField.getText());
-        nacosConfig.setUsername(nacosUserField.getText());
-        nacosConfig.setPassword(nacosPasswordField.getText());
-        nacosConfig.setGroupName(groupField.getText());
-        config.setNacosConfig(nacosConfig);
-    }
-
-    /**
-     * 保存转发规则
-     */
-    private void saveForwardEntries(IpForwardConfig config) {
-        config.setForwardEntries(forwardEntries);
-    }
-
-    // =============== 表格列配置方法 ===============
-
-    /**
-     * 配置表格列
-     */
-    private void configureTableColumns(
-            TableColumn<ForwardEntry, String> nameColumn,
-            TableColumn<ForwardEntry, String> localHostColumn,
-            TableColumn<ForwardEntry, Integer> localPortColumn,
-            TableColumn<ForwardEntry, String> remoteHostColumn,
-            TableColumn<ForwardEntry, Integer> remotePortColumn,
-            TableColumn<ForwardEntry, Void> actionColumn) {
-
-        // 名称列
-        nameColumn.setCellValueFactory(cellData ->
-                new SimpleStringProperty(cellData.getValue().getName()));
-        nameColumn.setPrefWidth(150);
-
-        // 本地主机列
-        localHostColumn.setCellValueFactory(cellData ->
-                new SimpleStringProperty(cellData.getValue().getLocalHost()));
-        localHostColumn.setPrefWidth(120);
-
-        // 本地端口列
-        localPortColumn.setCellValueFactory(cellData ->
-                new SimpleIntegerProperty(cellData.getValue().getLocalPort()).asObject());
-        localPortColumn.setPrefWidth(100);
-
-        // 远程主机列
-        remoteHostColumn.setCellValueFactory(cellData ->
-                new SimpleStringProperty(cellData.getValue().getRemoteHost()));
-        remoteHostColumn.setPrefWidth(120);
-
-        // 远程端口列
-        remotePortColumn.setCellValueFactory(cellData ->
-                new SimpleIntegerProperty(cellData.getValue().getRemotePort()).asObject());
-        remotePortColumn.setPrefWidth(100);
-
-        // 操作列
-        actionColumn.setCellFactory(col -> new TableCell<>() {
-            private final Button deleteButton = new Button("删除");
-
-            {
-                deleteButton.getStyleClass().addAll("button-small", "danger");
-                deleteButton.setOnAction(e -> {
-                    ForwardEntry entry = getTableView().getItems().get(getIndex());
-                    handleDeleteRule(entry);
-                });
-            }
-
-            @Override
-            protected void updateItem(Void item, boolean empty) {
-                super.updateItem(item, empty);
-                setGraphic(empty ? null : deleteButton);
-            }
-        });
-        actionColumn.setPrefWidth(80);
-    }
-
-    /**
-     * 更新转发规则
-     */
-    private void updateForwardRules(NacosServiceItem serviceItem, List<Instance> instances) {
-        // 查找该服务的转发规则
-        List<ForwardEntry> ruleList = forwardEntries.stream()
-                .filter(r -> r.getName().equals(serviceItem.getServiceName()))
-                .toList();
-
-        if (CollectionUtil.isEmpty(ruleList)) {
-            // 如果没有找到规则，说明服务未转发
-            return;
-        }
-
-        //获取健康的实例
-        List<Instance> healthyInstances = instances.stream().filter(Instance::isHealthy).toList();
-
-        //删除这个服务所有的转发信息，以最新更新为准
-        forwardEntries.removeAll(ruleList);
-
-        //基于连接已经建立
-        if (sshService.isConnected()) {
-            //删除原来转发信息
-            ruleList.forEach(rule -> {
-                try {
-                    sshService.removePortForwarding(
-                            rule.getLocalHost(),
-                            rule.getLocalPort()
-                    );
-                } catch (Exception e) {
-                    LOGGER.error("停止转发规则失败", e);
-                }
-            });
-            //新增转发规则
-            healthyInstances.forEach(instance -> {
-                ForwardEntry rule = new ForwardEntry(serviceItem.getServiceName(), "127.0.0.1", findAvailablePort(), instance.getIp(), instance.getPort());
-                forwardEntries.add(rule);
-                try {
-                    sshService.addPortForwarding(
-                            rule.getLocalHost(),
-                            rule.getLocalPort(),
-                            rule.getRemoteHost(),
-                            rule.getRemotePort()
-                    );
-                    NotificationUtil.showSuccess("服务实例已更新",
-                            String.format("服务 %s 的实例已更新到 %s:%d",
-                                    serviceItem.getServiceName(),
-                                    instance.getIp(),
-                                    instance.getPort()));
-                } catch (Exception e) {
-                    LOGGER.error("重启转发规则失败", e);
-                    NotificationUtil.showError("更新失败",
-                            "更新服务实例失败: " + e.getMessage());
-                }
-            });
-        }
-        saveHistory();
-    }
-
-    /**
-     * 处理启动/停止代理
-     */
-    private void handleStartProxy() {
-        try {
-            if (httpProxyService.isRunning()) {
-                httpProxyService.stop();
-                startProxyButton.setText("启动代理");
-                startProxyButton.setGraphic(new Glyph("FontAwesome", "PLAY"));
-                NotificationUtil.showSuccess("停止成功", "HTTP代理已停止");
-                return;
-            }
-
-            int port = Integer.parseInt(proxyPortField.getText());
-            if (isPortInUse(port)) {
-                NotificationUtil.showError("启动失败", "代理端口已被占用");
-                return;
-            }
-
-            httpProxyService.start(port);
-            startProxyButton.setText("停止代理");
-            startProxyButton.setGraphic(new Glyph("FontAwesome", "STOP"));
-            NotificationUtil.showSuccess("启动成功",
-                    String.format("HTTP代理已启动，端口: %d", port));
-
-        } catch (NumberFormatException e) {
-            NotificationUtil.showError("输入错误", "代理端口必须是数字");
-        } catch (Exception e) {
-            LOGGER.error("HTTP代理操作失败", e);
-            NotificationUtil.showError("操作失败", e.getMessage());
-        }
-    }
-
-    private void configureTabPane(TabPane tabPane) {
-        tabPane.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
-
-        // SSH端口转发选项卡
-        Tab sshTab = createSshTab();
-
-        // Nacos服务转发选项卡
-        Tab nacosTab = createNacosTab();
-
-        tabPane.getTabs().addAll(sshTab, nacosTab);
-
-        getContentBox().setPadding(new Insets(25, 0, 18, 0));
-    }
-
-    @Override
-    public void shutdown() {
-        // 取消服务订阅
-        unsubscribeAllServices();
-
-        // 关闭服务连接
-        closeAllServices();
     }
 }

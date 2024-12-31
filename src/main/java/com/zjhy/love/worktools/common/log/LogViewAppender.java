@@ -15,10 +15,10 @@ import org.apache.logging.log4j.core.layout.PatternLayout;
  * @author zhengjun
  */
 @Plugin(
-    name = "LogView",
-    category = Core.CATEGORY_NAME,
-    elementType = Appender.ELEMENT_TYPE,
-    printObject = true
+        name = "LogView",
+        category = Core.CATEGORY_NAME,
+        elementType = Appender.ELEMENT_TYPE,
+        printObject = true
 )
 public class LogViewAppender extends AbstractAppender {
 
@@ -38,7 +38,7 @@ public class LogViewAppender extends AbstractAppender {
             @PluginAttribute("name") String name,
             @PluginElement("Layout") PatternLayout layout,
             @PluginElement("Filter") Filter filter) {
-        
+
         if (name == null) {
             LOGGER.error("No name provided for LogViewAppender");
             return null;
@@ -55,6 +55,6 @@ public class LogViewAppender extends AbstractAppender {
     public void append(LogEvent event) {
         String level = event.getLevel().toString();
         String message = event.getMessage().getFormattedMessage();
-        LogManager.addLog(level, message,event.getThrown());
+        LogManager.addLog(level, message, event.getThrown());
     }
 } 

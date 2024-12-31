@@ -17,12 +17,12 @@ import java.util.concurrent.ConcurrentHashMap;
 public class PluginManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(PluginManager.class);
     private static final String PLUGIN_HISTORY_KEY = "installed_plugins";
-    
+
     // 已加载的插件实例
     private final Map<String, WorkToolsPlugin> loadedPlugins = new ConcurrentHashMap<>();
     // 可用的插件信息
     private final Map<String, PluginInfo> availablePlugins = new ConcurrentHashMap<>();
-    
+
     /**
      * 初始化插件管理器
      */
@@ -35,20 +35,20 @@ public class PluginManager {
                 availablePlugins.put(info.getId(), info);
                 LOGGER.info("发现插件: {}", info.getName());
             }
-            
+
             // 2. 加载已安装插件的历史记录
             List<String> installedPluginIds = HistoryUtil.getHistory(PLUGIN_HISTORY_KEY, List.class);
             if (installedPluginIds != null) {
                 installedPluginIds.forEach(this::installPlugin);
             }
-            
+
             LOGGER.info("插件管理器初始化完成，共发现 {} 个插件", availablePlugins.size());
         } catch (Exception e) {
             LOGGER.error("插件管理器初始化失败", e);
             NotificationUtil.showError("插件加载失败", e.getMessage());
         }
     }
-    
+
     /**
      * 安装插件
      */
@@ -58,12 +58,12 @@ public class PluginManager {
             if (info == null) {
                 throw new IllegalArgumentException("插件不存在: " + pluginId);
             }
-            
+
             if (info.isInstalled()) {
                 LOGGER.warn("插件已安装: {}", pluginId);
                 return;
             }
-            
+
             // 通过SPI重新加载插件实例
             ServiceLoader<WorkToolsPlugin> loader = ServiceLoader.load(WorkToolsPlugin.class);
             for (WorkToolsPlugin plugin : loader) {
@@ -76,20 +76,20 @@ public class PluginManager {
                     info.setInstalled(true);
                     // 保存安装记录
                     saveInstalledPlugins();
-                    
+
                     LOGGER.info("插件安装成功: {}", info.getName());
                     NotificationUtil.showSuccess("插件安装成功", "已安装 " + info.getName());
                     return;
                 }
             }
-            
+
             throw new IllegalStateException("未找到插件实现类: " + pluginId);
         } catch (Exception e) {
             LOGGER.error("插件安装失败: {}", pluginId, e);
             NotificationUtil.showError("插件安装失败", e.getMessage());
         }
     }
-    
+
     /**
      * 卸载插件
      */
@@ -100,7 +100,7 @@ public class PluginManager {
                 LOGGER.warn("插件未安装: {}", pluginId);
                 return;
             }
-            
+
             // 销毁插件
             plugin.destroy();
             // 移除插件实例
@@ -112,7 +112,7 @@ public class PluginManager {
             }
             // 保存安装记录
             saveInstalledPlugins();
-            
+
             LOGGER.info("插件卸载成功: {}", info.getName());
             NotificationUtil.showSuccess("插件卸载成功", "已卸载 " + info.getName());
         } catch (Exception e) {
@@ -120,21 +120,21 @@ public class PluginManager {
             NotificationUtil.showError("插件卸载失败", e.getMessage());
         }
     }
-    
+
     /**
      * 获取所有可用插件信息
      */
     public Collection<PluginInfo> getAvailablePlugins() {
         return availablePlugins.values();
     }
-    
+
     /**
      * 获取所有已加载的插件实例
      */
     public Collection<WorkToolsPlugin> getLoadedPlugins() {
         return loadedPlugins.values();
     }
-    
+
     /**
      * 保存已安装插件记录
      */
@@ -142,7 +142,7 @@ public class PluginManager {
         List<String> installedPluginIds = new ArrayList<>(loadedPlugins.keySet());
         HistoryUtil.saveHistory(PLUGIN_HISTORY_KEY, installedPluginIds);
     }
-    
+
     /**
      * 创建插件信息对象
      */
@@ -156,7 +156,7 @@ public class PluginManager {
         info.setInstalled(false);
         return info;
     }
-    
+
     /**
      * 关闭插件管理器
      */
@@ -169,14 +169,14 @@ public class PluginManager {
                 LOGGER.error("插件销毁失败: {}", plugin.getId(), e);
             }
         });
-        
+
         // 清空插件列表
         loadedPlugins.clear();
         availablePlugins.clear();
-        
+
         LOGGER.info("插件管理器已关闭");
     }
-    
+
     /**
      * 根据插件ID获取已加载的插件实例
      *

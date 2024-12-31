@@ -39,10 +39,8 @@ public class ObjectStorageView extends BaseView implements ShutdownHook {
     private final TableView<StorageObject> objectTable = new TableView<>();
     private final ProgressBar progressBar = new ProgressBar(0);
     private final Label statusLabel = new Label();
-
-    private ObjectStorageService storageService;
     private final ObservableList<StorageObject> objects = FXCollections.observableArrayList();
-
+    private ObjectStorageService storageService;
     // 添加配置缓存
     private ObjectStorageConfig aliyunConfig;
     private ObjectStorageConfig tencentConfig;
@@ -52,17 +50,17 @@ public class ObjectStorageView extends BaseView implements ShutdownHook {
         providerComboBox.getItems().addAll(ALIYUN_OSS, TENCENT_COS);
         // 默认选择阿里云 OSS
         providerComboBox.setValue(ALIYUN_OSS);
-        
+
         // 创建组件
         VBox configSection = createConfigSection();
         HBox toolbar = createToolbar();
         configureObjectTable();
         VBox.setVgrow(objectTable, Priority.ALWAYS);
         HBox statusBar = createStatusBar();
-        
+
         // 使用基类方法添加内容
         addContent(configSection, toolbar, objectTable, statusBar);
-        
+
         // 初始化数据
         initializeData();
     }
@@ -131,7 +129,7 @@ public class ObjectStorageView extends BaseView implements ShutdownHook {
         buttonBox.setAlignment(Pos.CENTER_LEFT);
         buttonBox.setPadding(new Insets(10, 0, 0, 0));
 
-        container.getChildren().addAll( grid, buttonBox);
+        container.getChildren().addAll(grid, buttonBox);
         return container;
     }
 
@@ -193,7 +191,7 @@ public class ObjectStorageView extends BaseView implements ShutdownHook {
 
         //设置数据源
         objectTable.setItems(objects);
-        
+
         // 设置表格容器的内边距
         getContentBox().setPadding(new Insets(25, 0, 5, 0));
     }
@@ -359,13 +357,13 @@ public class ObjectStorageView extends BaseView implements ShutdownHook {
             config.setAccessKeySecret(secretKeyField.getText().trim());
             config.setEndpoint(endpointField.getText().trim());
             config.setBucket(bucketField.getText().trim());
-            if(TENCENT_COS.equals(provider)){
+            if (TENCENT_COS.equals(provider)) {
                 config.setRegion(regionField.getText().trim());
             }
 
             // 创建存储服务实例
-            storageService = ALIYUN_OSS.equals(provider) ? 
-                new AliyunOssService() : new TencentCosService();
+            storageService = ALIYUN_OSS.equals(provider) ?
+                    new AliyunOssService() : new TencentCosService();
 
             // 初始化连接
             storageService.init(config);
@@ -574,6 +572,16 @@ public class ObjectStorageView extends BaseView implements ShutdownHook {
         });
     }
 
+    @Override
+    public void shutdown() {
+        if (CollectionUtil.isNotEmpty(objects)) {
+            objects.clear();
+        }
+        if (storageService != null) {
+            storageService.shutdown();
+        }
+    }
+
     // 操作列单元格
     private class ActionTableCell extends TableCell<StorageObject, Void> {
         private final HBox container;
@@ -607,16 +615,6 @@ public class ObjectStorageView extends BaseView implements ShutdownHook {
         protected void updateItem(Void item, boolean empty) {
             super.updateItem(item, empty);
             setGraphic(empty ? null : container);
-        }
-    }
-
-    @Override
-    public void shutdown() {
-        if (CollectionUtil.isNotEmpty(objects)) {
-            objects.clear();
-        }
-        if (storageService != null) {
-            storageService.shutdown();
         }
     }
 } 

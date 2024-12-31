@@ -3,6 +3,7 @@
 ## 核心API
 
 ### 1. 转发服务 API
+
 ```java
 public interface ForwardService {
     /**
@@ -10,13 +11,13 @@ public interface ForwardService {
      * @param entry 转发配置
      */
     void startForward(ForwardEntry entry);
-    
+
     /**
      * 停止转发
      * @param id 转发ID
      */
     void stopForward(String id);
-    
+
     /**
      * 获取活动的转发列表
      * @return 转发列表
@@ -26,6 +27,7 @@ public interface ForwardService {
 ```
 
 ### 2. 存储服务 API
+
 ```java
 public interface StorageService {
     /**
@@ -35,14 +37,14 @@ public interface StorageService {
      * @return 访问URL
      */
     String uploadFile(File file, String key);
-    
+
     /**
      * 下载文件
      * @param key 存储键
      * @param localPath 本地路径
      */
     void downloadFile(String key, String localPath);
-    
+
     /**
      * 删除文件
      * @param key 存储键
@@ -52,6 +54,7 @@ public interface StorageService {
 ```
 
 ### 3. 验证服务 API
+
 ```java
 public interface AuthService {
     /**
@@ -60,7 +63,7 @@ public interface AuthService {
      * @return 验证码
      */
     String generateCode(String secret);
-    
+
     /**
      * 验证验证码
      * @param secret 密钥
@@ -74,22 +77,23 @@ public interface AuthService {
 ## 事件系统
 
 ### 1. 转发事件
+
 ```java
 public class ForwardEvent extends Event {
     private final ForwardEntry entry;
     private final ForwardStatus status;
-    
+
     // 构造方法
     public ForwardEvent(ForwardEntry entry, ForwardStatus status) {
         this.entry = entry;
         this.status = status;
     }
-    
+
     // getter方法
     public ForwardEntry getEntry() {
         return entry;
     }
-    
+
     public ForwardStatus getStatus() {
         return status;
     }
@@ -97,22 +101,23 @@ public class ForwardEvent extends Event {
 ```
 
 ### 2. 存储事件
+
 ```java
 public class StorageEvent extends Event {
     private final String key;
     private final StorageAction action;
-    
+
     // 构造方法
     public StorageEvent(String key, StorageAction action) {
         this.key = key;
         this.action = action;
     }
-    
+
     // getter方法
     public String getKey() {
         return key;
     }
-    
+
     public StorageAction getAction() {
         return action;
     }
@@ -122,6 +127,7 @@ public class StorageEvent extends Event {
 ## 工具类
 
 ### 1. 通知工具
+
 ```java
 public class NotificationUtil {
     /**
@@ -130,21 +136,21 @@ public class NotificationUtil {
      * @param message 消息
      */
     public static void showSuccess(String title, String message);
-    
+
     /**
      * 显示错误通知
      * @param title 标题
      * @param message 消息
      */
     public static void showError(String title, String message);
-    
+
     /**
      * 显示警告通知
      * @param title 标题
      * @param message 消息
      */
     public static void showWarning(String title, String message);
-    
+
     /**
      * 显示信息通知
      * @param title 标题
@@ -155,6 +161,7 @@ public class NotificationUtil {
 ```
 
 ### 2. 文件工具
+
 ```java
 public class FileUtil {
     /**
@@ -163,21 +170,21 @@ public class FileUtil {
      * @return 配置对象
      */
     public static Config readConfig(String path);
-    
+
     /**
      * 保存配置文件
      * @param config 配置对象
      * @param path 文件路径
      */
     public static void saveConfig(Config config, String path);
-    
+
     /**
      * 导出数据
      * @param data 数据对象
      * @param path 导出路径
      */
     public static void exportData(Object data, String path);
-    
+
     /**
      * 导入数据
      * @param path 导入路径
@@ -191,12 +198,13 @@ public class FileUtil {
 ## 异常类
 
 ### 1. 转发异常
+
 ```java
 public class ForwardException extends RuntimeException {
     public ForwardException(String message) {
         super(message);
     }
-    
+
     public ForwardException(String message, Throwable cause) {
         super(message, cause);
     }
@@ -204,12 +212,13 @@ public class ForwardException extends RuntimeException {
 ```
 
 ### 2. 存储异常
+
 ```java
 public class StorageException extends RuntimeException {
     public StorageException(String message) {
         super(message);
     }
-    
+
     public StorageException(String message, Throwable cause) {
         super(message, cause);
     }
@@ -219,18 +228,20 @@ public class StorageException extends RuntimeException {
 ## 配置类
 
 ### 1. 应用配置
+
 ```java
 public class ApplicationConfig {
     private String appName;
     private String version;
     private boolean autoStart;
     private String theme;
-    
+
     // getter和setter方法
 }
 ```
 
 ### 2. 存储配置
+
 ```java
 public class StorageConfig {
     private String provider;

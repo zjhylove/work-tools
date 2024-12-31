@@ -12,22 +12,22 @@ public class NacosConfig {
      * Nacos服务器地址
      */
     private String serverAddr;
-    
+
     /**
      * 命名空间
      */
     private String namespace;
-    
+
     /**
      * 用户名
      */
     private String username;
-    
+
     /**
      * 密码
      */
     private String password;
-    
+
     /**
      * 要转发的服务名称列表
      */

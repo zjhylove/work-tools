@@ -30,17 +30,17 @@ public class TencentCosService implements ObjectStorageService {
     @Override
     public void init(ObjectStorageConfig config) {
         COSCredentials credentials = new BasicCOSCredentials(
-            config.getAccessKeyId(), 
-            config.getAccessKeySecret()
+                config.getAccessKeyId(),
+                config.getAccessKeySecret()
         );
-        
+
         ClientConfig clientConfig = new ClientConfig(new Region(config.getRegion()));
         cosClient = new COSClient(credentials, clientConfig);
         transferManager = new TransferManager(cosClient);
-        
+
         this.bucket = config.getBucket();
         this.region = config.getRegion();
-        
+
         LOGGER.info("腾讯云COS客户端初始化成功");
     }
 
@@ -49,12 +49,12 @@ public class TencentCosService implements ObjectStorageService {
         try {
             PutObjectRequest request = new PutObjectRequest(bucket, key, file);
             Upload upload = transferManager.upload(request);
-            
+
             while (!upload.isDone()) {
                 progress.set(upload.getProgress().getPercentTransferred() / 100);
                 Thread.sleep(100);
             }
-            
+
             upload.waitForCompletion();
             progress.set(1.0);
         } catch (Exception e) {
@@ -68,12 +68,12 @@ public class TencentCosService implements ObjectStorageService {
         try {
             GetObjectRequest request = new GetObjectRequest(bucket, key);
             Download download = transferManager.download(request, targetFile);
-            
+
             while (!download.isDone()) {
                 progress.set(download.getProgress().getPercentTransferred() / 100);
                 Thread.sleep(100);
             }
-            
+
             download.waitForCompletion();
             progress.set(1.0);
         } catch (Exception e) {
@@ -89,15 +89,15 @@ public class TencentCosService implements ObjectStorageService {
             request.setBucketName(bucket);
             request.setPrefix(prefix);
             request.setMaxKeys(maxKeys);
-            
+
             ObjectListing result = cosClient.listObjects(request);
             List<StorageObject> objects = new ArrayList<>();
-            
+
             for (COSObjectSummary summary : result.getObjectSummaries()) {
                 objects.add(new StorageObject(
-                    summary.getKey(),
-                    summary.getSize(),
-                    summary.getLastModified().toString()
+                        summary.getKey(),
+                        summary.getSize(),
+                        summary.getLastModified().toString()
                 ));
             }
             return objects;

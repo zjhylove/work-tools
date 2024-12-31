@@ -40,8 +40,10 @@ public class DbDocConfig {
     private String outputDir;
 
     // Getters and Setters
+
     /**
      * 获取数据库连接URL
+     *
      * @return 数据库连接URL
      */
     public String getJdbcUrl() {
@@ -50,6 +52,7 @@ public class DbDocConfig {
 
     /**
      * 设置数据库连接URL
+     *
      * @param jdbcUrl 数据库连接URL
      */
     public void setJdbcUrl(String jdbcUrl) {
@@ -58,6 +61,7 @@ public class DbDocConfig {
 
     /**
      * 获取数据库用户名
+     *
      * @return 数据库用户名
      */
     public String getUsername() {
@@ -66,6 +70,7 @@ public class DbDocConfig {
 
     /**
      * 设置数据库用户名
+     *
      * @param username 数据库用户名
      */
     public void setUsername(String username) {
@@ -74,6 +79,7 @@ public class DbDocConfig {
 
     /**
      * 获取数据库密码
+     *
      * @return 数据库密码
      */
     public String getPassword() {
@@ -82,6 +88,7 @@ public class DbDocConfig {
 
     /**
      * 设置数据库密码
+     *
      * @param password 数据库密码
      */
     public void setPassword(String password) {
@@ -90,6 +97,7 @@ public class DbDocConfig {
 
     /**
      * 获取需要导出的表名列表
+     *
      * @return 表名列表
      */
     public List<String> getTables() {
@@ -98,6 +106,7 @@ public class DbDocConfig {
 
     /**
      * 设置需要导出的表名列表
+     *
      * @param tables 表名列表
      */
     public void setTables(List<String> tables) {
@@ -106,6 +115,7 @@ public class DbDocConfig {
 
     /**
      * 获取文档输出目录
+     *
      * @return 输出目录路径
      */
     public String getOutputDir() {
@@ -114,6 +124,7 @@ public class DbDocConfig {
 
     /**
      * 设置文档输出目录
+     *
      * @param outputDir 输出目录路径
      */
     public void setOutputDir(String outputDir) {

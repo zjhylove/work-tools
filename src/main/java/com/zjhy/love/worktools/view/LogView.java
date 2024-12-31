@@ -30,57 +30,77 @@ import java.util.List;
 
 public class LogView extends BaseView {
     private static final Logger LOGGER = LoggerFactory.getLogger(LogView.class);
-    
+
     private final TableView<LogEntry> logTable = new TableView<>();
     private final ObservableList<LogEntry> logEntries = FXCollections.observableArrayList();
     private final ComboBox<String> logLevelComboBox = new ComboBox<>();
-    
+
     public LogView() {
         // 创建工具栏
         HBox toolbar = createToolbar();
-        
+
         // 配置日志表格
         configureLogTable();
         VBox.setVgrow(logTable, Priority.ALWAYS);
-        
+
         // 添加到视图
         addContent(toolbar, logTable);
-        
+
         // 初始加载日志
         refreshLogs();
     }
-    
+
+    private static TableColumn<LogEntry, LocalDateTime> getLogEntryDateTimeTableColumn() {
+        TableColumn<LogEntry, LocalDateTime> timeColumn = new TableColumn<>("时间");
+        timeColumn.setCellValueFactory(data -> new SimpleObjectProperty<>(data.getValue().getTime()));
+        timeColumn.setCellFactory(column -> new TableCell<>() {
+            private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+            @Override
+            protected void updateItem(LocalDateTime item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    setText(formatter.format(item));
+                }
+            }
+        });
+        timeColumn.setPrefWidth(180);
+        return timeColumn;
+    }
+
     private HBox createToolbar() {
         HBox toolbar = new HBox(10);
         toolbar.setAlignment(Pos.CENTER_LEFT);
-        
+
         // 日志级别选择
         Label levelLabel = new Label("日志级别:");
         logLevelComboBox.setItems(FXCollections.observableArrayList("ALL", "INFO", "ERROR"));
         logLevelComboBox.setValue("ALL");
         logLevelComboBox.getStyleClass().add(Styles.FLAT);
         logLevelComboBox.setOnAction(e -> refreshLogs());
-        
+
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
-        
+
         // 工具按钮
         Button refreshButton = new Button("刷新", new Glyph("FontAwesome", "REFRESH"));
         refreshButton.getStyleClass().addAll(Styles.BUTTON_OUTLINED, Styles.ACCENT);
         refreshButton.setOnAction(e -> refreshLogs());
-        
+
         Button clearButton = new Button("清空", new Glyph("FontAwesome", "TRASH"));
         clearButton.getStyleClass().add(Styles.BUTTON_OUTLINED);
         clearButton.setOnAction(e -> handleClear());
-        
+
         toolbar.getChildren().addAll(
-            levelLabel, logLevelComboBox, spacer,
-            refreshButton, clearButton
+                levelLabel, logLevelComboBox, spacer,
+                refreshButton, clearButton
         );
-        
+
         return toolbar;
     }
-    
+
     private void configureLogTable() {
         //设置样式和大小
         logTable.getStyleClass().add("table-striped");
@@ -180,39 +200,19 @@ public class LogView extends BaseView {
         return levelColumn;
     }
 
-    private static TableColumn<LogEntry, LocalDateTime> getLogEntryDateTimeTableColumn() {
-        TableColumn<LogEntry, LocalDateTime> timeColumn = new TableColumn<>("时间");
-        timeColumn.setCellValueFactory(data -> new SimpleObjectProperty<>(data.getValue().getTime()));
-        timeColumn.setCellFactory(column -> new TableCell<>() {
-            private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-
-            @Override
-            protected void updateItem(LocalDateTime item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null) {
-                    setText(null);
-                } else {
-                    setText(formatter.format(item));
-                }
-            }
-        });
-        timeColumn.setPrefWidth(180);
-        return timeColumn;
-    }
-
     private void refreshLogs() {
         logEntries.clear();
         String selectedLevel = logLevelComboBox.getValue();
         List<LogEntry> filteredLogs = LogManager.getLogsByLevel(selectedLevel);
         logEntries.addAll(filteredLogs);
     }
-    
+
     private void handleClear() {
         logEntries.clear();
         LogManager.clearLogs();
         NotificationUtil.showSuccess("日志已清空");
     }
-    
+
     private void showErrorDetails(LogEntry entry) {
         Dialog<Void> dialog = DialogUtil.createCommonDataDialog("错误详情");
         DialogPane dialogPane = dialog.getDialogPane();
@@ -221,14 +221,14 @@ public class LogView extends BaseView {
 
         VBox content = new VBox(10);
         content.setPadding(new Insets(20));
-        
+
         // 错误消息
         Label messageLabel = new Label("错误信息：");
         messageLabel.getStyleClass().add("text-bold");
         TextArea messageArea = new TextArea(entry.getMessage());
         messageArea.setEditable(false);
         messageArea.setPrefRowCount(2);
-        
+
         // 堆栈信息
         Label stackLabel = new Label("堆栈信息：");
         stackLabel.getStyleClass().add("text-bold");
@@ -236,7 +236,7 @@ public class LogView extends BaseView {
         stackArea.setEditable(false);
         stackArea.setWrapText(true);
         VBox.setVgrow(stackArea, Priority.ALWAYS);
-        
+
         // 获取堆栈信息
         if (entry.getThrowable() != null) {
             StringWriter sw = new StringWriter();
@@ -244,22 +244,22 @@ public class LogView extends BaseView {
             entry.getThrowable().printStackTrace(pw);
             stackArea.setText(sw.toString());
         }
-        
+
         content.getChildren().addAll(messageLabel, messageArea, stackLabel, stackArea);
         dialogPane.setContent(content);
-        
+
         // 添加复制按钮
         ButtonType copyButton = new ButtonType("复制堆栈", ButtonBar.ButtonData.LEFT);
         ButtonType closeButton = new ButtonType("关闭", ButtonBar.ButtonData.CANCEL_CLOSE);
         dialogPane.getButtonTypes().addAll(copyButton, closeButton);
-        
+
         // 设置按钮样式
         Button copy = (Button) dialogPane.lookupButton(copyButton);
         copy.getStyleClass().addAll(Styles.BUTTON_OUTLINED, Styles.ACCENT);
-        
+
         Button close = (Button) dialogPane.lookupButton(closeButton);
         close.getStyleClass().add(Styles.BUTTON_OUTLINED);
-        
+
         // 处理复制按钮事件
         copy.setOnAction(e -> {
             Clipboard clipboard = Clipboard.getSystemClipboard();
@@ -268,7 +268,7 @@ public class LogView extends BaseView {
             clipboard.setContent(content1);
             NotificationUtil.showSuccess("堆栈信息已复制到剪贴板");
         });
-        
+
         dialog.show();
     }
 } 

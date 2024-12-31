@@ -1,15 +1,15 @@
 package com.zjhy.love.worktools.service;
 
+import cn.hutool.core.util.StrUtil;
 import com.alibaba.nacos.api.NacosFactory;
 import com.alibaba.nacos.api.exception.NacosException;
 import com.alibaba.nacos.api.naming.NamingService;
-import com.alibaba.nacos.api.naming.pojo.Instance;
 import com.alibaba.nacos.api.naming.listener.NamingEvent;
+import com.alibaba.nacos.api.naming.pojo.Instance;
 import com.zjhy.love.worktools.model.NacosConfig;
 import javafx.application.Platform;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import cn.hutool.core.util.StrUtil;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -26,33 +26,28 @@ public class NacosService {
      * 日志记录器
      */
     private static final Logger LOGGER = LoggerFactory.getLogger(NacosService.class);
-    
-    /**
-     * Nacos命名服务客户端
-     */
-    private NamingService namingService;
-    
-    /**
-     * 连接状态标志
-     */
-    private boolean connected;
-    
-    /**
-     * 最后一次使用的配置信息
-     */
-    private NacosConfig lastConfig;
-    
     /**
      * 服务列表变更监听器集合
      * key为服务名称，value为监听器回调函数
      */
     private final Map<String, Consumer<List<String>>> serviceListeners = new ConcurrentHashMap<>();
-    
     /**
      * 服务实例变更监听器集合
      * key为服务名称，value为监听器回调函数
      */
     private final Map<String, Consumer<List<Instance>>> instanceListeners = new ConcurrentHashMap<>();
+    /**
+     * Nacos命名服务客户端
+     */
+    private NamingService namingService;
+    /**
+     * 连接状态标志
+     */
+    private boolean connected;
+    /**
+     * 最后一次使用的配置信息
+     */
+    private NacosConfig lastConfig;
 
     /**
      * 连接到Nacos服务器
@@ -63,11 +58,11 @@ public class NacosService {
      */
     public void connect(NacosConfig config) throws NacosException {
         this.lastConfig = config;
-        
+
         Properties properties = new Properties();
         properties.setProperty("serverAddr", config.getServerAddr());
         properties.setProperty("namespace", config.getNamespace());
-        
+
         // 添加认证信息
         if (StrUtil.isNotBlank(config.getUsername())) {
             properties.setProperty("username", config.getUsername());
@@ -94,7 +89,7 @@ public class NacosService {
     /**
      * 获取服务列表
      */
-    public List<String> getServiceList(String groupName){
+    public List<String> getServiceList(String groupName) {
         if (namingService == null) {
             throw new IllegalStateException("Nacos未连接");
         }
@@ -109,16 +104,17 @@ public class NacosService {
 
     /**
      * 订阅服务列表变化
+     *
      * @param groupName 分组名称
-     * @param listener 服务列表变化监听器
+     * @param listener  服务列表变化监听器
      */
     public void subscribeServices(String groupName, Consumer<List<String>> listener) throws Exception {
         if (namingService == null) {
             throw new IllegalStateException("Nacos未连接");
         }
-        
+
         serviceListeners.put(groupName, listener);
-        
+
         // 启动定期刷新服务列表的任务
         Timer timer = new Timer(true);
         timer.scheduleAtFixedRate(new TimerTask() {
@@ -148,26 +144,27 @@ public class NacosService {
 
     /**
      * 订阅服务实例变化
+     *
      * @param serviceName 服务名称
-     * @param groupName 分组名称
-     * @param listener 实例变化监听器
+     * @param groupName   分组名称
+     * @param listener    实例变化监听器
      */
-    public void subscribeService(String serviceName, String groupName, 
-                               Consumer<List<Instance>> listener) throws Exception {
+    public void subscribeService(String serviceName, String groupName,
+                                 Consumer<List<Instance>> listener) throws Exception {
         if (namingService == null) {
             throw new IllegalStateException("Nacos未连接");
         }
-        
+
         String key = groupName + "@" + serviceName;
         instanceListeners.put(key, listener);
-        
+
         namingService.subscribe(serviceName, groupName, event -> {
             if (event instanceof NamingEvent) {
                 List<Instance> instances = ((NamingEvent) event).getInstances();
                 Platform.runLater(() -> listener.accept(instances));
             }
         });
-        
+
         LOGGER.info("已订阅服务: {} ({})", serviceName, groupName);
     }
 
@@ -178,11 +175,12 @@ public class NacosService {
         if (namingService == null) {
             return;
         }
-        
+
         String key = groupName + "@" + serviceName;
         Consumer<List<Instance>> listener = instanceListeners.remove(key);
         if (listener != null) {
-            namingService.unsubscribe(serviceName, groupName, event -> {});
+            namingService.unsubscribe(serviceName, groupName, event -> {
+            });
             LOGGER.info("已取消订阅服务: {} ({})", serviceName, groupName);
         }
     }
@@ -199,15 +197,15 @@ public class NacosService {
         if (namingService != null) {
             try {
                 // 取消所有服务订阅
-                for (Map.Entry<String, Consumer<List<Instance>>> entry : 
-                     new HashMap<>(instanceListeners).entrySet()) {
+                for (Map.Entry<String, Consumer<List<Instance>>> entry :
+                        new HashMap<>(instanceListeners).entrySet()) {
                     String[] parts = entry.getKey().split("@");
                     unsubscribeService(parts[1], parts[0]);
                 }
-                
+
                 serviceListeners.clear();
                 instanceListeners.clear();
-                
+
                 namingService.shutDown();
                 connected = false;
                 LOGGER.info("Nacos连接已关闭");

@@ -28,14 +28,14 @@ public class HistoryUtil {
     private static final String HISTORY_FILE = "history.json";
     private static final Map<String, Object> HISTORY_CACHE = new ConcurrentHashMap<>();
 
-    private HistoryUtil() {
-    }
-
     static {
         // 确保目录存在
         FileUtil.mkdir(HISTORY_DIR);
         // 加载历史记录
         loadHistory();
+    }
+
+    private HistoryUtil() {
     }
 
     /**
@@ -65,12 +65,12 @@ public class HistoryUtil {
      * @return 历史参数
      */
     public static <T> T getHistory(String toolName, Class<T> type) {
-        return getHistory(toolName,(mapper,json)-> {
+        return getHistory(toolName, (mapper, json) -> {
             try {
                 if (type == String.class) {
-                    return (T)json;
+                    return (T) json;
                 }
-                return mapper.readValue(json,type);
+                return mapper.readValue(json, type);
             } catch (JsonProcessingException e) {
                 throw new RuntimeException(e);
             }
@@ -78,27 +78,27 @@ public class HistoryUtil {
     }
 
     public static <T> T getHistory(String toolName, TypeReference<T> typeReference) {
-        return getHistory(toolName,(mapper,json)-> {
+        return getHistory(toolName, (mapper, json) -> {
             try {
-                return mapper.readValue(json,typeReference);
+                return mapper.readValue(json, typeReference);
             } catch (JsonProcessingException e) {
                 throw new RuntimeException(e);
             }
         });
     }
 
-    public static <T> T getHistory(String toolName, BiFunction<ObjectMapper,String, T> readMethod) {
+    public static <T> T getHistory(String toolName, BiFunction<ObjectMapper, String, T> readMethod) {
         Object history = HISTORY_CACHE.get(toolName);
         if (history == null) {
             return null;
         }
         if (history instanceof String) {
-            return (T)history;
+            return (T) history;
         }
         try {
             ObjectMapper mapper = new ObjectMapper();
             String json = JSONUtil.toJsonStr(HISTORY_CACHE.get(toolName));
-            return readMethod.apply(mapper,json);
+            return readMethod.apply(mapper, json);
         } catch (Exception e) {
             NotificationUtil.showError("读取历史记录失败 ", e.getMessage());
             return null;

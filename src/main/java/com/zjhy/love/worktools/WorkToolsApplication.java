@@ -22,6 +22,10 @@ public class WorkToolsApplication extends Application {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(WorkToolsApplication.class);
 
+    public static void main(String[] args) {
+        launch(args);
+    }
+
     @Override
     public void start(Stage stage) {
         //设置全局异常处理
@@ -38,7 +42,7 @@ public class WorkToolsApplication extends Application {
             // 创建场景
             Scene scene = new Scene(layoutView, 1200, 800);
 
-           // 加载自定义样式表
+            // 加载自定义样式表
             String cssPath = Objects.requireNonNull(getClass().getResource("/css/styles.css")).toExternalForm();
 
             // 添加样式
@@ -89,11 +93,7 @@ public class WorkToolsApplication extends Application {
         // 在JavaFX应用程序线程中显示错误
         Platform.runLater(() -> {
             LOGGER.error("操作出现异常", e);
-            NotificationUtil.showError( e.getMessage());
+            NotificationUtil.showError(e.getMessage());
         });
-    }
-
-    public static void main(String[] args) {
-        launch(args);
     }
 } 

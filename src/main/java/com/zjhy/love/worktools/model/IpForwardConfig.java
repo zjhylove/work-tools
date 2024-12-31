@@ -15,31 +15,31 @@ public class IpForwardConfig {
      * 用于建立SSH隧道的远程服务器地址
      */
     private String host;
-    
+
     /**
      * SSH服务器端口
      * 默认为22，用于SSH连接的端口号
      */
     private int port;
-    
+
     /**
      * SSH用户名
      * 用于SSH服务器认证的用户名
      */
     private String username;
-    
+
     /**
      * SSH密码
      * 用于SSH服务器认证的密码
      */
     private String password;
-    
+
     /**
      * 转发规则列表
      * 存储所有配置的端口转发规则
      */
     private List<ForwardEntry> forwardEntries = new ArrayList<>();
-    
+
     /**
      * Nacos配置
      * 用于Nacos服务发现的相关配置
@@ -47,6 +47,7 @@ public class IpForwardConfig {
     private NacosConfig nacosConfig;
 
     // Getters and Setters
+
     /**
      * 获取SSH服务器地址
      */

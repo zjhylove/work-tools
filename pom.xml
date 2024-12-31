@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
@@ -25,17 +25,17 @@
         <maven.compiler.target>23</maven.compiler.target>
         <maven.compiler.release>23</maven.compiler.release>
         <java.version>23</java.version>
-        
+
         <!-- JavaFX -->
         <javafx.version>17.0.9</javafx.version>
         <atlantafx.version>2.0.1</atlantafx.version>
         <controlfx.version>11.2.1</controlfx.version>
         <ikonli.version>12.3.1</ikonli.version>
-        
+
         <!-- 日志 -->
         <log4j.version>2.20.0</log4j.version>
         <slf4j.version>1.7.32</slf4j.version>
-        
+
         <!-- 工具库 -->
         <hutool.version>5.8.25</hutool.version>
         <commons-codec.version>1.15</commons-codec.version>
@@ -43,11 +43,11 @@
         <freemarker.version>2.3.9</freemarker.version>
         <sshd.version>2.9.2</sshd.version>
         <jackson.version>2.12.6</jackson.version>
-        
+
         <!-- HTTP -->
         <httpclient.version>4.5.13</httpclient.version>
         <httpcore.version>4.4.13</httpcore.version>
-        
+
         <!-- Office -->
         <poi.version>5.2.3</poi.version>
         <spire.version>12.8.0</spire.version>
@@ -68,7 +68,7 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-            
+
             <!-- Log4j BOM -->
             <dependency>
                 <groupId>org.apache.logging.log4j</groupId>
@@ -247,7 +247,7 @@
                 </exclusion>
             </exclusions>
         </dependency>
-        
+
         <!-- Office -->
         <dependency>
             <groupId>org.apache.poi</groupId>
@@ -481,7 +481,7 @@
                 <filtering>false</filtering>
             </resource>
         </resources>
-        
+
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

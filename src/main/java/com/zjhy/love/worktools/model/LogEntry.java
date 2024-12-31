@@ -13,22 +13,22 @@ public class LogEntry {
      * 日志时间
      */
     private LocalDateTime time;
-    
+
     /**
      * 日志级别（如：INFO、ERROR、WARN等）
      */
     private String level;
-    
+
     /**
      * 日志消息内容
      */
     private String message;
-    
+
     /**
      * 异常对象
      */
     private Throwable throwable;
-    
+
     /**
      * 创建日志条目
      *
@@ -41,13 +41,13 @@ public class LogEntry {
         this.level = level;
         this.message = message;
     }
-    
+
     /**
      * 创建日志条目
      *
-     * @param time    日志记录时间
-     * @param level   日志级别
-     * @param message 日志消息
+     * @param time      日志记录时间
+     * @param level     日志级别
+     * @param message   日志消息
      * @param throwable 异常对象
      */
     public LogEntry(LocalDateTime time, String level, String message, Throwable throwable) {
@@ -56,7 +56,7 @@ public class LogEntry {
         this.message = message;
         this.throwable = throwable;
     }
-    
+
     /**
      * 获取日志时间
      *
@@ -65,7 +65,7 @@ public class LogEntry {
     public LocalDateTime getTime() {
         return time;
     }
-    
+
     /**
      * 设置日志时间
      *
@@ -74,7 +74,7 @@ public class LogEntry {
     public void setTime(LocalDateTime time) {
         this.time = time;
     }
-    
+
     /**
      * 获取日志级别
      *
@@ -83,7 +83,7 @@ public class LogEntry {
     public String getLevel() {
         return level;
     }
-    
+
     /**
      * 设置日志级别
      *
@@ -92,7 +92,7 @@ public class LogEntry {
     public void setLevel(String level) {
         this.level = level;
     }
-    
+
     /**
      * 获取日志消息
      *
@@ -101,7 +101,7 @@ public class LogEntry {
     public String getMessage() {
         return message;
     }
-    
+
     /**
      * 设置日志消息
      *
@@ -110,7 +110,7 @@ public class LogEntry {
     public void setMessage(String message) {
         this.message = message;
     }
-    
+
     /**
      * 获取异常对象
      *
@@ -119,7 +119,7 @@ public class LogEntry {
     public Throwable getThrowable() {
         return throwable;
     }
-    
+
     /**
      * 设置异常对象
      *

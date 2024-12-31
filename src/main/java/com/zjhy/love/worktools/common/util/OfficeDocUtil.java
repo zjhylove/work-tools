@@ -1,5 +1,22 @@
 package com.zjhy.love.worktools.common.util;
 
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.io.FileUtil;
+import cn.hutool.json.JSONUtil;
+import com.spire.doc.Document;
+import com.spire.doc.FileFormat;
+import freemarker.cache.TemplateLoader;
+import freemarker.cache.URLTemplateLoader;
+import freemarker.template.Configuration;
+import freemarker.template.Template;
+import freemarker.template.TemplateException;
+import freemarker.template.TemplateExceptionHandler;
+import org.apache.poi.xwpf.usermodel.XWPFDocument;
+import org.apache.poi.xwpf.usermodel.XWPFParagraph;
+import org.apache.poi.xwpf.usermodel.XWPFRun;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.BufferedWriter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -9,25 +26,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
-import org.apache.poi.xwpf.usermodel.XWPFDocument;
-import org.apache.poi.xwpf.usermodel.XWPFParagraph;
-import org.apache.poi.xwpf.usermodel.XWPFRun;
-
-import com.spire.doc.Document;
-import com.spire.doc.FileFormat;
-
-import cn.hutool.core.bean.BeanUtil;
-import cn.hutool.core.io.FileUtil;
-import cn.hutool.json.JSONUtil;
-import freemarker.cache.TemplateLoader;
-import freemarker.cache.URLTemplateLoader;
-import freemarker.template.Configuration;
-import freemarker.template.Template;
-import freemarker.template.TemplateException;
-import freemarker.template.TemplateExceptionHandler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * @author zhengjun
@@ -45,7 +43,7 @@ public abstract class OfficeDocUtil {
      * @param ftlTemplateName 模板名称
      * @param renderData      渲染数据
      * @param renderXmlFile   渲染输出xml 文件
-     * @throws IOException 异常
+     * @throws IOException       异常
      * @throws TemplateException 异常
      */
     public static void openOfficeXmlRender(String ftlTemplateName, Object renderData, String renderXmlFile) throws IOException, TemplateException {
@@ -56,7 +54,7 @@ public abstract class OfficeDocUtil {
         TemplateLoader templateLoader = new URLTemplateLoader() {
             @Override
             protected URL getURL(String ftlName) {
-                return OfficeDocUtil.class.getResource("/templates/"+ftlName);
+                return OfficeDocUtil.class.getResource("/templates/" + ftlName);
             }
         };
         configuration.setTemplateLoader(templateLoader);
