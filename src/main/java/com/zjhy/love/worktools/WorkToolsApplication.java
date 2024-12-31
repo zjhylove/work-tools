@@ -24,6 +24,10 @@ public class WorkToolsApplication extends Application {
 
     @Override
     public void start(Stage stage) {
+        //设置全局异常处理
+        Thread.setDefaultUncaughtExceptionHandler((thread, e) -> {
+            globalHandleException(e);
+        });
         try {
             // 设置 AtlantaFX 主题
             Application.setUserAgentStylesheet(new PrimerLight().getUserAgentStylesheet());
@@ -79,6 +83,14 @@ public class WorkToolsApplication extends Application {
             LOGGER.error("应用启动失败", e);
             throw new RuntimeException("应用启动失败", e);
         }
+    }
+
+    private void globalHandleException(Throwable e) {
+        // 在JavaFX应用程序线程中显示错误
+        Platform.runLater(() -> {
+            LOGGER.error("操作出现异常", e);
+            NotificationUtil.showError("出现错误", e.getMessage());
+        });
     }
 
     public static void main(String[] args) {
