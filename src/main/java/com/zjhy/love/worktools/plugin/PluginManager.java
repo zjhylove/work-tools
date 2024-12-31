@@ -176,4 +176,14 @@ public class PluginManager {
         
         LOGGER.info("插件管理器已关闭");
     }
+    
+    /**
+     * 根据插件ID获取已加载的插件实例
+     *
+     * @param id 插件ID
+     * @return 插件实例，如果未找到则返回null
+     */
+    public PluginInfo getPluginById(String id) {
+        return availablePlugins.get(id);
+    }
 } 

@@ -48,6 +48,7 @@
 - 阿里云/腾讯云 SDK
 
 ## 项目结构
+```
 src/main/java/com/zjhy/love/worktools/
 ├── WorkToolsApplication.java # 应用程序入口
 ├── common/ # 公共工具类
@@ -66,6 +67,7 @@ src/main/java/com/zjhy/love/worktools/
 └── view/ # 视图组件
 ├── AuthView.java # 验证码视图
 └── BaseView.java # 基础视图
+```
 
 
 ## 开发环境
@@ -100,3 +102,10 @@ src/main/java/com/zjhy/love/worktools/
 ## 作者
 
 @zjhylove
+
+## 详细文档
+
+- [用户手册](docs/user/README.md) - 详细的功能使用说明和常见问题解答
+- [开发文档](docs/development/README.md) - 项目架构、开发规范和构建部署说明
+- [API文档](docs/api/README.md) - 核心API接口说明和示例代码
+- [更新日志](CHANGELOG.md) - 版本更新历史和功能变更记录

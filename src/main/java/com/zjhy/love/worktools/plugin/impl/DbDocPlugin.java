@@ -3,6 +3,7 @@ package com.zjhy.love.worktools.plugin.impl;
 import com.zjhy.love.worktools.plugin.api.WorkToolsPlugin;
 import com.zjhy.love.worktools.view.DbDocView;
 import javafx.scene.Node;
+import org.kordamp.ikonli.materialdesign2.MaterialDesignA;
 
 public class DbDocPlugin implements WorkToolsPlugin {
     private DbDocView view;
@@ -29,7 +30,7 @@ public class DbDocPlugin implements WorkToolsPlugin {
     
     @Override
     public String getIcon() {
-        return "fas-database";
+        return MaterialDesignA.ARROW_DECISION_OUTLINE.getDescription();
     }
     
     @Override

@@ -3,6 +3,7 @@ package com.zjhy.love.worktools.plugin.impl;
 import com.zjhy.love.worktools.plugin.api.WorkToolsPlugin;
 import com.zjhy.love.worktools.view.IpForwardView;
 import javafx.scene.Node;
+import org.kordamp.ikonli.materialdesign2.MaterialDesignA;
 
 public class IpForwardPlugin implements WorkToolsPlugin {
     private IpForwardView view;
@@ -29,7 +30,7 @@ public class IpForwardPlugin implements WorkToolsPlugin {
     
     @Override
     public String getIcon() {
-        return "fas-random";
+        return MaterialDesignA.ARROW_DECISION_OUTLINE.getDescription();
     }
     
     @Override

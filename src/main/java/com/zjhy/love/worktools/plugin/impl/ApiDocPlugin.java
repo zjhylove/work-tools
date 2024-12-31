@@ -3,6 +3,7 @@ package com.zjhy.love.worktools.plugin.impl;
 import com.zjhy.love.worktools.plugin.api.WorkToolsPlugin;
 import com.zjhy.love.worktools.view.ApiDocView;
 import javafx.scene.Node;
+import org.kordamp.ikonli.materialdesign2.MaterialDesignF;
 
 public class ApiDocPlugin implements WorkToolsPlugin {
     private ApiDocView view;
@@ -29,7 +30,7 @@ public class ApiDocPlugin implements WorkToolsPlugin {
     
     @Override
     public String getIcon() {
-        return "fas-book";
+        return MaterialDesignF.FILE_DOCUMENT_OUTLINE.getDescription();
     }
     
     @Override

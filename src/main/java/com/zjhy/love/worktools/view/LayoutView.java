@@ -16,7 +16,10 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
-import org.controlsfx.glyphfont.Glyph;
+import org.kordamp.ikonli.javafx.FontIcon;
+import org.kordamp.ikonli.materialdesign2.MaterialDesignC;
+import org.kordamp.ikonli.materialdesign2.MaterialDesignP;
+import org.kordamp.ikonli.materialdesign2.MaterialDesignT;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -71,7 +74,7 @@ public class LayoutView extends HBox {
         // 设置最小高度，确保有足够的空间
         setMinHeight(600);
     }
-    
+
     private void configureMenuList() {
         menuList.getStyleClass().add("dense");
         
@@ -80,7 +83,7 @@ public class LayoutView extends HBox {
         for (WorkToolsPlugin plugin : pluginManager.getLoadedPlugins()) {
             items.add(new MenuItem(
                 plugin.getName(),
-                plugin.getIcon() != null ? "fas-puzzle-piece" : "fas-cube",
+                plugin.getIcon() != null ? plugin.getIcon() : "fas-cube",
                 plugin.getDescription()
             ));
         }
@@ -101,20 +104,25 @@ public class LayoutView extends HBox {
         HBox toolbar = new HBox(10);
         toolbar.setAlignment(Pos.CENTER);
         
-        // 设置按钮
-        Button settingsBtn = new Button("", new Glyph("FontAwesome", "GEAR"));
+        // 设置按钮 - 使用齿轮图标
+        Button settingsBtn = new Button("", new FontIcon(MaterialDesignC.COG_OUTLINE));
         settingsBtn.getStyleClass().addAll("button-icon", "flat");
         settingsBtn.setOnAction(e -> showSettingsDialog());
         
-        // 日志按钮
-        Button logBtn = new Button("", new Glyph("FontAwesome", "LIST"));
+        // 日志按钮 - 使用文档列表图标
+        Button logBtn = new Button("", new FontIcon(MaterialDesignT.TEXT_BOX_OUTLINE));
         logBtn.getStyleClass().addAll("button-icon", "flat");
         logBtn.setOnAction(e -> showLogDialog());
         
-        // 插件市场按钮
-        Button pluginMarketBtn = new Button("", new Glyph("FontAwesome", "PUZZLE_PIECE"));
+        // 插件市场按钮 - 使用插件图标
+        Button pluginMarketBtn = new Button("", new FontIcon(MaterialDesignP.PUZZLE_OUTLINE));
         pluginMarketBtn.getStyleClass().addAll("button-icon", "flat");
         pluginMarketBtn.setOnAction(e -> showPluginMarketDialog());
+        
+        // 设置图标大小
+        settingsBtn.getGraphic().getStyleClass().add("icon-16");
+        logBtn.getGraphic().getStyleClass().add("icon-16");
+        pluginMarketBtn.getGraphic().getStyleClass().add("icon-16");
         
         toolbar.getChildren().addAll(settingsBtn, logBtn, pluginMarketBtn);
         return toolbar;
@@ -331,17 +339,16 @@ public class LayoutView extends HBox {
             } else {
                 titleLabel.setText(item.title());
                 descLabel.setText(item.description());
+                // 清除旧的图标
+                container.getChildren().removeIf(node -> node instanceof FontIcon);
+                // 添加新的图标
+                if (item.icon() != null) {
+                    FontIcon icon = new FontIcon(item.icon());
+                    icon.getStyleClass().add("icon-16");
+                    container.getChildren().addFirst(icon);  // 将图标添加到最前面
+                }
                 setGraphic(container);
             }
-        }
-    }
-    
-    // 临时占位组件
-    private static class Placeholder extends StackPane {
-        public Placeholder(String text) {
-            Label label = new Label(text + " (开发中...)");
-            label.getStyleClass().addAll("h3", "text-muted");
-            getChildren().add(label);
         }
     }
 
@@ -376,6 +383,22 @@ public class LayoutView extends HBox {
     }
 
     private void refreshMenuList() {
+        // 获取当前显示的插件视图
+        WorkToolsPlugin currentPlugin = null;
+        if (!contentArea.getChildren().isEmpty()) {
+            Node currentView = contentArea.getChildren().get(0);
+            currentPlugin = pluginManager.getLoadedPlugins().stream()
+                    .filter(p -> p.getView() == currentView)
+                    .findFirst()
+                    .orElse(null);
+        }
+
+        // 如果当前显示的插件已被卸载，清空内容区域
+        if (currentPlugin == null && !contentArea.getChildren().isEmpty()) {
+            contentArea.getChildren().clear();
+        }
+
+        // 刷新菜单列表
         configureMenuList();
     }
 } 

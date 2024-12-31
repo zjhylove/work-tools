@@ -2,7 +2,9 @@ package com.zjhy.love.worktools.common.util;
 
 import atlantafx.base.controls.Notification;
 import atlantafx.base.theme.Styles;
-import javafx.animation.*;
+import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
+import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -18,9 +20,7 @@ import org.kordamp.ikonli.javafx.FontIcon;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignA;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignC;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignH;
-import org.kordamp.ikonli.materialdesign2.MaterialDesignI;
-import org.kordamp.ikonli.materialdesign2.MaterialDesignM;
-import org.kordamp.ikonli.materialdesign2.MaterialDesignQ;
+import org.kordamp.ikonli.materialdesign2.MaterialDesignL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -201,9 +201,9 @@ public class NotificationUtil {
      */
     private static Node createIcon(NotificationType type) {
         FontIcon icon = switch (type) {
-            case SUCCESS -> new FontIcon(MaterialDesignC.CHECK_CIRCLE);
-            case ERROR -> new FontIcon(MaterialDesignA.ALERT_CIRCLE);
-            case WARNING -> new FontIcon(MaterialDesignA.ALERT);
+            case SUCCESS -> new FontIcon(MaterialDesignC.CHECK_CIRCLE_OUTLINE);
+            case ERROR -> new FontIcon(MaterialDesignA.ALERT_CIRCLE_OUTLINE);
+            case WARNING -> new FontIcon(MaterialDesignA.ALERT_OCTAGON_OUTLINE);
         };
         
         icon.setIconSize(24);
@@ -274,11 +274,9 @@ public class NotificationUtil {
         alert.setHeaderText(null);
         alert.setContentText(message);
         
-        // 设置对话框样式
         alert.getDialogPane().getStyleClass().add("surface-card");
         
-        // 设置对话框图标
-        FontIcon icon = new FontIcon(MaterialDesignH.HELP_CIRCLE);
+        FontIcon icon = new FontIcon(MaterialDesignH.HELP_CIRCLE_OUTLINE);
         icon.setIconSize(32);
         icon.getStyleClass().add(Styles.ACCENT);
         alert.setGraphic(icon);
@@ -398,20 +396,11 @@ public class NotificationUtil {
         if (notificationPane == null) return;
         
         Platform.runLater(() -> {
-            // 创建通知
             Notification notification = new Notification(message);
             
-            // 设置加载图标
-            FontIcon icon = new FontIcon(MaterialDesignM.MOTION_PLAY);
+            FontIcon icon = new FontIcon(MaterialDesignL.LOADING);
             icon.setIconSize(24);
             icon.getStyleClass().add(Styles.ACCENT);
-            
-            // 添加旋转动画
-            RotateTransition rotateTransition = new RotateTransition(Duration.seconds(2), icon);
-            rotateTransition.setByAngle(360);
-            rotateTransition.setCycleCount(Animation.INDEFINITE);
-            rotateTransition.setInterpolator(Interpolator.LINEAR);
-            rotateTransition.play();
             
             notification.setGraphic(icon);
             notification.getStyleClass().addAll("surface-card", PERSIST_STYLE);

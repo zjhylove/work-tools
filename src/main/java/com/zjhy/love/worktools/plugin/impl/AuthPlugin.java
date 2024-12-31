@@ -3,6 +3,7 @@ package com.zjhy.love.worktools.plugin.impl;
 import com.zjhy.love.worktools.plugin.api.WorkToolsPlugin;
 import com.zjhy.love.worktools.view.AuthView;
 import javafx.scene.Node;
+import org.kordamp.ikonli.materialdesign2.MaterialDesignK;
 
 public class AuthPlugin implements WorkToolsPlugin {
     private AuthView view;
@@ -29,7 +30,7 @@ public class AuthPlugin implements WorkToolsPlugin {
     
     @Override
     public String getIcon() {
-        return "fas-user-shield";
+        return MaterialDesignK.KEY_OUTLINE.getDescription();
     }
     
     @Override

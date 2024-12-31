@@ -2,6 +2,7 @@ package com.zjhy.love.worktools.view;
 
 import atlantafx.base.theme.Styles;
 import com.zjhy.love.worktools.plugin.PluginManager;
+import com.zjhy.love.worktools.plugin.api.WorkToolsPlugin;
 import com.zjhy.love.worktools.plugin.model.PluginInfo;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -14,6 +15,10 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import org.controlsfx.glyphfont.Glyph;
+import org.kordamp.ikonli.javafx.FontIcon;
+import org.kordamp.ikonli.materialdesign2.MaterialDesignP;
+import org.kordamp.ikonli.materialdesign2.MaterialDesignM;
+import org.kordamp.ikonli.materialdesign2.MaterialDesignC;
 
 import java.util.Collection;
 import java.util.function.Predicate;
@@ -61,9 +66,9 @@ public class PluginMarketView extends VBox {
         searchBox.setAlignment(Pos.CENTER_LEFT);
         searchBox.setPadding(new Insets(0, 5, 0, 5));
         
-        // 搜索图标
-        Glyph searchIcon = new Glyph("FontAwesome", "SEARCH");
-        searchIcon.getStyleClass().add("text-subtle");
+        // 搜索图标 - 使用 MaterialDesign 图标
+        FontIcon searchIcon = new FontIcon(MaterialDesignM.MAGNIFY);
+        searchIcon.getStyleClass().addAll("text-subtle", "icon-16");
         
         // 搜索输入框
         TextField searchField = new TextField();
@@ -82,9 +87,10 @@ public class PluginMarketView extends VBox {
             }
         });
         
-        // 清除按钮
-        Button clearButton = new Button("", new Glyph("FontAwesome", "TIMES"));
+        // 清除按钮 - 使用 MaterialDesign 图标
+        Button clearButton = new Button("", new FontIcon(MaterialDesignC.CLOSE));
         clearButton.getStyleClass().addAll("button-icon", "flat");
+        ((FontIcon) clearButton.getGraphic()).getStyleClass().add("icon-16");
         clearButton.setVisible(false);
         clearButton.setOnAction(e -> searchField.clear());
         
@@ -120,17 +126,20 @@ public class PluginMarketView extends VBox {
     
     private class PluginListCell extends ListCell<PluginInfo> {
         private final HBox container;
+        private final VBox infoContainer;
         private final Label nameLabel;
         private final Label descLabel;
         private final Label versionLabel;
         private final Button actionButton;
+        private final Region spacer;
         
         public PluginListCell() {
             container = new HBox(15);
             container.setAlignment(Pos.CENTER_LEFT);
             container.setPadding(new Insets(10));
 
-            VBox infoContainer = new VBox(5);
+            // 创建信息容器
+            infoContainer = new VBox(5);
             nameLabel = new Label();
             nameLabel.getStyleClass().add("h4");
             
@@ -143,18 +152,14 @@ public class PluginMarketView extends VBox {
             
             infoContainer.getChildren().addAll(nameLabel, descLabel, versionLabel);
             
-            Region spacer = new Region();
+            spacer = new Region();
             HBox.setHgrow(spacer, Priority.ALWAYS);
             
             actionButton = new Button();
             actionButton.getStyleClass().add("button-outlined");
             
-            container.getChildren().addAll(
-                new Glyph("FontAwesome", "PUZZLE_PIECE"),
-                    infoContainer,
-                spacer,
-                actionButton
-            );
+            // 初始时不添加任何子节点，在updateItem中再添加
+            container.getChildren().clear();
         }
         
         @Override
@@ -165,6 +170,20 @@ public class PluginMarketView extends VBox {
                 setGraphic(null);
                 return;
             }
+            
+            // 获取对应的插件实现类
+            PluginInfo plugin = pluginManager.getPluginById(item.getId());
+            
+            // 创建图标
+            FontIcon icon;
+            if (plugin != null && plugin.getIcon() != null) {
+                // 使用插件定义的图标
+                icon = new FontIcon(plugin.getIcon());
+            } else {
+                // 使用默认图标
+                icon = new FontIcon(MaterialDesignP.PUZZLE_OUTLINE);
+            }
+            icon.getStyleClass().add("icon-24");  // 使用稍大的图标尺寸
             
             nameLabel.setText(item.getName());
             descLabel.setText(item.getDescription());
@@ -190,6 +209,7 @@ public class PluginMarketView extends VBox {
                 }
             });
             
+            container.getChildren().setAll(icon, infoContainer, spacer, actionButton);
             setGraphic(container);
         }
     }

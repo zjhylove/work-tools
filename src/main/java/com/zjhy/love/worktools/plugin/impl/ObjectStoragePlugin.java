@@ -3,6 +3,7 @@ package com.zjhy.love.worktools.plugin.impl;
 import com.zjhy.love.worktools.plugin.api.WorkToolsPlugin;
 import com.zjhy.love.worktools.view.ObjectStorageView;
 import javafx.scene.Node;
+import org.kordamp.ikonli.materialdesign2.MaterialDesignC;
 
 public class ObjectStoragePlugin implements WorkToolsPlugin {
     private ObjectStorageView view;
@@ -29,7 +30,7 @@ public class ObjectStoragePlugin implements WorkToolsPlugin {
     
     @Override
     public String getIcon() {
-        return "fas-cloud";
+        return MaterialDesignC.CLOUD_OUTLINE.getDescription();
     }
     
     @Override
