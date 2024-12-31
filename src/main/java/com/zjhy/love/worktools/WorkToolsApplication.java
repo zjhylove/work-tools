@@ -89,7 +89,7 @@ public class WorkToolsApplication extends Application {
         // 在JavaFX应用程序线程中显示错误
         Platform.runLater(() -> {
             LOGGER.error("操作出现异常", e);
-            NotificationUtil.showError("出现错误", e.getMessage());
+            NotificationUtil.showError( e.getMessage());
         });
     }
 
