@@ -75,6 +75,8 @@ public class NacosService {
         }
 
         namingService = NacosFactory.createNamingService(properties);
+        //test connect
+        getServiceList(config.getGroupName());
         connected = true;
         LOGGER.info("Nacos连接成功: {}", config.getServerAddr());
     }
@@ -92,7 +94,7 @@ public class NacosService {
     /**
      * 获取服务列表
      */
-    public List<String> getServiceList(String groupName) throws Exception {
+    public List<String> getServiceList(String groupName){
         if (namingService == null) {
             throw new IllegalStateException("Nacos未连接");
         }
@@ -101,7 +103,7 @@ public class NacosService {
         } catch (Exception e) {
             LOGGER.error("获取服务列表失败", e);
             connected = false; // 连接可能已断开
-            throw e;
+            throw new RuntimeException(e);
         }
     }
 
