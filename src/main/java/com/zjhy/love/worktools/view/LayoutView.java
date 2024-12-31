@@ -20,6 +20,8 @@ import org.kordamp.ikonli.javafx.FontIcon;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignC;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignP;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignT;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -27,7 +29,7 @@ import java.util.List;
 import java.util.Objects;
 
 public class LayoutView extends HBox {
-
+    private static final Logger LOGGER = LoggerFactory.getLogger(LayoutView.class);
     private final StackPane contentArea = new StackPane();
     private final ListView<MenuItem> menuList = new ListView<>();
     private final List<WeakReference<ShutdownHook>> shutdownList = new ArrayList<>();
@@ -356,7 +358,11 @@ public class LayoutView extends HBox {
         shutdownList.forEach(s -> {
             ShutdownHook shutdownHook = s.get();
             if (Objects.nonNull(shutdownHook)) {
-                shutdownHook.shutdown();
+                try {
+                    shutdownHook.shutdown();
+                } catch (Exception e) {
+                    LOGGER.error("停止相关服务异常", e);
+                }
             }
             s.clear();
         });
