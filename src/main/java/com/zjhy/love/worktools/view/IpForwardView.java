@@ -36,9 +36,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.ServerSocket;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -146,7 +144,6 @@ public class IpForwardView extends BaseView {
         TableColumn<ForwardEntry, Integer> localPortColumn = new TableColumn<>("本地端口");
         TableColumn<ForwardEntry, String> remoteHostColumn = new TableColumn<>("远程主机");
         TableColumn<ForwardEntry, Integer> remotePortColumn = new TableColumn<>("远程端口");
-        TableColumn<ForwardEntry, Boolean> enabledColumn = new TableColumn<>("状态");
         TableColumn<ForwardEntry, Void> actionColumn = new TableColumn<>("操作");
 
         // 配置列数据
@@ -156,7 +153,7 @@ public class IpForwardView extends BaseView {
         // 添加列到表格
         forwardTable.getColumns().addAll(
                 nameColumn, localHostColumn, localPortColumn,
-                remoteHostColumn, remotePortColumn, enabledColumn, actionColumn
+                remoteHostColumn, remotePortColumn, actionColumn
         );
 
         // 设置表格数据源
@@ -357,14 +354,56 @@ public class IpForwardView extends BaseView {
 
             // 连接 SSH
             sshService.connect(host, port, username, password);
+            // 连接成功后自动转发已有规则
+            autoForwardExistingRules();
             connectButton.setText("断开");
-            saveHistory();
             NotificationUtil.showSuccess("连接成功", "SSH连接已建立");
 
         } catch (Exception e) {
             LOGGER.error("SSH连接失败", e);
             NotificationUtil.showError("连接失败", e.getMessage());
         }
+    }
+
+    /**
+     * 自动转发已有规则
+     */
+    private void autoForwardExistingRules() {
+        if (!sshService.isConnected() || forwardEntries.isEmpty()) {
+            return;
+        }
+
+        // 创建规则列表副本，避免并发修改
+        List<ForwardEntry> rulesToForward = new ArrayList<>(forwardEntries);
+
+        // 清空当前规则列表
+        forwardEntries.clear();
+
+        // 尝试重新添加每个规则
+        for (ForwardEntry entry : rulesToForward) {
+            try {
+                if (!Objects.equals(entry.getType(), ForwardEntry.TYPE_MANUAL)) {
+                    continue;
+                }
+                sshService.addPortForwarding(
+                        entry.getLocalHost(),
+                        entry.getLocalPort(),
+                        entry.getRemoteHost(),
+                        entry.getRemotePort()
+                );
+                // 转发成功，添加回列表
+                forwardEntries.add(entry);
+                LOGGER.info("自动转发规则成功: {}", entry.getName());
+            } catch (Exception e) {
+                LOGGER.error("自动转发规则失败: {}", entry.getName(), e);
+                NotificationUtil.showWarning("转发失败",
+                        String.format("规则 %s 转发失败: %s",
+                                entry.getName(), e.getMessage()));
+            }
+        }
+
+        // 保存更新后的配置
+        saveHistory();
     }
 
     /**
@@ -411,6 +450,7 @@ public class IpForwardView extends BaseView {
                     entry.setLocalPort(Integer.parseInt(localPortField.getText()));
                     entry.setRemoteHost(remoteHostField.getText());
                     entry.setRemotePort(Integer.parseInt(remotePortField.getText()));
+                    entry.setType(ForwardEntry.TYPE_MANUAL);
                     return entry;
                 } catch (NumberFormatException e) {
                     NotificationUtil.showError("输入错误", "端口必须是数字");
@@ -548,11 +588,16 @@ public class IpForwardView extends BaseView {
                     entry.setName(serviceItem.getServiceName());
                     entry.setLocalHost("127.0.0.1");
                     entry.setLocalPort(localPort);
-
                     entry.setRemoteHost(instance.getIp());
                     entry.setRemotePort(instance.getPort());
+                    entry.setType(ForwardEntry.TYPE_NACOS);
 
                     // 添加到转发列表
+                    try {
+                        sshService.addPortForwarding(entry.getLocalHost(), entry.getLocalPort(), entry.getRemoteHost(), entry.getRemotePort());
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
                     forwardEntries.add(entry);
                     serviceItem.setStatus("已转发");
 
@@ -719,7 +764,11 @@ public class IpForwardView extends BaseView {
      * 从 10000 开始查找第一个可用的端口
      */
     private int findAvailablePort() {
+        Set<Integer> portSet = forwardEntries.stream().map(ForwardEntry::getLocalPort).collect(Collectors.toSet());
         for (int port = 10000; port < 65535; port++) {
+            if (portSet.contains(port)) {
+                continue;
+            }
             if (!isPortInUse(port)) {
                 return port;
             }
@@ -884,15 +933,44 @@ public class IpForwardView extends BaseView {
             infoBox.getChildren().addAll(nameLabel, statusLabel);
             container.getChildren().addAll(infoBox, buttonBox);
 
-            // 根据 SSH 连接状态控制转发按钮的显示
+            // 修改按钮可见性绑定
             addButton.visibleProperty().bind(
-                    Bindings.createBooleanBinding(() ->
-                                    sshService.isConnected() &&
-                                            getItem() != null &&
-                                            !"已转发".equals(getItem().getStatus()),
-                            sshService.connectedProperty()
+                    Bindings.createBooleanBinding(
+                            () -> {
+                                NacosServiceItem item = getItem();
+                                boolean isConnected = sshService.isConnected();
+                                boolean hasItem = item != null;
+                                boolean notForwarded = hasItem && !"已转发".equals(item.getStatus());
+
+                                LOGGER.debug("Button visibility check: connected={}, hasItem={}, status={}",
+                                        isConnected, hasItem, item != null ? item.getStatus() : null);
+
+                                return isConnected && hasItem && notForwarded;
+                            },
+                            sshService.connectedProperty(),
+                            itemProperty(),
+                            // 添加对单元格项的监听
+                            this.itemProperty().isNotNull().get() ?
+                                    getItem().statusProperty() : new SimpleStringProperty()
                     )
             );
+
+            // 添加单元格项变化监听
+            itemProperty().addListener((obs, oldItem, newItem) -> {
+                if (oldItem != null) {
+                    addButton.visibleProperty().unbind();
+                }
+                if (newItem != null) {
+                    addButton.visibleProperty().bind(
+                            Bindings.createBooleanBinding(
+                                    () -> sshService.isConnected() &&
+                                            !"已转发".equals(newItem.getStatus()),
+                                    sshService.connectedProperty(),
+                                    newItem.statusProperty()
+                            )
+                    );
+                }
+            });
         }
 
         @Override
@@ -904,6 +982,9 @@ public class IpForwardView extends BaseView {
             } else {
                 nameLabel.setText(item.getServiceName());
                 statusLabel.setText(item.getStatus());
+
+                LOGGER.debug("Updating cell: service={}, status={}",
+                        item.getServiceName(), item.getStatus());
 
                 boolean isForwarded = "已转发".equals(item.getStatus());
                 removeButton.setVisible(isForwarded);

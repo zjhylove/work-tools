@@ -11,6 +11,11 @@ import javafx.beans.property.StringProperty;
  * 使用JavaFX属性支持UI数据绑定
  */
 public class ForwardEntry {
+
+    public static final String TYPE_NACOS = "NACOS";
+    public static final String TYPE_MANUAL = "MANUAL";
+
+
     /**
      * 转发规则名称
      * 用于标识和区分不同的转发规则
@@ -41,6 +46,11 @@ public class ForwardEntry {
      */
     private final IntegerProperty remotePort = new SimpleIntegerProperty();
 
+    /**
+     * 规则类型：MANUAL-手动添加，NACOS-Nacos服务添加
+     */
+
+    private final StringProperty type = new SimpleStringProperty("MANUAL");
 
     /**
      * 默认构造函数
@@ -140,4 +150,15 @@ public class ForwardEntry {
         return remotePort;
     }
 
+    public String getType() {
+        return type.get();
+    }
+
+    public StringProperty typeProperty() {
+        return type;
+    }
+
+    public void setType(String value) {
+        type.set(value);
+    }
 }
