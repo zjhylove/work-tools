@@ -1,26 +1,34 @@
 package com.zjhy.love.worktools.view;
 
 import atlantafx.base.theme.*;
+import com.zjhy.love.worktools.common.ShutdownHook;
+import com.zjhy.love.worktools.common.util.DialogUtil;
 import com.zjhy.love.worktools.common.util.HistoryUtil;
 import com.zjhy.love.worktools.common.util.NotificationUtil;
 import com.zjhy.love.worktools.common.util.SystemUtil;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
-import org.controlsfx.glyphfont.Glyph;
 import javafx.stage.Stage;
-import javafx.application.Platform;
-import javafx.scene.Scene;
+import org.controlsfx.glyphfont.Glyph;
+
+import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 public class LayoutView extends HBox {
 
     private final StackPane contentArea = new StackPane();
     private final ListView<MenuItem> menuList = new ListView<>();
+    private final List<WeakReference<ShutdownHook>> shutdownList = new ArrayList<>();
     
     public LayoutView() {
         // 基本设置
@@ -111,15 +119,10 @@ public class LayoutView extends HBox {
     }
     
     private void showLogDialog() {
-        Dialog<Void> dialog = new Dialog<>();
-        dialog.setTitle("系统日志");
-        dialog.setHeaderText(null);
-        
-        // 设置对话框大小
+        Dialog<Void> dialog = DialogUtil.createCommonDataDialog("系统日志");
         DialogPane dialogPane = dialog.getDialogPane();
         dialogPane.setPrefSize(800, 600);
-        dialogPane.getStyleClass().add("surface-card");
-        
+
         // 创建日志视图
         LogView logView = new LogView();
         
@@ -139,13 +142,9 @@ public class LayoutView extends HBox {
     }
     
     private void showSettingsDialog() {
-        Dialog<Void> dialog = new Dialog<>();
-        dialog.setTitle("设置");
-        dialog.setHeaderText(null);
-        
+        Dialog<Void> dialog = DialogUtil.createCommonDataDialog("设置");
         DialogPane dialogPane = dialog.getDialogPane();
         dialogPane.setPrefSize(500, 400);
-        dialogPane.getStyleClass().add("surface-card");
         
         // 创建设置内容
         TabPane settingsPane = new TabPane();
@@ -199,7 +198,7 @@ public class LayoutView extends HBox {
         
         CheckBox minimizeToTrayBox = new CheckBox();
         String minimizeToTray = HistoryUtil.getHistory("minimizeToTray", String.class);
-        minimizeToTrayBox.setSelected(minimizeToTray != null && Boolean.parseBoolean(minimizeToTray));
+        minimizeToTrayBox.setSelected(Boolean.parseBoolean(minimizeToTray));
         minimizeToTrayBox.selectedProperty().addListener((obs, oldVal, newVal) -> {
             HistoryUtil.saveHistory("minimizeToTray", newVal ? "true" : "false");
             NotificationUtil.showSuccess("设置已保存", "最小化到系统托盘已" + (newVal ? "启用" : "禁用"));
@@ -290,6 +289,9 @@ public class LayoutView extends HBox {
             case "对象存储" -> new ObjectStorageView();
             default -> new Placeholder("未实现");
         };
+        if (content instanceof ShutdownHook) {
+            shutdownList.add(new WeakReference<>((ShutdownHook) content));
+        }
         
         contentArea.getChildren().setAll(content);
     }
@@ -341,5 +343,15 @@ public class LayoutView extends HBox {
             label.getStyleClass().addAll("h3", "text-muted");
             getChildren().add(label);
         }
+    }
+
+    public void doShutDown() {
+        shutdownList.forEach(s -> {
+            ShutdownHook shutdownHook = s.get();
+            if (Objects.nonNull(shutdownHook)) {
+                shutdownHook.shutdown();
+            }
+            s.clear();
+        });
     }
 } 

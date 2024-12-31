@@ -3,6 +3,7 @@ package com.zjhy.love.worktools.view;
 import atlantafx.base.controls.Card;
 import atlantafx.base.theme.Styles;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.zjhy.love.worktools.common.util.DialogUtil;
 import com.zjhy.love.worktools.common.util.FileUtil;
 import com.zjhy.love.worktools.common.util.HistoryUtil;
 import com.zjhy.love.worktools.common.util.NotificationUtil;
@@ -10,18 +11,15 @@ import com.zjhy.love.worktools.model.AuthEntry;
 import com.zjhy.love.worktools.service.AuthService;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
-import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.layout.*;
-import javafx.stage.Stage;
 import javafx.util.Duration;
 import org.controlsfx.glyphfont.Glyph;
 import org.slf4j.Logger;
@@ -37,7 +35,6 @@ public class AuthView extends BaseView {
     private final ObservableList<AuthEntry> authEntries = FXCollections.observableArrayList();
     private final TableView<AuthEntry> authTable = new TableView<>();
     private final Label countdownLabel = new Label();
-    private Timeline timeline;
 
     public AuthView() {
         // 创建组件
@@ -50,15 +47,9 @@ public class AuthView extends BaseView {
         
         // 初始化
         initializeData();
+
+        //倒计时刷新验证码
         startCountdown();
-        
-        // 在组件添加到场景图后初始化通知上下文
-        Platform.runLater(() -> {
-            Scene scene = getScene();
-            if (scene != null && scene.getWindow() instanceof Stage stage) {
-                NotificationUtil.initStage(stage);
-            }
-        });
     }
 
     private HBox createToolbar() {
@@ -91,32 +82,40 @@ public class AuthView extends BaseView {
         authTable.setPlaceholder(new Label("暂无数据"));  // 添加空数据提示
         authTable.setFixedCellSize(40);  // 设置固定行高
         authTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);  // 设置列宽调整策略
+        ObservableList<TableColumn<AuthEntry, ?>> columns = authTable.getColumns();
+
 
         // 账户列
         TableColumn<AuthEntry, String> nameColumn = new TableColumn<>("账户");
         nameColumn.setCellValueFactory(data -> data.getValue().nameProperty());
         nameColumn.setPrefWidth(200);
+        columns.add(nameColumn);
         
         // 发行方列
         TableColumn<AuthEntry, String> issuerColumn = new TableColumn<>("发行方");
         issuerColumn.setCellValueFactory(data -> data.getValue().issuerProperty());
         issuerColumn.setPrefWidth(150);
-        
+        columns.add(issuerColumn);
+
+
         // 验证码列
         TableColumn<AuthEntry, String> codeColumn = new TableColumn<>("验证码");
         codeColumn.setCellFactory(col -> createCodeCell());
         codeColumn.setPrefWidth(150);
-        
+        columns.add(codeColumn);
+
+
         // 操作列
         TableColumn<AuthEntry, Void> actionColumn = new TableColumn<>("操作");
         actionColumn.setCellFactory(col -> createActionCell());
         actionColumn.setPrefWidth(200);
-        
-        authTable.getColumns().setAll(nameColumn, issuerColumn, codeColumn, actionColumn);
+        columns.add(actionColumn);
+
+
         authTable.setItems(authEntries);
-        
+
         // 设置表格容器的内边距
-        getContentBox().setPadding(new Insets(10, 0, 10, 0));
+        getContentBox().setPadding(new Insets(25, 0, 38, 0));
     }
 
     private TableCell<AuthEntry, String> createCodeCell() {
@@ -210,13 +209,9 @@ public class AuthView extends BaseView {
     }
 
     private void handleAddAuth() {
-        Dialog<AuthEntry> dialog = new Dialog<>();
-        dialog.setTitle("添加验证器");
-        dialog.setHeaderText(null);
-        
-        DialogPane dialogPane = dialog.getDialogPane();
-        dialogPane.getStyleClass().add("surface-card");
-        
+        Dialog<AuthEntry> dialog = DialogUtil.createCommonDataDialog("添加验证器");
+        DialogPane dialogPane =  dialog.getDialogPane();
+
         // 创建表单
         GridPane grid = new GridPane();
         grid.setHgap(10);
@@ -250,10 +245,7 @@ public class AuthView extends BaseView {
         // 添加按钮
         ButtonType addButton = new ButtonType("添加", ButtonBar.ButtonData.OK_DONE);
         dialogPane.getButtonTypes().addAll(addButton, ButtonType.CANCEL);
-        
-        // 设置按钮样式
-        styleDialogButtons(dialogPane);
-        
+
         // 设置结果转换器
         dialog.setResultConverter(dialogButton -> {
             if (dialogButton == addButton) {
@@ -283,12 +275,8 @@ public class AuthView extends BaseView {
     }
 
     private void showQRCode(AuthEntry entry) {
-        Dialog<Void> dialog = new Dialog<>();
-        dialog.setTitle("二维码");
-        dialog.setHeaderText(null);
-        
-        DialogPane dialogPane = dialog.getDialogPane();
-        dialogPane.getStyleClass().add("surface-card");
+        Dialog<AuthEntry> dialog = DialogUtil.createCommonDataDialog("二维码");
+        DialogPane dialogPane =  dialog.getDialogPane();
         
         // 创建二维码图片视图
         ImageView qrView = new ImageView(authService.generateQRCode(entry));
@@ -304,7 +292,6 @@ public class AuthView extends BaseView {
         
         dialogPane.setContent(card);
         dialogPane.getButtonTypes().add(ButtonType.CLOSE);
-        styleDialogButtons(dialogPane);
         
         dialog.show();
     }
@@ -323,7 +310,7 @@ public class AuthView extends BaseView {
     private void handleImport() {
         try {
             List<AuthEntry> entries = FileUtil.importFromJson(
-                new TypeReference<List<AuthEntry>>() {},
+                new TypeReference<>() {},
                 "导入验证器配置",
                 getScene().getWindow()
             );
@@ -378,8 +365,8 @@ public class AuthView extends BaseView {
     }
 
     private void startCountdown() {
-        timeline = new Timeline(
-            new KeyFrame(Duration.seconds(1), event -> updateCodes())
+        Timeline timeline = new Timeline(
+                new KeyFrame(Duration.seconds(1), event -> updateCodes())
         );
         timeline.setCycleCount(Timeline.INDEFINITE);
         timeline.play();
@@ -401,16 +388,5 @@ public class AuthView extends BaseView {
         
         // 直接显示通知，因为已经在构造函数中初始化了通知上下文
         NotificationUtil.showSuccess("验证码已复制到剪贴板");
-    }
-
-    private void styleDialogButtons(DialogPane dialogPane) {
-        dialogPane.getButtonTypes().forEach(buttonType -> {
-            Button button = (Button) dialogPane.lookupButton(buttonType);
-            if (buttonType.getButtonData() == ButtonBar.ButtonData.OK_DONE) {
-                button.getStyleClass().addAll(Styles.BUTTON_OUTLINED, Styles.SUCCESS);
-            } else if (buttonType.getButtonData() == ButtonBar.ButtonData.CANCEL_CLOSE) {
-                button.getStyleClass().add(Styles.BUTTON_OUTLINED);
-            }
-        });
     }
 } 

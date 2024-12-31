@@ -164,20 +164,8 @@ public class DbDocView extends BaseView {
             NotificationUtil.showPersist("正在生成文档，请稍候...");
             
             // 构建配置
-            DbDocConfig config = new DbDocConfig();
-            config.setJdbcUrl(jdbcUrlField.getText().trim());
-            config.setUsername(usernameField.getText().trim());
-            config.setPassword(passwordField.getText());
-            
-            // 将逗号分隔的表名字符串转换为List
-            String tablesStr = tablesField.getText().trim();
-            List<String> tables = tablesStr.isEmpty() 
-                ? Collections.emptyList() 
-                : Arrays.asList(tablesStr.split(","));
-            config.setTables(tables);
-            
-            config.setOutputDir(outputDirField.getText().trim());
-            
+            DbDocConfig config = getDbDocConfig();
+
             // 保存历史记录
             HistoryUtil.saveHistory("dbDoc", config);
             
@@ -200,7 +188,24 @@ public class DbDocView extends BaseView {
             NotificationUtil.showError("生成文档失败", e.getMessage());
         }
     }
-    
+
+    private DbDocConfig getDbDocConfig() {
+        DbDocConfig config = new DbDocConfig();
+        config.setJdbcUrl(jdbcUrlField.getText().trim());
+        config.setUsername(usernameField.getText().trim());
+        config.setPassword(passwordField.getText());
+
+        // 将逗号分隔的表名字符串转换为List
+        String tablesStr = tablesField.getText().trim();
+        List<String> tables = tablesStr.isEmpty()
+            ? Collections.emptyList()
+            : Arrays.asList(tablesStr.split(","));
+        config.setTables(tables);
+
+        config.setOutputDir(outputDirField.getText().trim());
+        return config;
+    }
+
     private void handleReset() {
         jdbcUrlField.clear();
         usernameField.clear();

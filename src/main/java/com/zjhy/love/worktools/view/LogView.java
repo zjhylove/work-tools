@@ -2,6 +2,7 @@ package com.zjhy.love.worktools.view;
 
 import atlantafx.base.theme.Styles;
 import com.zjhy.love.worktools.common.log.LogManager;
+import com.zjhy.love.worktools.common.util.DialogUtil;
 import com.zjhy.love.worktools.common.util.NotificationUtil;
 import com.zjhy.love.worktools.model.LogEntry;
 import javafx.beans.property.SimpleObjectProperty;
@@ -81,30 +82,84 @@ public class LogView extends BaseView {
     }
     
     private void configureLogTable() {
+        //设置样式和大小
         logTable.getStyleClass().add("table-striped");
         logTable.setPlaceholder(new Label("暂无日志"));
         logTable.setFixedCellSize(40);
         logTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        
+        ObservableList<TableColumn<LogEntry, ?>> columns = logTable.getColumns();
+
         // 时间列
-        TableColumn<LogEntry, LocalDateTime> timeColumn = new TableColumn<>("时间");
-        timeColumn.setCellValueFactory(data -> new SimpleObjectProperty<>(data.getValue().getTime()));
-        timeColumn.setCellFactory(column -> new TableCell<>() {
-            private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-            
+        TableColumn<LogEntry, LocalDateTime> timeColumn = getLogEntryDateTimeTableColumn();
+        columns.add(timeColumn);
+
+        // 级别列
+        TableColumn<LogEntry, String> levelColumn = getLogEntryLevelTableColumn();
+        columns.add(levelColumn);
+
+        // 消息列
+        TableColumn<LogEntry, LogEntry> messageColumn = getLogEntryMessageTableColumn();
+        columns.add(messageColumn);
+
+        //设置数据源
+        logTable.setItems(logEntries);
+    }
+
+    private TableColumn<LogEntry, LogEntry> getLogEntryMessageTableColumn() {
+        TableColumn<LogEntry, LogEntry> messageColumn = new TableColumn<>("消息");
+        messageColumn.setCellValueFactory(data -> new SimpleObjectProperty<>(data.getValue()));
+        messageColumn.setCellFactory(column -> new TableCell<>() {
+            private final HBox container = new HBox(5);
+            private final Label messageLabel = new Label();
+            private final Button detailsButton = new Button("查看详情", new Glyph("FontAwesome", "INFO_CIRCLE"));
+
+            {
+                container.setAlignment(Pos.CENTER_LEFT);
+                detailsButton.getStyleClass().addAll(Styles.SMALL, Styles.ACCENT);
+                detailsButton.setVisible(false);
+                container.getChildren().addAll(messageLabel, detailsButton);
+
+                detailsButton.setOnAction(e -> {
+                    LogEntry entry = getTableRow().getItem();
+                    if (entry != null && entry.getThrowable() != null) {
+                        showErrorDetails(entry);
+                    }
+                });
+            }
+
             @Override
-            protected void updateItem(LocalDateTime item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null) {
-                    setText(null);
+            protected void updateItem(LogEntry entry, boolean empty) {
+                super.updateItem(entry, empty);
+                if (empty || entry == null) {
+                    setGraphic(null);
                 } else {
-                    setText(formatter.format(item));
+                    messageLabel.setText(entry.getMessage());
+
+                    // 根据日志级别设置样式和显示详情按钮
+                    switch (entry.getLevel()) {
+                        case "INFO" -> {
+                            messageLabel.getStyleClass().setAll("text-normal");
+                            detailsButton.setVisible(false);
+                        }
+                        case "WARN" -> {
+                            messageLabel.getStyleClass().setAll("text-warning");
+                            detailsButton.setVisible(false);
+                        }
+                        case "ERROR" -> {
+                            messageLabel.getStyleClass().setAll("text-danger");
+                            detailsButton.setVisible(entry.getThrowable() != null);
+                        }
+                    }
+
+                    setGraphic(container);
                 }
             }
         });
-        timeColumn.setPrefWidth(180);
-        
-        // 级别列
+        messageColumn.setPrefWidth(500);
+        return messageColumn;
+    }
+
+    private TableColumn<LogEntry, String> getLogEntryLevelTableColumn() {
         TableColumn<LogEntry, String> levelColumn = new TableColumn<>("级别");
         levelColumn.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getLevel()));
         levelColumn.setCellFactory(column -> new TableCell<>() {
@@ -122,63 +177,29 @@ public class LogView extends BaseView {
             }
         });
         levelColumn.setPrefWidth(80);
-        
-        // 消息列
-        TableColumn<LogEntry, LogEntry> messageColumn = new TableColumn<>("消息");
-        messageColumn.setCellValueFactory(data -> new SimpleObjectProperty<>(data.getValue()));
-        messageColumn.setCellFactory(column -> new TableCell<>() {
-            private final HBox container = new HBox(5);
-            private final Label messageLabel = new Label();
-            private final Button detailsButton = new Button("查看详情", new Glyph("FontAwesome", "INFO_CIRCLE"));
-            
-            {
-                container.setAlignment(Pos.CENTER_LEFT);
-                detailsButton.getStyleClass().addAll(Styles.SMALL, Styles.ACCENT);
-                detailsButton.setVisible(false);
-                container.getChildren().addAll(messageLabel, detailsButton);
-                
-                detailsButton.setOnAction(e -> {
-                    LogEntry entry = getTableRow().getItem();
-                    if (entry != null && entry.getThrowable() != null) {
-                        showErrorDetails(entry);
-                    }
-                });
-            }
-            
+        return levelColumn;
+    }
+
+    private static TableColumn<LogEntry, LocalDateTime> getLogEntryDateTimeTableColumn() {
+        TableColumn<LogEntry, LocalDateTime> timeColumn = new TableColumn<>("时间");
+        timeColumn.setCellValueFactory(data -> new SimpleObjectProperty<>(data.getValue().getTime()));
+        timeColumn.setCellFactory(column -> new TableCell<>() {
+            private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
             @Override
-            protected void updateItem(LogEntry entry, boolean empty) {
-                super.updateItem(entry, empty);
-                if (empty || entry == null) {
-                    setGraphic(null);
+            protected void updateItem(LocalDateTime item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
                 } else {
-                    messageLabel.setText(entry.getMessage());
-                    
-                    // 根据日志级别设置样式和显示详情按钮
-                    switch (entry.getLevel()) {
-                        case "INFO" -> {
-                            messageLabel.getStyleClass().setAll("text-normal");
-                            detailsButton.setVisible(false);
-                        }
-                        case "WARN" -> {
-                            messageLabel.getStyleClass().setAll("text-warning");
-                            detailsButton.setVisible(false);
-                        }
-                        case "ERROR" -> {
-                            messageLabel.getStyleClass().setAll("text-danger");
-                            detailsButton.setVisible(entry.getThrowable() != null);
-                        }
-                    }
-                    
-                    setGraphic(container);
+                    setText(formatter.format(item));
                 }
             }
         });
-        messageColumn.setPrefWidth(500);
-        
-        logTable.getColumns().setAll(timeColumn, levelColumn, messageColumn);
-        logTable.setItems(logEntries);
+        timeColumn.setPrefWidth(180);
+        return timeColumn;
     }
-    
+
     private void refreshLogs() {
         logEntries.clear();
         String selectedLevel = logLevelComboBox.getValue();
@@ -193,15 +214,11 @@ public class LogView extends BaseView {
     }
     
     private void showErrorDetails(LogEntry entry) {
-        Dialog<Void> dialog = new Dialog<>();
-        dialog.setTitle("错误详情");
-        dialog.setHeaderText(null);
-        
+        Dialog<Void> dialog = DialogUtil.createCommonDataDialog("错误详情");
         DialogPane dialogPane = dialog.getDialogPane();
-        dialogPane.getStyleClass().add("surface-card");
-        dialogPane.setPrefWidth(800);
-        dialogPane.setPrefHeight(600);
-        
+        dialogPane.setPrefSize(800, 600);
+
+
         VBox content = new VBox(10);
         content.setPadding(new Insets(20));
         

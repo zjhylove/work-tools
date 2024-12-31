@@ -1,6 +1,8 @@
 package com.zjhy.love.worktools.view;
 
+import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.io.file.FileNameUtil;
+import com.zjhy.love.worktools.common.ShutdownHook;
 import com.zjhy.love.worktools.common.util.HistoryUtil;
 import com.zjhy.love.worktools.common.util.NotificationUtil;
 import com.zjhy.love.worktools.model.ObjectStorageConfig;
@@ -22,7 +24,7 @@ import org.controlsfx.glyphfont.Glyph;
 import java.io.File;
 import java.util.List;
 
-public class ObjectStorageView extends BaseView {
+public class ObjectStorageView extends BaseView implements ShutdownHook {
 
     private static final String ALIYUN_OSS = "阿里云 OSS";
     private static final String TENCENT_COS = "腾讯云 COS";
@@ -48,7 +50,8 @@ public class ObjectStorageView extends BaseView {
     public ObjectStorageView() {
         // 初始化服务商选项
         providerComboBox.getItems().addAll(ALIYUN_OSS, TENCENT_COS);
-        providerComboBox.setValue(ALIYUN_OSS);  // 默认选择阿里云 OSS
+        // 默认选择阿里云 OSS
+        providerComboBox.setValue(ALIYUN_OSS);
         
         // 创建组件
         VBox configSection = createConfigSection();
@@ -162,32 +165,37 @@ public class ObjectStorageView extends BaseView {
         objectTable.setPlaceholder(new Label("暂无数据"));  // 添加空数据提示
         objectTable.setFixedCellSize(40);  // 设置固定行高
         objectTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);  // 设置列宽调整策略
+        ObservableList<TableColumn<StorageObject, ?>> columns = objectTable.getColumns();
 
         // 对象名称列
         TableColumn<StorageObject, String> keyColumn = new TableColumn<>("对象名称");
         keyColumn.setCellValueFactory(data -> data.getValue().keyProperty());
         keyColumn.setPrefWidth(300);
+        columns.add(keyColumn);
 
         // 大小列
         TableColumn<StorageObject, String> sizeColumn = new TableColumn<>("大小");
         sizeColumn.setCellValueFactory(data -> data.getValue().sizeProperty());
         sizeColumn.setPrefWidth(100);
+        columns.add(sizeColumn);
 
         // 修改时间列
         TableColumn<StorageObject, String> lastModifiedColumn = new TableColumn<>("修改时间");
         lastModifiedColumn.setCellValueFactory(data -> data.getValue().lastModifiedProperty());
         lastModifiedColumn.setPrefWidth(150);
+        columns.add(lastModifiedColumn);
 
         // 操作列
         TableColumn<StorageObject, Void> actionColumn = new TableColumn<>("操作");
         actionColumn.setCellFactory(col -> new ActionTableCell());
         actionColumn.setPrefWidth(200);
+        columns.add(actionColumn);
 
-        objectTable.getColumns().setAll(keyColumn, sizeColumn, lastModifiedColumn, actionColumn);
+        //设置数据源
         objectTable.setItems(objects);
         
         // 设置表格容器的内边距
-        getContentBox().setPadding(new Insets(10, 0, 10, 0));
+        getContentBox().setPadding(new Insets(25, 0, 5, 0));
     }
 
     private HBox createStatusBar() {
@@ -233,14 +241,7 @@ public class ObjectStorageView extends BaseView {
     }
 
     private void saveCurrentConfig() {
-        ObjectStorageConfig config = new ObjectStorageConfig();
-        config.setProvider(providerComboBox.getValue());
-        config.setAccessKeyId(accessKeyField.getText());
-        config.setAccessKeySecret(secretKeyField.getText());
-        config.setEndpoint(endpointField.getText());
-        config.setBucket(bucketField.getText());
-        config.setRegion(regionField.getText());
-
+        ObjectStorageConfig config = createObjectStorageConfig();
         if (ALIYUN_OSS.equals(config.getProvider())) {
             aliyunConfig = config;
         } else if (TENCENT_COS.equals(config.getProvider())) {
@@ -528,18 +529,22 @@ public class ObjectStorageView extends BaseView {
 
     private void saveHistory() {
         try {
-            ObjectStorageConfig config = new ObjectStorageConfig();
-            config.setProvider(providerComboBox.getValue());
-            config.setAccessKeyId(accessKeyField.getText());
-            config.setAccessKeySecret(secretKeyField.getText());
-            config.setEndpoint(endpointField.getText());
-            config.setBucket(bucketField.getText());
-            config.setRegion(regionField.getText());
-
+            ObjectStorageConfig config = createObjectStorageConfig();
             HistoryUtil.saveHistory("object-storage", config);
         } catch (Exception e) {
             NotificationUtil.showError("保存配置失败", e.getMessage());
         }
+    }
+
+    private ObjectStorageConfig createObjectStorageConfig() {
+        ObjectStorageConfig config = new ObjectStorageConfig();
+        config.setProvider(providerComboBox.getValue());
+        config.setAccessKeyId(accessKeyField.getText());
+        config.setAccessKeySecret(secretKeyField.getText());
+        config.setEndpoint(endpointField.getText());
+        config.setBucket(bucketField.getText());
+        config.setRegion(regionField.getText());
+        return config;
     }
 
     private void styleAlert(Alert alert) {
@@ -602,6 +607,16 @@ public class ObjectStorageView extends BaseView {
         protected void updateItem(Void item, boolean empty) {
             super.updateItem(item, empty);
             setGraphic(empty ? null : container);
+        }
+    }
+
+    @Override
+    public void shutdown() {
+        if (CollectionUtil.isNotEmpty(objects)) {
+            objects.clear();
+        }
+        if (storageService != null) {
+            storageService.shutdown();
         }
     }
 } 

@@ -4,6 +4,7 @@ import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.nacos.api.naming.pojo.Instance;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.zjhy.love.worktools.common.ShutdownHook;
 import com.zjhy.love.worktools.common.util.FileUtil;
 import com.zjhy.love.worktools.common.util.HistoryUtil;
 import com.zjhy.love.worktools.common.util.NotificationUtil;
@@ -43,7 +44,7 @@ import java.util.stream.Collectors;
  * IP转发视图
  * 包含 SSH 端口转发和 Nacos 服务转发功能
  */
-public class IpForwardView extends BaseView {
+public class IpForwardView extends BaseView implements ShutdownHook {
     private static final Logger LOGGER = LoggerFactory.getLogger(IpForwardView.class);
 
     // =============== UI 组件 ===============
@@ -138,23 +139,25 @@ public class IpForwardView extends BaseView {
      * 配置转发规则表格
      */
     private void configureForwardTable() {
+        //配置表格
+        ObservableList<TableColumn<ForwardEntry, ?>> columns = forwardTable.getColumns();
         // 创建表格列
         TableColumn<ForwardEntry, String> nameColumn = new TableColumn<>("名称");
+        columns.add(nameColumn);
         TableColumn<ForwardEntry, String> localHostColumn = new TableColumn<>("本地主机");
+        columns.add(localHostColumn);
         TableColumn<ForwardEntry, Integer> localPortColumn = new TableColumn<>("本地端口");
+        columns.add(localPortColumn);
         TableColumn<ForwardEntry, String> remoteHostColumn = new TableColumn<>("远程主机");
+        columns.add(remoteHostColumn);
         TableColumn<ForwardEntry, Integer> remotePortColumn = new TableColumn<>("远程端口");
+        columns.add(remotePortColumn);
         TableColumn<ForwardEntry, Void> actionColumn = new TableColumn<>("操作");
+        columns.add(actionColumn);
 
         // 配置列数据
         configureTableColumns(nameColumn, localHostColumn, localPortColumn,
                 remoteHostColumn, remotePortColumn, actionColumn);
-
-        // 添加列到表格
-        forwardTable.getColumns().addAll(
-                nameColumn, localHostColumn, localPortColumn,
-                remoteHostColumn, remotePortColumn, actionColumn
-        );
 
         // 设置表格数据源
         forwardTable.setItems(forwardEntries);
@@ -830,9 +833,7 @@ public class IpForwardView extends BaseView {
      * 用于显示和管理 Nacos 服务列表
      */
     private class NacosServiceListView extends VBox {
-        private final ListView<NacosServiceItem> serviceListView;
         private final FilteredList<NacosServiceItem> filteredServices;
-        private final SortedList<NacosServiceItem> sortedServices;
         private String nameFilter = "";
 
         public NacosServiceListView() {
@@ -840,8 +841,8 @@ public class IpForwardView extends BaseView {
 
             // 初始化列表视图和过滤排序
             filteredServices = new FilteredList<>(nacosServices);
-            sortedServices = new SortedList<>(filteredServices);
-            serviceListView = new ListView<>(sortedServices);
+            SortedList<NacosServiceItem> sortedServices = new SortedList<>(filteredServices);
+            ListView<NacosServiceItem> serviceListView = new ListView<>(sortedServices);
 
             // 配置列表视图
             serviceListView.setCellFactory(lv -> new ServiceListCell());
@@ -892,7 +893,6 @@ public class IpForwardView extends BaseView {
      */
     private class ServiceListCell extends ListCell<NacosServiceItem> {
         private final HBox container = new HBox(10);
-        private final VBox infoBox = new VBox(5);
         private final Label nameLabel = new Label();
         private final Label statusLabel = new Label();
         private final Button addButton = new Button("转发", new Glyph("FontAwesome", "FORWARD"));
@@ -902,6 +902,7 @@ public class IpForwardView extends BaseView {
             container.setAlignment(Pos.CENTER_LEFT);
             container.setPadding(new Insets(8));
 
+            VBox infoBox = new VBox(5);
             infoBox.setAlignment(Pos.CENTER_LEFT);
             nameLabel.getStyleClass().add("h6");
             statusLabel.getStyleClass().add("text-muted");
@@ -993,18 +994,6 @@ public class IpForwardView extends BaseView {
     }
 
     /**
-     * 释放资源
-     * 关闭所有服务连接和订阅
-     */
-    public void dispose() {
-        // 取消服务订阅
-        unsubscribeAllServices();
-
-        // 关闭服务连接
-        closeAllServices();
-    }
-
-    /**
      * 取消所有服务订阅
      */
     private void unsubscribeAllServices() {
@@ -1017,13 +1006,13 @@ public class IpForwardView extends BaseView {
      * 关闭所有服务连接
      */
     private void closeAllServices() {
-        if (sshService.isConnected()) {
+        if (Objects.nonNull(sshService) && sshService.isConnected()) {
             sshService.disconnect();
         }
-        if (nacosService.isConnected()) {
+        if (Objects.nonNull(nacosService) && nacosService.isConnected()) {
             nacosService.shutdown();
         }
-        if (httpProxyService.isRunning()) {
+        if (Objects.nonNull(httpProxyService) && httpProxyService.isRunning()) {
             httpProxyService.stop();
         }
     }
@@ -1256,6 +1245,15 @@ public class IpForwardView extends BaseView {
 
         tabPane.getTabs().addAll(sshTab, nacosTab);
 
-        getContentBox().setPadding(new Insets(25, 0, 15, 0));
+        getContentBox().setPadding(new Insets(25, 0, 18, 0));
+    }
+
+    @Override
+    public void shutdown() {
+        // 取消服务订阅
+        unsubscribeAllServices();
+
+        // 关闭服务连接
+        closeAllServices();
     }
 }

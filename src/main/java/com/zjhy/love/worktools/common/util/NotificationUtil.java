@@ -20,7 +20,9 @@ import org.controlsfx.glyphfont.Glyph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * 通知工具类
@@ -34,33 +36,6 @@ public class NotificationUtil {
      * 日志记录器
      */
     private static final Logger LOGGER = LoggerFactory.getLogger(NotificationUtil.class);
-    
-    /**
-     * 通知显示时长（毫秒）
-     */
-    private static final int DURATION = 3000;
-    
-    /**
-     * 通知显示位置
-     */
-    private static final Pos POSITION = Pos.BOTTOM_RIGHT;
-    
-    /**
-     * 主舞台引用
-     * 用于定位通知显示位置
-     */
-    private static Stage primaryStage;
-    
-    /**
-     * 通知队列
-     * 用于管理多个通知的显示顺序
-     */
-    private static final Queue<Stage> notificationQueue = new LinkedList<>();
-    
-    /**
-     * 当前显示的通知数量
-     */
-    private static int displayCount = 0;
 
     /**
      * 通知面板
@@ -75,14 +50,10 @@ public class NotificationUtil {
     private static final List<Notification> activeNotifications = new ArrayList<>();
 
     /**
-     * 通知之间的间距
-     */
-    private static final double SPACING = 10;
-
-    /**
      * 持久化通知的样式类名
      */
     private static final String PERSIST_STYLE = "notification-persist";
+
 
     private NotificationUtil() {}
     
@@ -93,8 +64,7 @@ public class NotificationUtil {
      * @param stage 主舞台实例
      */
     public static void initStage(Stage stage) {
-        primaryStage = stage;
-        
+
         // 创建通知容器
         notificationPane = new StackPane();
         notificationPane.setPickOnBounds(false);

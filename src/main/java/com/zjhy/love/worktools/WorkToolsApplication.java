@@ -28,14 +28,14 @@ public class WorkToolsApplication extends Application {
             // 设置 AtlantaFX 主题
             Application.setUserAgentStylesheet(new PrimerLight().getUserAgentStylesheet());
 
-            // 加载自定义样式表
-            String cssPath = Objects.requireNonNull(getClass().getResource("/css/styles.css")).toExternalForm();
-
             // 创建主视图
             LayoutView layoutView = new LayoutView();
 
             // 创建场景
             Scene scene = new Scene(layoutView, 1200, 800);
+
+           // 加载自定义样式表
+            String cssPath = Objects.requireNonNull(getClass().getResource("/css/styles.css")).toExternalForm();
 
             // 添加样式
             scene.getStylesheets().add(cssPath);
@@ -61,6 +61,7 @@ public class WorkToolsApplication extends Application {
                     event.consume();
                     SystemUtil.minimizeToTray();
                 } else {
+                    layoutView.doShutDown();
                     Platform.exit();
                     System.exit(0);
                 }
