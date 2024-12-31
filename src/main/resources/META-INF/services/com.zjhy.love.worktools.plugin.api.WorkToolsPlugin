@@ -1,0 +1,5 @@
+com.zjhy.love.worktools.plugin.impl.ApiDocPlugin
+com.zjhy.love.worktools.plugin.impl.DbDocPlugin
+com.zjhy.love.worktools.plugin.impl.IpForwardPlugin
+com.zjhy.love.worktools.plugin.impl.AuthPlugin
+com.zjhy.love.worktools.plugin.impl.ObjectStoragePlugin 

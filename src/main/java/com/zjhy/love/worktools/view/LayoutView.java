@@ -6,17 +6,16 @@ import com.zjhy.love.worktools.common.util.DialogUtil;
 import com.zjhy.love.worktools.common.util.HistoryUtil;
 import com.zjhy.love.worktools.common.util.NotificationUtil;
 import com.zjhy.love.worktools.common.util.SystemUtil;
+import com.zjhy.love.worktools.plugin.PluginManager;
+import com.zjhy.love.worktools.plugin.api.WorkToolsPlugin;
 import javafx.application.Application;
-import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
-import javafx.stage.Stage;
 import org.controlsfx.glyphfont.Glyph;
 
 import java.lang.ref.WeakReference;
@@ -29,6 +28,7 @@ public class LayoutView extends HBox {
     private final StackPane contentArea = new StackPane();
     private final ListView<MenuItem> menuList = new ListView<>();
     private final List<WeakReference<ShutdownHook>> shutdownList = new ArrayList<>();
+    private final PluginManager pluginManager = new PluginManager();
     
     public LayoutView() {
         // 基本设置
@@ -47,6 +47,9 @@ public class LayoutView extends HBox {
         title.getStyleClass().addAll("h3", "accent");
         title.setMaxWidth(Double.MAX_VALUE);
         title.setAlignment(Pos.CENTER);
+        
+        // 初始化插件管理器
+        pluginManager.init();
         
         // 配置菜单列表
         configureMenuList();
@@ -67,32 +70,24 @@ public class LayoutView extends HBox {
         
         // 设置最小高度，确保有足够的空间
         setMinHeight(600);
-        
-        // 在组件添加到场景图后初始化通知上下文
-        Platform.runLater(() -> {
-            Scene scene = getScene();
-            if (scene != null && scene.getWindow() instanceof Stage stage) {
-                NotificationUtil.initStage(stage);
-            }
-        });
     }
     
     private void configureMenuList() {
         menuList.getStyleClass().add("dense");
         
-        // 创建菜单项
-        ObservableList<MenuItem> items = FXCollections.observableArrayList(
-            new MenuItem("API文档", "fas-book", "API接口文档导出工具"),
-            new MenuItem("DB文档", "fas-database", "数据库文档导出工具"),
-            new MenuItem("IP转发", "fas-random", "IP端口转发配置工具"),
-            new MenuItem("身份验证", "fas-user-shield", "用户认证与授权工具"),
-            new MenuItem("对象存储", "fas-cloud", "对象存储管理工具")
-        );
+        // 从插件管理器获取已安装的插件创建菜单项
+        ObservableList<MenuItem> items = FXCollections.observableArrayList();
+        for (WorkToolsPlugin plugin : pluginManager.getLoadedPlugins()) {
+            items.add(new MenuItem(
+                plugin.getName(),
+                plugin.getIcon() != null ? "fas-puzzle-piece" : "fas-cube",
+                plugin.getDescription()
+            ));
+        }
         
         menuList.setItems(items);
         menuList.setCellFactory(view -> new MenuCell());
         
-        // 添加选择监听器
         menuList.getSelectionModel().selectedItemProperty().addListener(
             (obs, oldVal, newVal) -> {
                 if (newVal != null) {
@@ -106,15 +101,22 @@ public class LayoutView extends HBox {
         HBox toolbar = new HBox(10);
         toolbar.setAlignment(Pos.CENTER);
         
+        // 设置按钮
         Button settingsBtn = new Button("", new Glyph("FontAwesome", "GEAR"));
         settingsBtn.getStyleClass().addAll("button-icon", "flat");
         settingsBtn.setOnAction(e -> showSettingsDialog());
         
+        // 日志按钮
         Button logBtn = new Button("", new Glyph("FontAwesome", "LIST"));
         logBtn.getStyleClass().addAll("button-icon", "flat");
         logBtn.setOnAction(e -> showLogDialog());
         
-        toolbar.getChildren().addAll(settingsBtn, logBtn);
+        // 插件市场按钮
+        Button pluginMarketBtn = new Button("", new Glyph("FontAwesome", "PUZZLE_PIECE"));
+        pluginMarketBtn.getStyleClass().addAll("button-icon", "flat");
+        pluginMarketBtn.setOnAction(e -> showPluginMarketDialog());
+        
+        toolbar.getChildren().addAll(settingsBtn, logBtn, pluginMarketBtn);
         return toolbar;
     }
     
@@ -280,20 +282,18 @@ public class LayoutView extends HBox {
     }
     
     private void handleMenuSelection(MenuItem item) {
-        // 根据选择的菜单项切换内容
-        Node content = switch (item.title()) {
-            case "API文档" -> new ApiDocView();
-            case "DB文档" -> new DbDocView();
-            case "IP转发" -> new IpForwardView();
-            case "身份验证" -> new AuthView();
-            case "对象存储" -> new ObjectStorageView();
-            default -> new Placeholder("未实现");
-        };
-        if (content instanceof ShutdownHook) {
-            shutdownList.add(new WeakReference<>((ShutdownHook) content));
+        WorkToolsPlugin plugin = pluginManager.getLoadedPlugins().stream()
+            .filter(p -> p.getName().equals(item.title()))
+            .findFirst()
+            .orElse(null);
+            
+        if (plugin != null) {
+            Node content = plugin.getView();
+            if (content instanceof ShutdownHook) {
+                shutdownList.add(new WeakReference<>((ShutdownHook) content));
+            }
+            contentArea.getChildren().setAll(content);
         }
-        
-        contentArea.getChildren().setAll(content);
     }
     
     // 菜单项数据类
@@ -353,5 +353,29 @@ public class LayoutView extends HBox {
             }
             s.clear();
         });
+    }
+
+    private void showPluginMarketDialog() {
+        Dialog<Void> dialog = DialogUtil.createCommonDataDialog("插件市场");
+        DialogPane dialogPane = dialog.getDialogPane();
+        dialogPane.setPrefSize(600, 400);
+        
+        // 创建插件市场视图
+        PluginMarketView marketView = new PluginMarketView(pluginManager);
+        marketView.setOnPluginStateChanged(this::refreshMenuList);
+        
+        dialogPane.setContent(marketView);
+        
+        // 添加关闭按钮
+        ButtonType closeButton = new ButtonType("关闭", ButtonBar.ButtonData.CANCEL_CLOSE);
+        dialogPane.getButtonTypes().add(closeButton);
+        Button closeBtn = (Button) dialogPane.lookupButton(closeButton);
+        closeBtn.getStyleClass().add(Styles.BUTTON_OUTLINED);
+        
+        dialog.show();
+    }
+
+    private void refreshMenuList() {
+        configureMenuList();
     }
 } 

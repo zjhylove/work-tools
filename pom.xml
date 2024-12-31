@@ -30,6 +30,7 @@
         <javafx.version>17.0.9</javafx.version>
         <atlantafx.version>2.0.1</atlantafx.version>
         <controlfx.version>11.2.1</controlfx.version>
+        <ikonli.version>12.3.1</ikonli.version>
         
         <!-- 日志 -->
         <log4j.version>2.20.0</log4j.version>
@@ -432,6 +433,17 @@
         </dependency>
 
         <dependency>
+            <groupId>org.kordamp.ikonli</groupId>
+            <artifactId>ikonli-javafx</artifactId>
+            <version>${ikonli.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.kordamp.ikonli</groupId>
+            <artifactId>ikonli-materialdesign2-pack</artifactId>
+            <version>${ikonli.version}</version>
+        </dependency>
+
+        <dependency>
             <groupId>org.controlsfx</groupId>
             <artifactId>controlsfx</artifactId>
             <version>${controlfx.version}</version>
@@ -441,6 +453,20 @@
             <groupId>com.dustinredmond.fxtrayicon</groupId>
             <artifactId>FXTrayIcon</artifactId>
             <version>4.2.0</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>javafx-controls</artifactId>
+                    <groupId>org.openjfx</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>javafx-graphics</artifactId>
+                    <groupId>org.openjfx</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>javafx-swing</artifactId>
+                    <groupId>org.openjfx</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
     </dependencies>

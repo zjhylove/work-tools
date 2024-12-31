@@ -31,7 +31,6 @@ public class DialogUtil {
         Dialog<T> dialog = new Dialog<>();
         dialog.setTitle(title);
         dialog.setHeaderText(headerText);
-
         DialogPane dialogPane = dialog.getDialogPane();
         dialogPane.getStyleClass().addAll(styleClass);
         return dialog;

@@ -2,9 +2,7 @@ package com.zjhy.love.worktools.common.util;
 
 import atlantafx.base.controls.Notification;
 import atlantafx.base.theme.Styles;
-import javafx.animation.KeyFrame;
-import javafx.animation.KeyValue;
-import javafx.animation.Timeline;
+import javafx.animation.*;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -16,7 +14,13 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import javafx.util.Duration;
-import org.controlsfx.glyphfont.Glyph;
+import org.kordamp.ikonli.javafx.FontIcon;
+import org.kordamp.ikonli.materialdesign2.MaterialDesignA;
+import org.kordamp.ikonli.materialdesign2.MaterialDesignC;
+import org.kordamp.ikonli.materialdesign2.MaterialDesignH;
+import org.kordamp.ikonli.materialdesign2.MaterialDesignI;
+import org.kordamp.ikonli.materialdesign2.MaterialDesignM;
+import org.kordamp.ikonli.materialdesign2.MaterialDesignQ;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -195,12 +199,14 @@ public class NotificationUtil {
      * @param type 通知类型
      * @return 对应类型的图标实例
      */
-    private static Glyph createIcon(NotificationType type) {
-        Glyph icon = switch (type) {
-            case SUCCESS -> new Glyph("FontAwesome", "CHECK_CIRCLE");
-            case ERROR -> new Glyph("FontAwesome", "TIMES_CIRCLE");
-            case WARNING -> new Glyph("FontAwesome", "EXCLAMATION_TRIANGLE");
+    private static Node createIcon(NotificationType type) {
+        FontIcon icon = switch (type) {
+            case SUCCESS -> new FontIcon(MaterialDesignC.CHECK_CIRCLE);
+            case ERROR -> new FontIcon(MaterialDesignA.ALERT_CIRCLE);
+            case WARNING -> new FontIcon(MaterialDesignA.ALERT);
         };
+        
+        icon.setIconSize(24);
         icon.getStyleClass().add(type.styleClass);
         return icon;
     }
@@ -214,29 +220,23 @@ public class NotificationUtil {
      * @return true表示用户点击确认，false表示用户点击取消或关闭对话框
      */
     public static boolean showConfirm(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        
-        // 设置对话框样式
-        alert.getDialogPane().getStyleClass().add("surface-card");
-        
+        Alert alert = createAlert(title, message);
+
         // 设置按钮样式
         ButtonType okButton = ButtonType.OK;
         ButtonType cancelButton = ButtonType.CANCEL;
         alert.getButtonTypes().setAll(okButton, cancelButton);
-        
+
         alert.getDialogPane().lookupButton(okButton)
             .getStyleClass().addAll(Styles.BUTTON_OUTLINED, Styles.ACCENT);
         alert.getDialogPane().lookupButton(cancelButton)
             .getStyleClass().add(Styles.BUTTON_OUTLINED);
-        
+
         // 显示对话框并等待结果
         Optional<ButtonType> result = alert.showAndWait();
         return result.isPresent() && result.get() == ButtonType.OK;
     }
-    
+
     /**
      * 显示自定义按钮文本的确认对话框
      *
@@ -247,14 +247,8 @@ public class NotificationUtil {
      * @return true表示用户点击确认按钮，false表示用户点击取消按钮或关闭对话框
      */
     public static boolean showConfirm(String title, String message, String okText, String cancelText) {
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        
-        // 设置对话框样式
-        alert.getDialogPane().getStyleClass().add("surface-card");
-        
+        Alert alert = createAlert(title, message);
+
         // 创建自定义按钮
         ButtonType okButton = new ButtonType(okText);
         ButtonType cancelButton = new ButtonType(cancelText);
@@ -270,7 +264,28 @@ public class NotificationUtil {
         Optional<ButtonType> result = alert.showAndWait();
         return result.isPresent() && result.get() == okButton;
     }
-    
+
+    /**
+     * 创建统一样式的Alert对话框
+     */
+    private static Alert createAlert(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        
+        // 设置对话框样式
+        alert.getDialogPane().getStyleClass().add("surface-card");
+        
+        // 设置对话框图标
+        FontIcon icon = new FontIcon(MaterialDesignH.HELP_CIRCLE);
+        icon.setIconSize(32);
+        icon.getStyleClass().add(Styles.ACCENT);
+        alert.setGraphic(icon);
+        
+        return alert;
+    }
+
     /**
      * 通知类型枚举
      * 定义不同类型通知的显示时长和样式
@@ -387,10 +402,18 @@ public class NotificationUtil {
             Notification notification = new Notification(message);
             
             // 设置加载图标
-            Glyph icon = new Glyph("FontAwesome", "SPINNER");
+            FontIcon icon = new FontIcon(MaterialDesignM.MOTION_PLAY);
+            icon.setIconSize(24);
             icon.getStyleClass().add(Styles.ACCENT);
-            notification.setGraphic(icon);
             
+            // 添加旋转动画
+            RotateTransition rotateTransition = new RotateTransition(Duration.seconds(2), icon);
+            rotateTransition.setByAngle(360);
+            rotateTransition.setCycleCount(Animation.INDEFINITE);
+            rotateTransition.setInterpolator(Interpolator.LINEAR);
+            rotateTransition.play();
+            
+            notification.setGraphic(icon);
             notification.getStyleClass().addAll("surface-card", PERSIST_STYLE);
             
             // 设置大小和位置
