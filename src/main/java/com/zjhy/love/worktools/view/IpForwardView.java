@@ -64,7 +64,7 @@ public class IpForwardView extends BaseView {
     private final Button nacosConnectButton = new Button("连接");
 
     // HTTP 代理相关组件
-    private final TextField proxyPortField = new TextField("8080");
+    private final TextField proxyPortField = new TextField("80");
     private final Button startProxyButton = new Button("启动代理");
 
     // 数据表格和列表
@@ -601,9 +601,8 @@ public class IpForwardView extends BaseView {
                     forwardEntries.add(entry);
                     serviceItem.setStatus("已转发");
 
-                    // 添加域名映射
-                    String domain = serviceItem.getServiceName();
-                    httpProxyService.registerService(domain, serviceItem.getServiceName(), localPort);
+                    // 添加代理映射
+                    httpProxyService.registerService(instance.getIp() + ":" + instance.getPort(), serviceItem.getServiceName(), localPort);
 
                     saveHistory();
                     NotificationUtil.showSuccess("添加成功",
@@ -641,9 +640,8 @@ public class IpForwardView extends BaseView {
                     // 删除规则
                     forwardEntries.remove(ruleToRemove);
 
-                    // 取消服务域名映射
-                    String domain = serviceItem.getServiceName();
-                    httpProxyService.removeServiceMapping(domain);
+                    // 取消代理映射
+                    httpProxyService.removeServiceMapping(ruleToRemove.getRemoteHost() + ":" + ruleToRemove.getRemotePort());
 
                     // 取消服务实例订阅
                     nacosService.unsubscribeService(

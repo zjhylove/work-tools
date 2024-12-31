@@ -58,9 +58,9 @@ public class HttpProxyService {
      */
     private final Map<String, String> serviceMapping = new ConcurrentHashMap<>();
 
-    private  Tomcat tomcat;
+    private Tomcat tomcat;
 
-    private  Context ctx;
+    private Context ctx;
 
     /**
      * 启动HTTP代理服务器
@@ -95,7 +95,7 @@ public class HttpProxyService {
     }
 
 
-    public void doProxy(HttpServletRequest req, HttpServletResponse resp, Function<String,HttpRequest> proxyCreator) throws IOException {
+    public void doProxy(HttpServletRequest req, HttpServletResponse resp, Function<String, HttpRequest> proxyCreator) throws IOException {
         String originHost = req.getHeader("host");
         LOGGER.info("originHost:{}", originHost);
         String forwardHost = serviceMapping.get(originHost);
@@ -115,7 +115,7 @@ public class HttpProxyService {
             String name = headerNames.nextElement();
             httpRequest.header(name, req.getHeader(name));
         }
-        try (ServletInputStream inputStream = req.getInputStream()){
+        try (ServletInputStream inputStream = req.getInputStream()) {
             httpRequest.body(new InputStreamResource(inputStream));
             try (HttpResponse response = httpRequest.execute()) {
                 response.charset(StandardCharsets.UTF_8);
@@ -126,18 +126,6 @@ public class HttpProxyService {
                 }
             }
         }
-    }
-
-    /**
-     * 添加服务映射
-     * 将域名映射到目标服务器地址
-     *
-     * @param domain 域名
-     * @param target 目标地址
-     */
-    public void addServiceMapping(String domain, String target) {
-        serviceMapping.put(domain, target);
-        LOGGER.info("添加服务映射: {} -> {}", domain, target);
     }
 
     /**
@@ -164,37 +152,28 @@ public class HttpProxyService {
     }
 
     /**
-     * 获取服务映射地址
-     * @param domain 域名
-     * @return 映射的目标地址
-     */
-    public String getServiceMapping(String domain) {
-        return serviceMapping.get(domain);
-    }
-
-    /**
      * 注册服务映射
      * 将服务名和本地端口映射到域名
      *
-     * @param domain 域名
+     * @param remoteAddr  远程地址
      * @param serviceName 服务名称
-     * @param localPort 本地端口
+     * @param localPort   本地端口
      */
-    public void registerService(String domain, String serviceName, int localPort) {
+    public void registerService(String remoteAddr, String serviceName, int localPort) {
         String target = "127.0.0.1:" + localPort;
-        addServiceMapping(domain, target);
-        LOGGER.info("注册服务映射: {} ({}) -> {}", domain, serviceName, target);
+        serviceMapping.put(remoteAddr, target);
+        LOGGER.info("注册服务映射: {} ({}) -> {}", remoteAddr, serviceName, target);
     }
 
     /**
      * 移除服务映射
      * 删除域名和目标地址的映射关系
      *
-     * @param domain 域名
+     * @param remoteAddr 远程地址
      */
-    public void removeServiceMapping(String domain) {
-        serviceMapping.remove(domain);
-        LOGGER.info("移除服务映射: {}", domain);
+    public void removeServiceMapping(String remoteAddr) {
+        serviceMapping.remove(remoteAddr);
+        LOGGER.info("移除服务映射: {}", remoteAddr);
     }
 
     /**

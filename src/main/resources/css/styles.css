@@ -1,16 +1,12 @@
 /* 通知样式 */
 .notification {
     /* 通知框背景色，使用渐变效果 */
-    -fx-background-color: ladder(
-        -fx-background,
-        derive(-fx-background, 5%) 20%,
-        derive(-fx-background, 2%) 90%
-    );
+    -fx-background-color:  derive(-fx-background, 2%) 90%;
     /* 圆角边框 */
     -fx-background-radius: 4;
     -fx-border-radius: 4;
     /* 边框颜色，略深于背景色 */
-    -fx-border-color: derive(-fx-background, -10%);
+    -fx-border-color: derive(-fx-background, -10%) 10%;
     /* 内边距和间距 */
     -fx-padding: 12;
     -fx-spacing: 10;
